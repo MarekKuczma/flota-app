@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rozliczenie Floty Rinkon</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./ikona-192.png">
+<link rel="apple-touch-icon" href="./ikona-192.png">
+<meta name="theme-color" content="#1a73e8">
+<style>
+  :root{
+    --akcent:#1a73e8; --akcent-c:#155ab6; --tlo:#f4f6f8; --karta:#ffffff;
+    --tekst:#1f2937; --szary:#6b7280; --blad:#d93025; --ok:#188038; --uwaga:#b45309;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; background:var(--tlo); color:var(--tekst);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:17px;}
+  header{background:var(--akcent); color:#fff; padding:14px 16px;
+    padding-top:calc(14px + env(safe-area-inset-top)); position:sticky; top:0; z-index:5;}
+  header h1{margin:0; font-size:19px; font-weight:600;}
+  header .kto{font-size:14px; opacity:.9; margin-top:2px;}
+  main{max-width:560px; margin:0 auto; padding:14px 14px 90px;}
+  .baner{background:#fef3c7; border:1px solid #f59e0b; color:#92400e;
+    border-radius:12px; padding:12px 14px; margin-bottom:12px; font-size:15px;}
+  .baner b{display:block; margin-bottom:2px;}
+  .karta{background:var(--karta); border-radius:14px; padding:16px;
+    box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:14px;}
+  label{display:block; font-size:14px; font-weight:600; color:var(--szary);
+    margin:14px 0 5px;}
+  label:first-child{margin-top:0;}
+  label .wym{color:var(--blad);}
+  input,select,textarea{width:100%; font-size:18px; padding:12px;
+    border:1.5px solid #d1d5db; border-radius:10px; background:#fff; color:var(--tekst);
+    min-height:48px;}
+  input:focus,select:focus,textarea:focus{outline:none; border-color:var(--akcent);}
+  textarea{min-height:72px; resize:vertical;}
+  .etykieta-typ{display:inline-block; background:#e8f0fe; color:var(--akcent-c);
+    font-size:13px; font-weight:600; border-radius:8px; padding:3px 10px; margin-top:6px;}
+  .blad-pola{color:var(--blad); font-size:14px; margin-top:4px; display:none;}
+  .pole-blad input,.pole-blad select,.pole-blad textarea{border-color:var(--blad);}
+  .pole-blad .blad-pola{display:block;}
+  button{font-family:inherit; cursor:pointer;}
+  .przycisk{display:block; width:100%; background:var(--akcent); color:#fff;
+    font-size:19px; font-weight:600; border:none; border-radius:12px;
+    padding:15px; min-height:54px; margin-top:18px;}
+  .przycisk:active{background:var(--akcent-c);}
+  .przycisk[disabled]{opacity:.6;}
+  .przycisk-drugi{display:block; width:100%; background:#fff; color:var(--akcent);
+    border:1.5px solid var(--akcent); font-size:16px; font-weight:600;
+    border-radius:12px; padding:12px; min-height:48px; margin-top:10px;}
+  .przycisk-maly{background:#fff; color:var(--akcent); border:1.5px solid var(--akcent);
+    border-radius:10px; font-size:15px; font-weight:600; padding:8px 14px; min-height:40px;}
+  .komunikat{border-radius:12px; padding:14px; margin:12px 0; font-size:16px; display:none;}
+  .komunikat.ok{display:block; background:#e6f4ea; border:1px solid var(--ok); color:#135c26;}
+  .komunikat.blad{display:block; background:#fce8e6; border:1px solid var(--blad); color:#a50e0e;}
+  .komunikat.uwaga{display:block; background:#fef3c7; border:1px solid #f59e0b; color:#92400e;}
+  .komunikat ul{margin:6px 0 0; padding-left:20px;}
+  .wpis{border-bottom:1px solid #e5e7eb; padding:12px 2px;}
+  .wpis:last-child{border-bottom:none;}
+  .wpis .linia1{display:flex; justify-content:space-between; font-weight:600; font-size:16px;}
+  .wpis .linia2{color:var(--szary); font-size:14px; margin-top:3px;}
+  .wpis.anulowany .linia1,.wpis.anulowany .linia2{text-decoration:line-through; color:#9ca3af;}
+  .wpis .akcja{margin-top:8px;}
+  .klodka{color:var(--szary); font-size:14px;}
+  .kolejka-info{background:#e8f0fe; color:var(--akcent-c); border-radius:12px;
+    padding:10px 14px; margin-bottom:12px; font-size:15px; display:none;}
+  .odrzucony{background:#fce8e6; border-radius:10px; padding:10px; margin-top:8px; font-size:14px;}
+  .odrzucony .p{display:flex; gap:8px; margin-top:8px;}
+  nav{position:fixed; bottom:0; left:0; right:0; background:#fff;
+    border-top:1px solid #e5e7eb; display:flex; z-index:5;
+    padding-bottom:env(safe-area-inset-bottom);}
+  nav button{flex:1; background:none; border:none; padding:12px 0 10px;
+    font-size:14px; font-weight:600; color:var(--szary); min-height:56px;}
+  nav button.aktywna{color:var(--akcent);}
+  nav button .i{display:block; font-size:22px; line-height:1.1;}
+  .ukryte{display:none !important;}
+  .srodek{text-align:center; padding:40px 20px; color:var(--szary);}
+  h2{font-size:18px; margin:0 0 10px;}
+  dialog{border:none; border-radius:14px; padding:20px; max-width:340px; width:90%;}
+  dialog::backdrop{background:rgba(0,0,0,.4);}
+  dialog p{margin:0 0 14px; font-size:16px;}
+  dialog .p{display:flex; gap:10px;}
+  dialog .p button{flex:1;}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="tytul">Rozliczenie Floty Rinkon</h1>
+  <div class="kto" id="kto"></div>
+</header>
+
+<main>
+  <div class="baner ukryte" id="baner"></div>
+  <div class="kolejka-info" id="kolejkaInfo"></div>
+
+  <!-- Brak kodu -->
+  <div id="widokBrakKodu" class="karta ukryte">
+    <div class="srodek">
+      <p style="font-size:40px; margin:0;">🔑</p>
+      <p><b>Otwórz aplikację ze swojego osobistego linku.</b></p>
+      <p style="font-size:15px;">Link dostałeś od Marka. Jeśli go nie masz — zadzwoń do Marka.</p>
+    </div>
+  </div>
+
+  <!-- Formularz -->
+  <div id="widokFormularz" class="ukryte">
+    <div class="komunikat" id="komunikatWynik"></div>
+    <div class="karta" id="kartaFormularz">
+      <h2 id="naglowekFormularza">Nowe tankowanie</h2>
+      <form id="formularz" novalidate>
+        <div class="pole" id="p-data">
+          <label>Data zakupu <span class="wym">*</span></label>
+          <input type="date" id="f-data">
+          <div class="blad-pola" id="b-data"></div>
+        </div>
+        <div class="pole" id="p-opis">
+          <label>Co kupiono <span class="wym">*</span></label>
+          <select id="f-opis"></select>
+          <div class="blad-pola" id="b-opis"></div>
+        </div>
+        <div class="pole" id="p-ilosc">
+          <label>Ilość (litry lub sztuki) <span class="wym">*</span></label>
+          <input type="text" inputmode="decimal" id="f-ilosc" placeholder="np. 45,5">
+          <div class="blad-pola" id="b-ilosc"></div>
+        </div>
+        <div class="pole" id="p-wartosc">
+          <label>Wartość (zł) <span class="wym">*</span></label>
+          <input type="text" inputmode="decimal" id="f-wartosc" placeholder="np. 289,99">
+          <div class="blad-pola" id="b-wartosc"></div>
+        </div>
+        <div class="pole" id="p-przeznaczenie">
+          <label>Do czego (pojazd / sprzęt) <span class="wym">*</span></label>
+          <select id="f-przeznaczenie"></select>
+          <span class="etykieta-typ ukryte" id="typSprzetu"></span>
+          <div class="blad-pola" id="b-przeznaczenie"></div>
+        </div>
+        <div class="pole" id="p-licznik">
+          <label>Stan licznika / motogodziny <span class="wym ukryte" id="licznikWym">*</span></label>
+          <input type="text" inputmode="numeric" id="f-licznik" placeholder="np. 184632">
+          <div class="blad-pola" id="b-licznik"></div>
+        </div>
+        <div class="pole" id="p-budowa">
+          <label>Budowa <span class="wym">*</span></label>
+          <select id="f-budowa"></select>
+          <div class="blad-pola" id="b-budowa"></div>
+        </div>
+        <div class="pole" id="p-info">
+          <label>Dodatkowe informacje <span class="wym ukryte" id="infoWym">*</span></label>
+          <textarea id="f-info" placeholder="np. 100L hidromek 1, 100L hidromek 2"></textarea>
+          <div class="blad-pola" id="b-info"></div>
+        </div>
+        <button type="submit" class="przycisk" id="przyciskZapisz">ZAPISZ</button>
+        <button type="button" class="przycisk-drugi ukryte" id="przyciskAnulujEdycje">Anuluj poprawianie</button>
+      </form>
+    </div>
+    <div class="karta" id="kartaMiesiac">
+      <button type="button" class="przycisk-drugi" id="przyciskMiesiac" style="margin-top:0;">
+        ✅ Zamykam miesiąc
+      </button>
+      <p style="font-size:13px; color:var(--szary); margin:8px 0 0;">
+        Kliknij, gdy wpiszesz już wszystkie tankowania za dany miesiąc.
+      </p>
+    </div>
+  </div>
+
+  <!-- Moje wpisy -->
+  <div id="widokWpisy" class="ukryte">
+    <div class="karta">
+      <h2>Moje wpisy (ostatnie 30 dni)</h2>
+      <div id="listaWpisow"><div class="srodek">Ładowanie…</div></div>
+    </div>
+  </div>
+</main>
+
+<nav id="nawigacja" class="ukryte">
+  <button id="nawNowy" class="aktywna"><span class="i">⛽</span>Nowy wpis</button>
+  <button id="nawWpisy"><span class="i">📋</span>Moje wpisy</button>
+</nav>
+
+<dialog id="dialogMiesiac">
+  <p><b>Zamykam miesiąc</b></p>
+  <p style="font-size:15px;">Który miesiąc masz skończony?</p>
+  <select id="wyborMiesiaca" style="margin-bottom:14px;"></select>
+  <p style="font-size:14px; color:var(--szary);">Czy na pewno? Po zamknięciu miesiąca przez
+    Marka wpisy zostaną zablokowane.</p>
+  <div class="p">
+    <button class="przycisk-maly" id="dialogNie" type="button">Nie</button>
+    <button class="przycisk" style="margin-top:0; padding:10px; font-size:16px;"
+            id="dialogTak" type="button">Tak, zamykam</button>
+  </div>
+</dialog>
+
+<script src="./config.js"></script>
+<script>
+'use strict';
+/* ===== ROZLICZENIE FLOTY RINKON — aplikacja kierowcy ===== */
+
+var MIESIACE_PL = ['styczeń','luty','marzec','kwiecień','maj','czerwiec',
+  'lipiec','sierpień','wrzesień','październik','listopad','grudzień'];
+var SLOWNIKI_WAZNOSC_MS = 24 * 60 * 60 * 1000;
+
+var kod = null;
+var slowniki = null;
+var edytowanyWpis = null; // null = nowy wpis; obiekt = tryb "Popraw"
+
+function el(id){ return document.getElementById(id); }
+function pokaz(id){ el(id).classList.remove('ukryte'); }
+function schowaj(id){ el(id).classList.add('ukryte'); }
+
+// ---------- start ----------
+window.addEventListener('load', function () {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js').catch(function(){});
+  }
+  var zUrl = new URLSearchParams(location.search).get('kod');
+  if (zUrl) {
+    localStorage.setItem('flota_kod', zUrl);
+    history.replaceState(null, '', location.pathname); // schowaj kod z paska
+  }
+  kod = localStorage.getItem('flota_kod');
+  if (!kod) { pokaz('widokBrakKodu'); return; }
+
+  pokaz('widokFormularz');
+  pokaz('nawigacja');
+  el('kto').textContent = localStorage.getItem('flota_kierowca') || '';
+  el('f-data').value = dzisiaj();
+  odswiezKolejkeInfo();
+
+  wczytajSlowniki(false).then(function () {
+    wypelnijFormularz();
+  });
+  if (navigator.onLine) {
+    wyslijKolejke();
+    pobierzStatus();
+    wczytajSlowniki(true).then(function(){ wypelnijFormularz(); });
+  }
+});
+window.addEventListener('online', function () { wyslijKolejke(); });
+
+// ---------- API ----------
+function apiGet(action, dodatkowe) {
+  var url = window.KONFIG.API_URL + '?token=' + encodeURIComponent(window.KONFIG.TOKEN) +
+    '&kod=' + encodeURIComponent(kod) + '&action=' + action + (dodatkowe || '');
+  return fetch(url, { redirect: 'follow' }).then(czytajJson);
+}
+function apiPost(obiekt) {
+  obiekt.token = window.KONFIG.TOKEN;
+  obiekt.kod = kod;
+  return fetch(window.KONFIG.API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(obiekt),
+    redirect: 'follow'
+  }).then(czytajJson);
+}
+function czytajJson(odp) {
+  return odp.text().then(function (tekst) {
+    try { return JSON.parse(tekst); }
+    catch (e) { throw new Error('Serwer chwilowo niedostępny'); }
+  });
+}
+
+// ---------- słowniki ----------
+function wczytajSlowniki(zSieci) {
+  var cache = null;
+  try { cache = JSON.parse(localStorage.getItem('flota_slowniki')); } catch (e) {}
+  var swieze = cache && (Date.now() - cache.czas) < SLOWNIKI_WAZNOSC_MS;
+  if (cache) slowniki = cache.dane;
+
+  if (!zSieci && swieze) return Promise.resolve();
+  if (!navigator.onLine) return Promise.resolve();
+
+  return apiGet('slowniki').then(function (d) {
+    if (d && d.ok) {
+      slowniki = d;
+      localStorage.setItem('flota_slowniki', JSON.stringify({ czas: Date.now(), dane: d }));
+    }
+  }).catch(function () {});
+}
+
+function wypelnijFormularz() {
+  if (!slowniki) {
+    el('kartaFormularz').innerHTML = '<div class="srodek">Brak internetu przy pierwszym ' +
+      'uruchomieniu — połącz się z siecią i otwórz aplikację ponownie.</div>';
+    return;
+  }
+  var opis = el('f-opis');
+  opis.innerHTML = '<option value="">— wybierz —</option>';
+  slowniki.opisy.forEach(function (o) {
+    var opt = document.createElement('option');
+    opt.value = o.nazwa; opt.textContent = o.nazwa;
+    opis.appendChild(opt);
+  });
+  var prz = el('f-przeznaczenie');
+  prz.innerHTML = '<option value="">— wybierz —</option>';
+  var inne = null;
+  slowniki.sprzet.forEach(function (s) {
+    if (s.nazwa === 'Inne') { inne = s; return; }
+    var opt = document.createElement('option');
+    opt.value = s.nazwa; opt.textContent = s.nazwa;
+    prz.appendChild(opt);
+  });
+  if (inne) {
+    var optI = document.createElement('option');
+    optI.value = 'Inne'; optI.textContent = 'Inne (wpisz szczegóły niżej)';
+    prz.appendChild(optI);
+  }
+  var bud = el('f-budowa');
+  bud.innerHTML = '<option value="">— wybierz —</option>';
+  slowniki.budowy.forEach(function (b) {
+    var opt = document.createElement('option');
+    opt.value = b; opt.textContent = b;
+    bud.appendChild(opt);
+  });
+  var ostatnia = localStorage.getItem('flota_budowa');
+  if (ostatnia) bud.value = ostatnia;
+  przelaczPola();
+}
+
+// ---------- zachowanie formularza ----------
+el('f-przeznaczenie').addEventListener('change', przelaczPola);
+el('f-opis').addEventListener('change', przelaczPola);
+
+function przelaczPola() {
+  var przezn = el('f-przeznaczenie').value;
+  var typ = '';
+  if (slowniki) {
+    for (var i = 0; i < slowniki.sprzet.length; i++) {
+      if (slowniki.sprzet[i].nazwa === przezn) { typ = slowniki.sprzet[i].typ; break; }
+    }
+  }
+  if (typ && przezn !== 'Inne') {
+    el('typSprzetu').textContent = typ;
+    pokaz('typSprzetu');
+  } else schowaj('typSprzetu');
+
+  if (przezn === 'Inne') {
+    schowaj('p-licznik');
+    pokaz('infoWym');
+    el('f-info').placeholder = 'OBOWIĄZKOWO napisz, czego dotyczy — np. 100L hidromek 1, 100L hidromek 2';
+  } else {
+    pokaz('p-licznik');
+    schowaj('infoWym');
+    el('f-info').placeholder = 'np. uwagi do tankowania (można pominąć)';
+  }
+  var opisWybrany = null;
+  if (slowniki) {
+    for (var j = 0; j < slowniki.opisy.length; j++) {
+      if (slowniki.opisy[j].nazwa === el('f-opis').value) { opisWybrany = slowniki.opisy[j]; break; }
+    }
+  }
+  if (opisWybrany && opisWybrany.czyPaliwo && przezn && przezn !== 'Inne') pokaz('licznikWym');
+  else schowaj('licznikWym');
+}
+
+function dzisiaj() {
+  var d = new Date();
+  return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' +
+    ('0' + d.getDate()).slice(-2);
+}
+function liczba(v) {
+  var s = String(v == null ? '' : v).trim().replace(/\s+/g, '').replace(',', '.');
+  if (!/^-?\d+(\.\d+)?$/.test(s)) return NaN;
+  return parseFloat(s);
+}
+
+// ---------- walidacja frontowa (lustro E001–E007) ----------
+function walidujFormularz(d) {
+  var bledy = {};
+  if (!d.dataZakupu) bledy.data = 'Podaj datę zakupu.';
+  else if (d.dataZakupu > dzisiaj()) bledy.data = 'Data nie może być z przyszłości.';
+  if (!d.opis) bledy.opis = 'Wybierz, co kupiono.';
+  var il = liczba(d.ilosc);
+  if (isNaN(il) || il <= 0) bledy.ilosc = 'Podaj ilość większą od zera (np. 45,5).';
+  var wa = liczba(d.wartosc);
+  if (isNaN(wa) || wa <= 0) bledy.wartosc = 'Podaj wartość w złotych (np. 289,99).';
+  if (!d.przeznaczenie) bledy.przeznaczenie = 'Wybierz pojazd lub sprzęt.';
+  if (!d.budowa) bledy.budowa = 'Wybierz budowę.';
+  var opisDef = null;
+  if (slowniki) {
+    for (var i = 0; i < slowniki.opisy.length; i++) {
+      if (slowniki.opisy[i].nazwa === d.opis) { opisDef = slowniki.opisy[i]; break; }
+    }
+  }
+  if (opisDef && opisDef.czyPaliwo && d.przeznaczenie && d.przeznaczenie !== 'Inne' && !d.licznik) {
+    bledy.licznik = 'Przy tankowaniu paliwa podaj stan licznika.';
+  }
+  if (d.licznik) {
+    var lc = liczba(d.licznik);
+    if (isNaN(lc) || lc < 0) bledy.licznik = 'Licznik musi być liczbą (bez minusów).';
+  }
+  if (d.przeznaczenie === 'Inne' && !d.dodatkoweInfo) {
+    bledy.info = 'Przy „Inne" napisz, czego dotyczy zakup.';
+  }
+  return bledy;
+}
+var MAPA_POL = { data:'p-data', opis:'p-opis', ilosc:'p-ilosc', wartosc:'p-wartosc',
+  przeznaczenie:'p-przeznaczenie', licznik:'p-licznik', budowa:'p-budowa', info:'p-info' };
+function pokazBledyPol(bledy) {
+  Object.keys(MAPA_POL).forEach(function (k) {
+    var pole = el(MAPA_POL[k]);
+    pole.classList.toggle('pole-blad', !!bledy[k]);
+    var b = el('b-' + (k === 'info' ? 'info' : k));
+    if (b) b.textContent = bledy[k] || '';
+  });
+}
+
+// ---------- zapis ----------
+el('formularz').addEventListener('submit', function (ev) {
+  ev.preventDefault();
+  var d = {
+    dataZakupu: el('f-data').value,
+    opis: el('f-opis').value,
+    ilosc: el('f-ilosc').value,
+    wartosc: el('f-wartosc').value,
+    przeznaczenie: el('f-przeznaczenie').value,
+    typSprzetu: el('typSprzetu').textContent || '',
+    licznik: el('f-przeznaczenie').value === 'Inne' ? '' : el('f-licznik').value,
+    budowa: el('f-budowa').value,
+    dodatkoweInfo: el('f-info').value.trim()
+  };
+  var bledy = walidujFormularz(d);
+  pokazBledyPol(bledy);
+  if (Object.keys(bledy).length) return;
+
+  localStorage.setItem('flota_budowa', d.budowa);
+  el('przyciskZapisz').disabled = true;
+
+  if (edytowanyWpis) { wyslijEdycje(d); return; }
+
+  if (!navigator.onLine) { dodajDoKolejki(d); return; }
+  apiPost(polaczZAkcja(d, 'nowy')).then(function (odp) {
+    el('przyciskZapisz').disabled = false;
+    if (odp.ok) pokazSukces('Zapisano! Numer wpisu: ' + odp.id, odp.ostrzezenia);
+    else pokazBladBackendu(odp.bledy);
+  }).catch(function () {
+    dodajDoKolejki(d);
+  });
+});
+function polaczZAkcja(d, akcja) {
+  return { action: akcja, dataZakupu: d.dataZakupu, opis: d.opis, ilosc: d.ilosc,
+    wartosc: d.wartosc, przeznaczenie: d.przeznaczenie, typSprzetu: d.typSprzetu,
+    licznik: d.licznik, budowa: d.budowa, dodatkoweInfo: d.dodatkoweInfo };
+}
+function pokazSukces(tekst, ostrzezenia) {
+  var k = el('komunikatWynik');
+  k.className = 'komunikat ' + (ostrzezenia && ostrzezenia.length ? 'uwaga' : 'ok');
+  k.innerHTML = '<b>' + tekst + '</b>' +
+    (ostrzezenia && ostrzezenia.length
+      ? '<ul>' + ostrzezenia.map(function (o) { return '<li>' + o + '</li>'; }).join('') + '</ul>'
+      : '') +
+    '<button type="button" class="przycisk-maly" style="margin-top:10px;" ' +
+    'onclick="dodajKolejne()">Dodaj kolejne tankowanie</button>';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function pokazBladBackendu(bledy) {
+  var k = el('komunikatWynik');
+  k.className = 'komunikat blad';
+  k.innerHTML = '<b>Nie zapisano:</b><ul>' +
+    (bledy || ['Nieznany błąd']).map(function (b) { return '<li>' + b + '</li>'; }).join('') +
+    '</ul>';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function dodajKolejne() {
+  el('komunikatWynik').className = 'komunikat';
+  el('f-ilosc').value = ''; el('f-wartosc').value = '';
+  el('f-licznik').value = ''; el('f-info').value = '';
+  pokazBledyPol({});
+  window.scrollTo({ top: 0 });
+}
+
+// ---------- kolejka offline ----------
+function kolejka() {
+  try { return JSON.parse(localStorage.getItem('flota_kolejka')) || []; }
+  catch (e) { return []; }
+}
+function zapiszKolejke(k) { localStorage.setItem('flota_kolejka', JSON.stringify(k)); }
+function dodajDoKolejki(d) {
+  var k = kolejka();
+  k.push({ tmp: Date.now(), dane: d, status: 'oczekuje', blad: '' });
+  zapiszKolejke(k);
+  el('przyciskZapisz').disabled = false;
+  pokazSukces('Brak internetu — wpis zapisany w telefonie i zostanie wysłany automatycznie.', []);
+  odswiezKolejkeInfo();
+}
+var wysylanie = false;
+function wyslijKolejke() {
+  if (wysylanie) return;
+  var k = kolejka();
+  var oczekujace = k.filter(function (w) { return w.status === 'oczekuje'; });
+  if (!oczekujace.length) { odswiezKolejkeInfo(); return; }
+  wysylanie = true;
+  (function nastepny(i) {
+    if (i >= k.length) {
+      wysylanie = false;
+      zapiszKolejke(k.filter(function (w) { return w.status !== 'wyslany'; }));
+      odswiezKolejkeInfo();
+      return;
+    }
+    if (k[i].status !== 'oczekuje') { nastepny(i + 1); return; }
+    apiPost(polaczZAkcja(k[i].dane, 'nowy')).then(function (odp) {
+      if (odp.ok) k[i].status = 'wyslany';
+      else { k[i].status = 'odrzucony'; k[i].blad = (odp.bledy || []).join('; '); }
+      zapiszKolejke(k);
+      nastepny(i + 1);
+    }).catch(function () {
+      wysylanie = false; // sieć padła — spróbujemy później
+      zapiszKolejke(k);
+      odswiezKolejkeInfo();
+    });
+  })(0);
+}
+function odswiezKolejkeInfo() {
+  var k = kolejka();
+  var oczekuje = k.filter(function (w) { return w.status === 'oczekuje'; }).length;
+  var odrzucone = k.filter(function (w) { return w.status === 'odrzucony'; });
+  var i = el('kolejkaInfo');
+  if (!oczekuje && !odrzucone.length) { i.style.display = 'none'; return; }
+  i.style.display = 'block';
+  var html = '';
+  if (oczekuje) html += '⏳ Wpisy czekające na wysłanie: <b>' + oczekuje + '</b>';
+  odrzucone.forEach(function (w, idx) {
+    html += '<div class="odrzucony"><b>Wpis odrzucony</b> (' + w.dane.dataZakupu + ', ' +
+      w.dane.ilosc + ' / ' + w.dane.wartosc + ' zł): ' + w.blad +
+      '<div class="p">' +
+      '<button class="przycisk-maly" onclick="ponowWpis(' + w.tmp + ')">Spróbuj ponownie</button>' +
+      '<button class="przycisk-maly" style="color:var(--blad); border-color:var(--blad);" ' +
+      'onclick="usunWpis(' + w.tmp + ')">Usuń</button></div></div>';
+  });
+  i.innerHTML = html;
+}
+function ponowWpis(tmp) {
+  var k = kolejka();
+  k.forEach(function (w) { if (w.tmp === tmp) { w.status = 'oczekuje'; w.blad = ''; } });
+  zapiszKolejke(k);
+  odswiezKolejkeInfo();
+  if (navigator.onLine) wyslijKolejke();
+}
+function usunWpis(tmp) {
+  zapiszKolejke(kolejka().filter(function (w) { return w.tmp !== tmp; }));
+  odswiezKolejkeInfo();
+}
+
+// ---------- baner + imię ----------
+function pobierzStatus() {
+  apiGet('status').then(function (d) {
+    if (!d.ok) return;
+    if (d.kierowca) {
+      localStorage.setItem('flota_kierowca', d.kierowca);
+      el('kto').textContent = d.kierowca;
+    }
+    if (d.zalegleMiesiace && d.zalegleMiesiace.length) {
+      var m = d.zalegleMiesiace[0];
+      var nazwa = MIESIACE_PL[parseInt(m.substring(5), 10) - 1] + ' ' + m.substring(0, 4);
+      el('baner').innerHTML = '<b>Skończył się ' + nazwa + '</b>' +
+        'Masz wpisy za ten miesiąc — jeśli to już wszystkie, kliknij „Zamykam miesiąc".';
+      pokaz('baner');
+    } else schowaj('baner');
+  }).catch(function () {});
+}
+
+// ---------- Zamykam miesiąc ----------
+el('przyciskMiesiac').addEventListener('click', function () {
+  if (!navigator.onLine) { alert('„Zamykam miesiąc" wymaga internetu.'); return; }
+  var sel = el('wyborMiesiaca');
+  sel.innerHTML = '';
+  var teraz = new Date();
+  for (var i = 1; i <= 3; i++) {
+    var d = new Date(teraz.getFullYear(), teraz.getMonth() - i, 1);
+    var v = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2);
+    var opt = document.createElement('option');
+    opt.value = v;
+    opt.textContent = MIESIACE_PL[d.getMonth()] + ' ' + d.getFullYear();
+    sel.appendChild(opt);
+  }
+  var dBiez = new Date(teraz.getFullYear(), teraz.getMonth(), 1);
+  var vBiez = dBiez.getFullYear() + '-' + ('0' + (dBiez.getMonth() + 1)).slice(-2);
+  var optB = document.createElement('option');
+  optB.value = vBiez;
+  optB.textContent = MIESIACE_PL[dBiez.getMonth()] + ' ' + dBiez.getFullYear() + ' (bieżący)';
+  sel.appendChild(optB);
+  el('dialogMiesiac').showModal();
+});
+el('dialogNie').addEventListener('click', function () { el('dialogMiesiac').close(); });
+el('dialogTak').addEventListener('click', function () {
+  var m = el('wyborMiesiaca').value;
+  el('dialogTak').disabled = true;
+  apiPost({ action: 'deklaracja', miesiac: m }).then(function (odp) {
+    el('dialogTak').disabled = false;
+    el('dialogMiesiac').close();
+    if (odp.ok) {
+      pokazSukces('Zgłoszono zamknięcie miesiąca. Dziękujemy!', []);
+      schowaj('baner');
+      pobierzStatus();
+    } else pokazBladBackendu(odp.bledy);
+  }).catch(function () {
+    el('dialogTak').disabled = false;
+    el('dialogMiesiac').close();
+    pokazBladBackendu(['Serwer chwilowo niedostępny — spróbuj za chwilę.']);
+  });
+});
+
+// ---------- Moje wpisy ----------
+el('nawNowy').addEventListener('click', function () { przelaczWidok('nowy'); });
+el('nawWpisy').addEventListener('click', function () { przelaczWidok('wpisy'); });
+function przelaczWidok(ktory) {
+  el('nawNowy').classList.toggle('aktywna', ktory === 'nowy');
+  el('nawWpisy').classList.toggle('aktywna', ktory === 'wpisy');
+  if (ktory === 'nowy') { pokaz('widokFormularz'); schowaj('widokWpisy'); }
+  else { schowaj('widokFormularz'); pokaz('widokWpisy'); wczytajWpisy(); }
+  window.scrollTo({ top: 0 });
+}
+function wczytajWpisy() {
+  var lista = el('listaWpisow');
+  if (!navigator.onLine) {
+    lista.innerHTML = '<div class="srodek">„Moje wpisy" wymagają internetu.</div>';
+    return;
+  }
+  lista.innerHTML = '<div class="srodek">Ładowanie…</div>';
+  apiGet('mojeWpisy').then(function (d) {
+    if (!d.ok) { lista.innerHTML = '<div class="srodek">' + (d.bledy || ['Błąd']).join('; ') + '</div>'; return; }
+    if (d.kierowca) el('kto').textContent = d.kierowca;
+    if (!d.wpisy.length) {
+      lista.innerHTML = '<div class="srodek">Brak wpisów z ostatnich 30 dni.</div>';
+      return;
+    }
+    lista.innerHTML = '';
+    d.wpisy.forEach(function (w) {
+      var div = document.createElement('div');
+      div.className = 'wpis' + (w.status === 'Anulowany' ? ' anulowany' : '');
+      var akcja = w.status === 'Anulowany' ? '' :
+        (w.edytowalny
+          ? '<div class="akcja"><button class="przycisk-maly" data-id="' + w.id + '">✏️ Popraw</button></div>'
+          : '<div class="akcja klodka">🔒 Edycja niemożliwa — skontaktuj się z Markiem</div>');
+      div.innerHTML =
+        '<div class="linia1"><span>' + w.dataZakupu + ' · ' + w.przeznaczenie + '</span>' +
+        '<span>' + String(w.wartosc).replace('.', ',') + ' zł</span></div>' +
+        '<div class="linia2">' + w.opis + ' · ' + String(w.ilosc).replace('.', ',') +
+        (w.opis === 'AdBlue' || w.opis === 'Płyny/oleje' || w.opis === 'Inne' ? ' szt/L' : ' L') +
+        ' · ' + w.budowa + (w.dodatkoweInfo ? ' · ' + w.dodatkoweInfo : '') + '</div>' + akcja;
+      var btn = div.querySelector('button');
+      if (btn) btn.addEventListener('click', function () { rozpocznijEdycje(w); });
+      lista.appendChild(div);
+    });
+  }).catch(function () {
+    lista.innerHTML = '<div class="srodek">Serwer chwilowo niedostępny.</div>';
+  });
+}
+
+// ---------- edycja ----------
+function rozpocznijEdycje(w) {
+  edytowanyWpis = w;
+  przelaczWidok('nowy');
+  el('naglowekFormularza').textContent = 'Poprawiam wpis ' + w.id;
+  el('przyciskZapisz').textContent = 'ZAPISZ POPRAWKĘ';
+  pokaz('przyciskAnulujEdycje');
+  schowaj('kartaMiesiac');
+  el('komunikatWynik').className = 'komunikat';
+  el('f-data').value = w.dataZakupu;
+  el('f-opis').value = w.opis;
+  el('f-ilosc').value = String(w.ilosc).replace('.', ',');
+  el('f-wartosc').value = String(w.wartosc).replace('.', ',');
+  el('f-przeznaczenie').value = w.przeznaczenie;
+  el('f-licznik').value = w.licznik === '' ? '' : String(w.licznik);
+  el('f-budowa').value = w.budowa;
+  el('f-info').value = w.dodatkoweInfo;
+  przelaczPola();
+}
+el('przyciskAnulujEdycje').addEventListener('click', zakonczEdycje);
+function zakonczEdycje() {
+  edytowanyWpis = null;
+  el('naglowekFormularza').textContent = 'Nowe tankowanie';
+  el('przyciskZapisz').textContent = 'ZAPISZ';
+  schowaj('przyciskAnulujEdycje');
+  pokaz('kartaMiesiac');
+  el('formularz').reset();
+  el('f-data').value = dzisiaj();
+  var ostatnia = localStorage.getItem('flota_budowa');
+  if (ostatnia) el('f-budowa').value = ostatnia;
+  pokazBledyPol({});
+  przelaczPola();
+}
+function wyslijEdycje(d) {
+  if (!navigator.onLine) {
+    el('przyciskZapisz').disabled = false;
+    pokazBladBackendu(['Poprawianie wpisu wymaga internetu.']);
+    return;
+  }
+  var w = edytowanyWpis;
+  var pola = {};
+  if (d.dataZakupu !== w.dataZakupu) pola.dataZakupu = d.dataZakupu;
+  if (liczba(d.ilosc) !== Number(w.ilosc)) pola.ilosc = d.ilosc;
+  if (liczba(d.wartosc) !== Number(w.wartosc)) pola.wartosc = d.wartosc;
+  if (d.opis !== w.opis) pola.opis = d.opis;
+  var staryLicznik = w.licznik === '' ? '' : String(w.licznik);
+  if (String(d.licznik) !== staryLicznik) pola.licznik = d.licznik;
+  if (d.przeznaczenie !== w.przeznaczenie) { pola.przeznaczenie = d.przeznaczenie; pola.typSprzetu = d.typSprzetu; }
+  if (d.budowa !== w.budowa) pola.budowa = d.budowa;
+  if (d.dodatkoweInfo !== w.dodatkoweInfo) pola.dodatkoweInfo = d.dodatkoweInfo;
+
+  if (!Object.keys(pola).length) {
+    el('przyciskZapisz').disabled = false;
+    pokazBladBackendu(['Nic nie zmieniono.']);
+    return;
+  }
+  apiPost({ action: 'edycja', id: w.id, pola: pola }).then(function (odp) {
+    el('przyciskZapisz').disabled = false;
+    if (odp.ok) {
+      zakonczEdycje();
+      pokazSukces('Poprawiono wpis ' + odp.id + '.', odp.ostrzezenia);
+    } else pokazBladBackendu(odp.bledy);
+  }).catch(function () {
+    el('przyciskZapisz').disabled = false;
+    pokazBladBackendu(['Serwer chwilowo niedostępny — spróbuj za chwilę.']);
+  });
+}
+</script>
+</body>
+</html>
