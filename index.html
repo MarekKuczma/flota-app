@@ -7,17 +7,21 @@
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" href="./ikona-192.png">
 <link rel="apple-touch-icon" href="./ikona-192.png">
-<meta name="theme-color" content="#1a73e8">
+<meta name="theme-color" content="#2563eb">
 <style>
   :root{
-    --akcent:#1a73e8; --akcent-c:#155ab6; --tlo:#f4f6f8; --karta:#ffffff;
+    --akcent:#2563eb; --akcent-c:#1e4fc4; --fiolet:#7c3aed;
+    --gradient:linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    --tlo:#f4f6f8; --karta:#ffffff;
     --tekst:#1f2937; --szary:#6b7280; --blad:#d93025; --ok:#188038; --uwaga:#b45309;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0; background:var(--tlo); color:var(--tekst);
     font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:17px;}
-  header{background:var(--akcent); color:#fff; padding:14px 16px;
-    padding-top:calc(14px + env(safe-area-inset-top)); position:sticky; top:0; z-index:5;}
+  header{background:var(--gradient); color:#fff; padding:14px 16px;
+    padding-top:calc(14px + env(safe-area-inset-top)); position:sticky; top:0; z-index:5;
+    display:flex; align-items:center; gap:12px;}
+  header img{width:40px; height:40px; border-radius:10px; flex:none;}
   header h1{margin:0; font-size:19px; font-weight:600;}
   header .kto{font-size:14px; opacity:.9; margin-top:2px;}
   main{max-width:560px; margin:0 auto; padding:14px 14px 90px;}
@@ -27,9 +31,12 @@
   .karta{background:var(--karta); border-radius:14px; padding:16px;
     box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:14px;}
   .metryki{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;}
-  .metryka{background:var(--tlo); border-radius:10px; padding:12px;}
+  .metryka{background:linear-gradient(135deg, #eef2ff 0%, #f5f0ff 100%);
+    border-radius:10px; padding:12px;}
   .metryka .m-et{font-size:13px; color:var(--szary);}
-  .metryka .m-w{font-size:24px; font-weight:600; margin-top:2px;}
+  .metryka .m-w{font-size:24px; font-weight:600; margin-top:2px;
+    background:var(--gradient); -webkit-background-clip:text;
+    background-clip:text; -webkit-text-fill-color:transparent; color:var(--akcent);}
   .powitanie{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;}
   .powitanie .p1{font-size:18px; font-weight:600;}
   .powitanie .p2{font-size:14px; color:var(--szary);}
@@ -48,10 +55,11 @@
   .pole-blad input,.pole-blad select,.pole-blad textarea{border-color:var(--blad);}
   .pole-blad .blad-pola{display:block;}
   button{font-family:inherit; cursor:pointer;}
-  .przycisk{display:block; width:100%; background:var(--akcent); color:#fff;
+  .przycisk{display:block; width:100%; background:var(--gradient); color:#fff;
     font-size:19px; font-weight:600; border:none; border-radius:12px;
-    padding:15px; min-height:54px; margin-top:18px;}
-  .przycisk:active{background:var(--akcent-c);}
+    padding:15px; min-height:54px; margin-top:18px;
+    box-shadow:0 4px 12px rgba(37,99,235,.3);}
+  .przycisk:active{opacity:.85; box-shadow:0 2px 6px rgba(37,99,235,.3);}
   .przycisk[disabled]{opacity:.6;}
   .przycisk-drugi{display:block; width:100%; background:#fff; color:var(--akcent);
     border:1.5px solid var(--akcent); font-size:16px; font-weight:600;
@@ -100,8 +108,11 @@
 </head>
 <body>
 <header>
-  <h1 id="tytul">Rozliczenie Floty Rinkon</h1>
-  <div class="kto" id="kto"></div>
+  <img src="./ikona-192.png" alt="Rinkon">
+  <div>
+    <h1 id="tytul">Rozliczenie Floty Rinkon</h1>
+    <div class="kto" id="kto"></div>
+  </div>
 </header>
 
 <main>
