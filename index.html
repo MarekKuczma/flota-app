@@ -12,8 +12,13 @@
   :root{
     --akcent:#f97316; --akcent-c:#c2410c; --fiolet:#dc2626;
     --gradient:linear-gradient(135deg, #fbbf24 0%, #f97316 55%, #dc2626 100%);
-    --tlo:#f4f6f8; --karta:#ffffff;
+    --tlo:#f4f6f8; --karta:#ffffff; --input-tlo:#ffffff; --input-brzeg:#d1d5db;
     --tekst:#1f2937; --szary:#6b7280; --blad:#d93025; --ok:#188038; --uwaga:#b45309;
+    --linia:#e5e7eb;
+  }
+  [data-motyw="ciemny"]{
+    --tlo:#0f1115; --karta:#1c1f26; --input-tlo:#262b34; --input-brzeg:#3a3f4a;
+    --tekst:#f0f1f3; --szary:#9aa1ad; --linia:#333844;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0; background:var(--tlo); color:var(--tekst);
@@ -24,6 +29,9 @@
   header img{width:40px; height:40px; border-radius:10px; flex:none;}
   header h1{margin:0; font-size:19px; font-weight:600;}
   header .kto{font-size:14px; opacity:.9; margin-top:2px;}
+  header .naglowek-tekst{flex:1; min-width:0;}
+  #motywBtn{background:rgba(255,255,255,.2); border:none; border-radius:10px;
+    width:40px; height:40px; font-size:18px; color:#fff; flex:none; min-height:auto;}
   main{max-width:560px; margin:0 auto; padding:14px 14px 90px;}
   .baner{background:#fef3c7; border:1px solid #f59e0b; color:#92400e;
     border-radius:12px; padding:12px 14px; margin-bottom:12px; font-size:15px;}
@@ -41,12 +49,13 @@
   .powitanie .p1{font-size:18px; font-weight:600;}
   .powitanie .p2{font-size:14px; color:var(--szary);}
   label{display:block; font-size:14px; font-weight:600; color:var(--szary);
-    margin:22px 0 6px;}
-  label:first-child{margin-top:0;}
+    margin:0 0 6px;}
+  .pole{margin-top:0;}
+  .pole + .pole{margin-top:22px;}
   label .wym{color:var(--blad);}
   input,select,textarea{width:100%; font-size:18px; padding:12px;
-    border:1.5px solid #d1d5db; border-radius:10px; background:#fff; color:var(--tekst);
-    min-height:48px;}
+    border:1.5px solid var(--input-brzeg); border-radius:10px; background:var(--input-tlo);
+    color:var(--tekst); min-height:48px;}
   input:focus,select:focus,textarea:focus{outline:none; border-color:var(--akcent);}
   textarea{min-height:72px; resize:vertical;}
   .etykieta-typ{display:inline-block; background:#fff1e6; color:var(--akcent-c);
@@ -80,7 +89,7 @@
   .komunikat.blad{display:block; background:#fce8e6; border:1px solid var(--blad); color:#a50e0e;}
   .komunikat.uwaga{display:block; background:#fef3c7; border:1px solid #f59e0b; color:#92400e;}
   .komunikat ul{margin:6px 0 0; padding-left:20px;}
-  .wpis{border-bottom:1px solid #e5e7eb; padding:12px 2px;}
+  .wpis{border-bottom:1px solid var(--linia); padding:12px 2px;}
   .wpis:last-child{border-bottom:none;}
   .wpis .linia1{display:flex; justify-content:space-between; font-weight:600; font-size:16px;}
   .wpis .linia2{color:var(--szary); font-size:14px; margin-top:3px;}
@@ -94,8 +103,8 @@
   .sukces-ikona{font-size:56px; text-align:center; margin:10px 0 0;}
   .sukces-tekst{text-align:center; font-size:18px; font-weight:600; margin:6px 0 2px;}
   .sukces-id{text-align:center; color:var(--szary); font-size:15px; margin:0 0 8px;}
-  nav{position:fixed; bottom:0; left:0; right:0; background:#fff;
-    border-top:1px solid #e5e7eb; display:flex; z-index:5;
+  nav{position:fixed; bottom:0; left:0; right:0; background:var(--karta);
+    border-top:1px solid var(--linia); display:flex; z-index:5;
     padding-bottom:env(safe-area-inset-bottom);}
   nav button{flex:1; background:none; border:none; padding:12px 0 10px;
     font-size:13px; font-weight:600; color:var(--szary); min-height:56px;}
@@ -104,20 +113,25 @@
   .ukryte{display:none !important;}
   .srodek{text-align:center; padding:40px 20px; color:var(--szary);}
   h2{font-size:18px; margin:0 0 10px;}
-  dialog{border:none; border-radius:14px; padding:20px; max-width:340px; width:90%;}
+  dialog{border:none; border-radius:14px; padding:20px; max-width:340px; width:90%;
+    background:var(--karta); color:var(--tekst);}
   dialog::backdrop{background:rgba(0,0,0,.4);}
   dialog p{margin:0 0 14px; font-size:16px;}
   dialog .p{display:flex; gap:10px;}
   dialog .p button{flex:1;}
+  .zgoda{display:flex; align-items:center; gap:8px; font-size:14px; font-weight:400;
+    color:var(--tekst); margin:0 0 10px;}
+  .zgoda input{width:auto; min-height:auto; flex:none;}
 </style>
 </head>
 <body>
 <header>
   <img src="./ikona-192.png" alt="Rinkon">
-  <div>
+  <div class="naglowek-tekst">
     <h1 id="tytul">Rozliczenie Floty Rinkon</h1>
     <div class="kto" id="kto"></div>
   </div>
+  <button type="button" id="motywBtn" aria-label="Zmień motyw">🌙</button>
 </header>
 
 <main>
@@ -189,6 +203,24 @@
           <input type="date" id="f-data">
           <div class="blad-pola" id="b-data"></div>
         </div>
+        <div class="pole" id="p-przeznaczenie">
+          <label>Do czego (pojazd / sprzęt) <span class="wym">*</span></label>
+          <select id="f-przeznaczenie"></select>
+          <span class="etykieta-typ ukryte" id="typSprzetu"></span>
+          <div class="blad-pola" id="b-przeznaczenie"></div>
+        </div>
+        <div class="pole" id="p-licznik">
+          <label>Stan licznika / motogodziny <span class="wym ukryte" id="licznikWym">*</span></label>
+          <input type="text" inputmode="numeric" id="f-licznik" placeholder="np. 184632">
+          <div class="blad-pola" id="b-licznik"></div>
+        </div>
+        <div class="pole ukryte" id="p-pary">
+          <label>Tankowanie łączone — sprzęt i litry <span class="wym">*</span></label>
+          <div id="paryLista"></div>
+          <button type="button" class="przycisk-maly" id="paryDodaj">+ Dodaj kolejny sprzęt</button>
+          <div id="paryPodglad" style="font-size:14px; color:var(--szary); margin-top:8px;"></div>
+          <div class="blad-pola" id="b-pary"></div>
+        </div>
         <div class="pole" id="p-opis">
           <label>Co kupiono <span class="wym">*</span></label>
           <select id="f-opis"></select>
@@ -204,17 +236,6 @@
           <input type="text" inputmode="decimal" id="f-wartosc" placeholder="np. 289,99">
           <div class="blad-pola" id="b-wartosc"></div>
         </div>
-        <div class="pole" id="p-przeznaczenie">
-          <label>Do czego (pojazd / sprzęt) <span class="wym">*</span></label>
-          <select id="f-przeznaczenie"></select>
-          <span class="etykieta-typ ukryte" id="typSprzetu"></span>
-          <div class="blad-pola" id="b-przeznaczenie"></div>
-        </div>
-        <div class="pole" id="p-licznik">
-          <label>Stan licznika / motogodziny <span class="wym ukryte" id="licznikWym">*</span></label>
-          <input type="text" inputmode="numeric" id="f-licznik" placeholder="np. 184632">
-          <div class="blad-pola" id="b-licznik"></div>
-        </div>
         <div class="pole" id="p-budowa">
           <label>Budowa <span class="wym">*</span></label>
           <select id="f-budowa"></select>
@@ -222,11 +243,6 @@
         </div>
         <div class="pole" id="p-info">
           <label>Dodatkowe informacje <span class="wym ukryte" id="infoWym">*</span></label>
-          <div id="paryKontener" class="ukryte">
-            <div id="paryLista"></div>
-            <button type="button" class="przycisk-maly" id="paryDodaj">+ Dodaj kolejny sprzęt</button>
-            <div id="paryPodglad" style="font-size:14px; color:var(--szary); margin-top:8px;"></div>
-          </div>
           <textarea id="f-info" placeholder="np. uwagi do tankowania (można pominąć)"></textarea>
           <div class="blad-pola" id="b-info"></div>
         </div>
@@ -240,6 +256,7 @@
   <div id="widokWpisy" class="ukryte">
     <div class="karta">
       <h2>Moje wpisy (ostatnie 30 dni)</h2>
+      <label class="zgoda"><input type="checkbox" id="pokazAnulowane"> Pokaż anulowane</label>
       <div id="listaWpisow"><div class="srodek">Ładowanie…</div></div>
     </div>
   </div>
@@ -280,6 +297,20 @@ var edytowanyWpis = null;
 function el(id){ return document.getElementById(id); }
 function pokaz(id){ el(id).classList.remove('ukryte'); }
 function schowaj(id){ el(id).classList.add('ukryte'); }
+
+// ---------- motyw (jasny/ciemny) ----------
+function wczytajMotyw() {
+  var m = localStorage.getItem('flota_motyw') || 'jasny';
+  document.documentElement.setAttribute('data-motyw', m);
+  el('motywBtn').textContent = m === 'ciemny' ? '☀️' : '🌙';
+}
+el('motywBtn').addEventListener('click', function () {
+  var obecny = document.documentElement.getAttribute('data-motyw') === 'ciemny' ? 'ciemny' : 'jasny';
+  var nowy = obecny === 'ciemny' ? 'jasny' : 'ciemny';
+  localStorage.setItem('flota_motyw', nowy);
+  wczytajMotyw();
+});
+wczytajMotyw();
 
 // ---------- start ----------
 window.addEventListener('load', function () {
@@ -363,6 +394,18 @@ function opisInfo(nazwa) {
   return null;
 }
 
+// ---------- częstość wyboru sprzętu (podpowiedzi w dropdownie) ----------
+function pobierzCzestosc_() {
+  try { return JSON.parse(localStorage.getItem('flota_czestosc_sprzet')) || {}; }
+  catch (e) { return {}; }
+}
+function zapiszWyborSprzetu_(nazwa) {
+  if (!nazwa) return;
+  var cz = pobierzCzestosc_();
+  cz[nazwa] = (cz[nazwa] || 0) + 1;
+  localStorage.setItem('flota_czestosc_sprzet', JSON.stringify(cz));
+}
+
 function wypelnijFormularz() {
   if (!slowniki) {
     el('kartaFormularz').innerHTML = '<div class="srodek">Brak internetu przy pierwszym ' +
@@ -379,13 +422,33 @@ function wypelnijFormularz() {
   var prz = el('f-przeznaczenie');
   prz.innerHTML = '<option value="">— wybierz —</option>';
   var koncowe = [];
+  var zwykle = [];
   slowniki.sprzet.forEach(function (s) {
     if (s.nazwa === 'Inne' || s.typ === 'Mix') { koncowe.push(s); return; }
+    zwykle.push(s);
+  });
+  function opcjaSprzetu_(s) {
     var opt = document.createElement('option');
     opt.value = s.nazwa;
     opt.textContent = s.model ? (s.model + ' ' + s.nazwa) : s.nazwa;
-    prz.appendChild(opt);
-  });
+    return opt;
+  }
+  var czestosc = pobierzCzestosc_();
+  var czeste = zwykle.filter(function (s) { return czestosc[s.nazwa] > 0; })
+    .sort(function (a, b) { return (czestosc[b.nazwa] || 0) - (czestosc[a.nazwa] || 0); })
+    .slice(0, 5);
+  if (czeste.length) {
+    var gCzeste = document.createElement('optgroup');
+    gCzeste.label = 'Często wybierane';
+    czeste.forEach(function (s) { gCzeste.appendChild(opcjaSprzetu_(s)); });
+    prz.appendChild(gCzeste);
+    var gWszystkie = document.createElement('optgroup');
+    gWszystkie.label = 'Wszystkie';
+    zwykle.forEach(function (s) { gWszystkie.appendChild(opcjaSprzetu_(s)); });
+    prz.appendChild(gWszystkie);
+  } else {
+    zwykle.forEach(function (s) { prz.appendChild(opcjaSprzetu_(s)); });
+  }
   koncowe.forEach(function (s) {
     var opt = document.createElement('option');
     opt.value = s.nazwa;
@@ -438,22 +501,21 @@ function przelaczPola() {
   else schowaj('p-licznik');
 
   if (czyMix(przezn)) {
-    pokaz('infoWym');
-    el('f-info').classList.add('ukryte');
-    pokaz('paryKontener');
+    schowaj('p-info');
+    pokaz('p-pary');
     if (!paryStan.length) paryStan = [{ sprzet: '', litry: '' }];
     rysujPary();
     odswiezPodgladPar();
   } else if (czyInfoWymagane(przezn)) {
+    pokaz('p-info');
     pokaz('infoWym');
-    el('f-info').classList.remove('ukryte');
-    schowaj('paryKontener');
+    schowaj('p-pary');
     paryStan = [];
     el('f-info').placeholder = 'OBOWIĄZKOWO napisz, czego dotyczy';
   } else {
+    pokaz('p-info');
     schowaj('infoWym');
-    el('f-info').classList.remove('ukryte');
-    schowaj('paryKontener');
+    schowaj('p-pary');
     paryStan = [];
     el('f-info').placeholder = 'np. uwagi do tankowania (można pominąć)';
   }
@@ -549,11 +611,17 @@ el('paryDodaj').addEventListener('click', function () {
   odswiezPodgladPar();
 });
 
-// ---------- jednostka ilości w listach ----------
+// ---------- jednostka i format ilości ----------
 function jednostkaOpisu(nazwaOpisu) {
   var o = opisInfo(nazwaOpisu);
   if (!o) return '';
   return o.czyPaliwo ? 'l' : 'szt.';
+}
+function formatIlosc_(v, nazwaOpisu) {
+  var o = opisInfo(nazwaOpisu);
+  if (o && o.czyPaliwo) return formatKwote_(v);
+  var n = Number(v);
+  return isNaN(n) ? String(v) : String(Math.round(n));
 }
 
 function dzisiaj() {
@@ -565,6 +633,11 @@ function liczba(v) {
   var s = String(v == null ? '' : v).trim().replace(/\s+/g, '').replace(',', '.');
   if (!/^-?\d+(\.\d+)?$/.test(s)) return NaN;
   return parseFloat(s);
+}
+function formatKwote_(v) {
+  var n = Number(v);
+  if (isNaN(n)) return String(v);
+  return n.toFixed(2).replace('.', ',');
 }
 
 // ---------- walidacja frontowa ----------
@@ -604,10 +677,13 @@ function walidujFormularz(d) {
 var MAPA_POL = { data:'p-data', opis:'p-opis', ilosc:'p-ilosc', wartosc:'p-wartosc',
   przeznaczenie:'p-przeznaczenie', licznik:'p-licznik', budowa:'p-budowa', info:'p-info' };
 function pokazBledyPol(bledy) {
+  var wMix = czyMix(el('f-przeznaczenie').value);
   Object.keys(MAPA_POL).forEach(function (k) {
-    var pole = el(MAPA_POL[k]);
+    var poleId = (k === 'info' && wMix) ? 'p-pary' : MAPA_POL[k];
+    var bladId = (k === 'info' && wMix) ? 'b-pary' : ('b-' + k);
+    var pole = el(poleId);
     pole.classList.toggle('pole-blad', !!bledy[k]);
-    var b = el('b-' + k);
+    var b = el(bladId);
     if (b) b.textContent = bledy[k] || '';
   });
 }
@@ -633,6 +709,7 @@ el('formularz').addEventListener('submit', function (ev) {
   if (Object.keys(bledy).length) return;
 
   localStorage.setItem('flota_budowa', d.budowa);
+  if (!edytowanyWpis) zapiszWyborSprzetu_(d.przeznaczenie);
   el('przyciskZapisz').disabled = true;
 
   if (edytowanyWpis) { wyslijEdycje(d); return; }
@@ -839,7 +916,7 @@ function rysujDashboard() {
     div.className = 'wpis';
     div.innerHTML = '<div class="linia1"><span>' + w.dataZakupu.substring(5).split('-').reverse().join('.') +
       ' · ' + w.przeznaczenie + '</span><span>' + String(w.wartosc).replace('.', ',') + ' zł</span></div>' +
-      '<div class="linia2">' + w.opis + ' · ' + String(w.ilosc).replace('.', ',') +
+      '<div class="linia2">' + w.opis + ' · ' + formatIlosc_(w.ilosc, w.opis) +
       (jednostkaOpisu(w.opis) ? ' ' + jednostkaOpisu(w.opis) : '') + ' · ' + w.budowa + '</div>';
     lista.appendChild(div);
   });
@@ -905,6 +982,7 @@ function przelaczWidok(ktory) {
 }
 
 // ---------- Moje wpisy ----------
+var ostatnieWpisy = [];
 function wczytajWpisy() {
   var lista = el('listaWpisow');
   if (!navigator.onLine) {
@@ -916,37 +994,51 @@ function wczytajWpisy() {
     if (!d.ok) { lista.innerHTML = '<div class="srodek">' + (d.bledy || ['Błąd']).join('; ') + '</div>'; return; }
     localStorage.setItem('flota_wpisy', JSON.stringify({ czas: Date.now(), wpisy: d.wpisy }));
     if (d.kierowca) el('kto').textContent = d.kierowca;
-    if (!d.wpisy.length) {
-      lista.innerHTML = '<div class="srodek">Brak wpisów z ostatnich 30 dni.</div>';
-      return;
-    }
-    lista.innerHTML = '';
-    d.wpisy.forEach(function (w) {
-      var div = document.createElement('div');
-      div.className = 'wpis' + (w.status === 'Anulowany' ? ' anulowany' : '');
-      var akcja = '';
-      if (w.status !== 'Anulowany') {
-        akcja = w.edytowalny
-          ? '<div class="akcja"><button class="przycisk-maly btn-popraw">✏️ Popraw</button>' +
-            '<button class="przycisk-czerwony btn-anuluj">🗑 Anuluj wpis</button></div>'
-          : '<div class="akcja klodka">🔒 Edycja niemożliwa — skontaktuj się z Markiem</div>';
-      }
-      div.innerHTML =
-        '<div class="linia1"><span>' + w.dataZakupu + ' · ' + w.przeznaczenie + '</span>' +
-        '<span>' + String(w.wartosc).replace('.', ',') + ' zł</span></div>' +
-        '<div class="linia2">' + w.opis + ' · ' + String(w.ilosc).replace('.', ',') +
-        (jednostkaOpisu(w.opis) ? ' ' + jednostkaOpisu(w.opis) : '') +
-        ' · ' + w.budowa + (w.dodatkoweInfo ? ' · ' + w.dodatkoweInfo : '') + '</div>' + akcja;
-      var bp = div.querySelector('.btn-popraw');
-      if (bp) bp.addEventListener('click', function () { rozpocznijEdycje(w); });
-      var ba = div.querySelector('.btn-anuluj');
-      if (ba) ba.addEventListener('click', function () { anulujWpis(w); });
-      lista.appendChild(div);
-    });
+    ostatnieWpisy = d.wpisy;
+    renderujListeWpisow();
   }).catch(function () {
     lista.innerHTML = '<div class="srodek">Serwer chwilowo niedostępny.</div>';
   });
 }
+function renderujListeWpisow() {
+  var lista = el('listaWpisow');
+  var pokazujAnulowane = el('pokazAnulowane').checked;
+  var wpisy = ostatnieWpisy.filter(function (w) {
+    return pokazujAnulowane || w.status !== 'Anulowany';
+  });
+  if (!ostatnieWpisy.length) {
+    lista.innerHTML = '<div class="srodek">Brak wpisów z ostatnich 30 dni.</div>';
+    return;
+  }
+  if (!wpisy.length) {
+    lista.innerHTML = '<div class="srodek">Brak wpisów do pokazania (są tylko anulowane — zaznacz „Pokaż anulowane").</div>';
+    return;
+  }
+  lista.innerHTML = '';
+  wpisy.forEach(function (w) {
+    var div = document.createElement('div');
+    div.className = 'wpis' + (w.status === 'Anulowany' ? ' anulowany' : '');
+    var akcja = '';
+    if (w.status !== 'Anulowany') {
+      akcja = w.edytowalny
+        ? '<div class="akcja"><button class="przycisk-maly btn-popraw">✏️ Popraw</button>' +
+          '<button class="przycisk-czerwony btn-anuluj">🗑 Anuluj wpis</button></div>'
+        : '<div class="akcja klodka">🔒 Edycja niemożliwa — skontaktuj się z Markiem</div>';
+    }
+    div.innerHTML =
+      '<div class="linia1"><span>' + w.dataZakupu + ' · ' + w.przeznaczenie + '</span>' +
+      '<span>' + String(w.wartosc).replace('.', ',') + ' zł</span></div>' +
+      '<div class="linia2">' + w.opis + ' · ' + formatIlosc_(w.ilosc, w.opis) +
+      (jednostkaOpisu(w.opis) ? ' ' + jednostkaOpisu(w.opis) : '') +
+      ' · ' + w.budowa + (w.dodatkoweInfo ? ' · ' + w.dodatkoweInfo : '') + '</div>' + akcja;
+    var bp = div.querySelector('.btn-popraw');
+    if (bp) bp.addEventListener('click', function () { rozpocznijEdycje(w); });
+    var ba = div.querySelector('.btn-anuluj');
+    if (ba) ba.addEventListener('click', function () { anulujWpis(w); });
+    lista.appendChild(div);
+  });
+}
+el('pokazAnulowane').addEventListener('change', renderujListeWpisow);
 
 // ---------- anulowanie wpisu ----------
 function anulujWpis(w) {
@@ -973,8 +1065,8 @@ function rozpocznijEdycje(w) {
   el('komunikatWynik').className = 'komunikat';
   el('f-data').value = w.dataZakupu;
   el('f-opis').value = w.opis;
-  el('f-ilosc').value = String(w.ilosc).replace('.', ',');
-  el('f-wartosc').value = String(w.wartosc).replace('.', ',');
+  el('f-ilosc').value = formatIlosc_(w.ilosc, w.opis);
+  el('f-wartosc').value = formatKwote_(w.wartosc);
   el('f-przeznaczenie').value = w.przeznaczenie;
   el('f-licznik').value = w.licznik === '' ? '' : String(w.licznik);
   el('f-budowa').value = w.budowa;
