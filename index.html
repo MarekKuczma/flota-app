@@ -132,6 +132,13 @@
   .zgoda{display:flex; align-items:center; gap:8px; font-size:14px; font-weight:400;
     color:var(--tekst); margin:0 0 10px;}
   .zgoda input{width:auto; min-height:auto; flex:none;}
+  .overlay-zapis{position:fixed; inset:0; background:rgba(15,17,21,.55);
+    display:flex; align-items:center; justify-content:center; flex-direction:column;
+    gap:14px; z-index:50;}
+  .overlay-zapis .spinner{width:42px; height:42px; border:4px solid rgba(255,255,255,.3);
+    border-top-color:#fff; border-radius:50%; animation:kreciSie .8s linear infinite;}
+  .overlay-zapis .tekst{color:#fff; font-size:16px; font-weight:600;}
+  @keyframes kreciSie{to{transform:rotate(360deg);}}
 </style>
 </head>
 <body>
@@ -277,6 +284,11 @@
   <button id="nawNowy"><span class="i">⛽</span>Nowy wpis</button>
   <button id="nawWpisy"><span class="i">📋</span>Moje wpisy</button>
 </nav>
+
+<div class="overlay-zapis ukryte" id="overlayZapis">
+  <div class="spinner"></div>
+  <div class="tekst">Zapisywanie… proszę czekać</div>
+</div>
 
 <dialog id="dialogMiesiac">
   <p><b>Zamykam miesiąc</b></p>
@@ -706,6 +718,14 @@ function pokazBledyPol(bledy) {
 }
 
 // ---------- zapis ----------
+function poczatekZapisu_() {
+  el('przyciskZapisz').disabled = true;
+  pokaz('overlayZapis');
+}
+function koniecZapisu_() {
+  el('przyciskZapisz').disabled = false;
+  schowaj('overlayZapis');
+}
 el('formularz').addEventListener('submit', function (ev) {
   ev.preventDefault();
   var przezn = el('f-przeznaczenie').value;
@@ -727,7 +747,7 @@ el('formularz').addEventListener('submit', function (ev) {
 
   localStorage.setItem('flota_budowa', d.budowa);
   if (!edytowanyWpis) { zapiszWyborSprzetu_(d.przeznaczenie); zbudujDropdownPrzeznaczenia_(); }
-  el('przyciskZapisz').disabled = true;
+  poczatekZapisu_();
 
   if (edytowanyWpis) { wyslijEdycje(d); return; }
   wyslijNowy(d, false);
@@ -737,7 +757,7 @@ function wyslijNowy(d, potwierdzenie) {
   var pakiet = polaczZAkcja(d, 'nowy');
   if (potwierdzenie) pakiet.potwierdzDuplikat = true;
   apiPost(pakiet).then(function (odp) {
-    el('przyciskZapisz').disabled = false;
+    koniecZapisu_();
     if (odp.ok) {
       pokazSukces('Wpis dodany', 'Numer wpisu: ' + odp.id, odp.ostrzezenia);
       odswiezWpisyCache();
@@ -745,7 +765,7 @@ function wyslijNowy(d, potwierdzenie) {
       if (confirm('Ten wpis wygląda jak duplikat (taki sam jak chwilę temu).\n\n' +
         'Jeśli to NAPRAWDĘ kolejna, osobna transakcja (np. druga bramka autostrady) — ' +
         'kliknij OK, żeby dodać mimo to.')) {
-        el('przyciskZapisz').disabled = true;
+        poczatekZapisu_();
         wyslijNowy(d, true);
       }
     } else pokazBladBackendu(odp.bledy);
@@ -772,17 +792,11 @@ function pokazSukces(tekst, podtekst, ostrzezenia) {
   przelaczWidok('sukces');
 }
 el('sKolejny').addEventListener('click', function () {
-  wyczyscKwoty();
+  zakonczEdycje();
   przelaczWidok('nowy');
 });
 el('sWpisy').addEventListener('click', function () { przelaczWidok('wpisy'); });
 el('sStart').addEventListener('click', function () { przelaczWidok('start'); });
-function wyczyscKwoty() {
-  el('f-ilosc').value = ''; el('f-wartosc').value = '';
-  el('f-licznik').value = ''; el('f-info').value = '';
-  el('komunikatWynik').className = 'komunikat';
-  pokazBledyPol({});
-}
 function pokazBladBackendu(bledy) {
   var k = el('komunikatWynik');
   k.className = 'komunikat blad';
@@ -802,7 +816,7 @@ function dodajDoKolejki(d) {
   var k = kolejka();
   k.push({ tmp: Date.now(), dane: d, status: 'oczekuje', blad: '' });
   zapiszKolejke(k);
-  el('przyciskZapisz').disabled = false;
+  koniecZapisu_();
   pokazSukces('Zapisano w telefonie', 'Brak internetu — wpis wyśle się automatycznie po złapaniu sieci.', []);
   odswiezKolejkeInfo();
 }
@@ -1101,12 +1115,13 @@ function zakonczEdycje() {
   el('f-data').value = dzisiaj();
   var ostatnia = localStorage.getItem('flota_budowa');
   if (ostatnia) el('f-budowa').value = ostatnia;
+  el('komunikatWynik').className = 'komunikat';
   pokazBledyPol({});
   przelaczPola();
 }
 function wyslijEdycje(d) {
   if (!navigator.onLine) {
-    el('przyciskZapisz').disabled = false;
+    koniecZapisu_();
     pokazBladBackendu(['Poprawianie wpisu wymaga internetu.']);
     return;
   }
@@ -1123,19 +1138,19 @@ function wyslijEdycje(d) {
   if (d.dodatkoweInfo !== w.dodatkoweInfo) pola.dodatkoweInfo = d.dodatkoweInfo;
 
   if (!Object.keys(pola).length) {
-    el('przyciskZapisz').disabled = false;
+    koniecZapisu_();
     pokazBladBackendu(['Nic nie zmieniono.']);
     return;
   }
   apiPost({ action: 'edycja', id: w.id, pola: pola }).then(function (odp) {
-    el('przyciskZapisz').disabled = false;
+    koniecZapisu_();
     if (odp.ok) {
       zakonczEdycje();
       pokazSukces('Wpis poprawiony', 'Numer wpisu: ' + odp.id, odp.ostrzezenia);
       odswiezWpisyCache();
     } else pokazBladBackendu(odp.bledy);
   }).catch(function () {
-    el('przyciskZapisz').disabled = false;
+    koniecZapisu_();
     pokazBladBackendu(['Serwer chwilowo niedostępny — spróbuj za chwilę.']);
   });
 }
