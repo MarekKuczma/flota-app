@@ -149,10 +149,8 @@
         </div>
       </div>
       <button type="button" class="przycisk" style="margin-top:4px;" id="dNowy">＋ Nowe tankowanie</button>
-      <div class="dwa">
-        <button type="button" class="przycisk-drugi" id="dWpisy">📋 Moje wpisy</button>
-        <button type="button" class="przycisk-drugi" id="dMiesiacBtn">✅ Zamykam miesiąc</button>
-      </div>
+      <button type="button" class="przycisk-drugi" id="dWpisy">📋 Moje wpisy</button>
+      <button type="button" class="przycisk-drugi" id="dMiesiacBtn">✅ Zamykam miesiąc</button>
     </div>
     <div class="karta">
       <h2>Ostatnie wpisy</h2>
@@ -192,7 +190,7 @@
           <div class="blad-pola" id="b-opis"></div>
         </div>
         <div class="pole" id="p-ilosc">
-          <label>Ilość (litry lub sztuki) <span class="wym">*</span></label>
+          <label id="labelIlosc">Ilość (litry lub sztuki) <span class="wym">*</span></label>
           <input type="text" inputmode="decimal" id="f-ilosc" placeholder="np. 45,5">
           <div class="blad-pola" id="b-ilosc"></div>
         </div>
@@ -252,7 +250,7 @@
   <div class="p">
     <button class="przycisk-maly" id="dialogNie" type="button">Nie</button>
     <button class="przycisk" style="margin-top:0; padding:10px; font-size:16px;"
-            id="dialogTak" type="button">Tak, zamykam</button>
+            id="dialogTak" type="button">Tak</button>
   </div>
 </dialog>
 
@@ -434,6 +432,16 @@ function przelaczPola() {
   var o = opisInfo(el('f-opis').value);
   if (o && o.czyPaliwo && czyLicznikPotrzebny(przezn)) pokaz('licznikWym');
   else schowaj('licznikWym');
+
+  var jednostkaTekst = o ? (o.czyPaliwo ? 'litry' : 'sztuki') : 'litry lub sztuki';
+  el('labelIlosc').innerHTML = 'Ilość (' + jednostkaTekst + ') <span class="wym">*</span>';
+}
+
+// ---------- jednostka ilości w listach ----------
+function jednostkaOpisu(nazwaOpisu) {
+  var o = opisInfo(nazwaOpisu);
+  if (!o) return '';
+  return o.czyPaliwo ? 'l' : 'szt.';
 }
 
 function dzisiaj() {
@@ -710,7 +718,8 @@ function rysujDashboard() {
     div.className = 'wpis';
     div.innerHTML = '<div class="linia1"><span>' + w.dataZakupu.substring(5).split('-').reverse().join('.') +
       ' · ' + w.przeznaczenie + '</span><span>' + String(w.wartosc).replace('.', ',') + ' zł</span></div>' +
-      '<div class="linia2">' + w.opis + ' · ' + String(w.ilosc).replace('.', ',') + ' · ' + w.budowa + '</div>';
+      '<div class="linia2">' + w.opis + ' · ' + String(w.ilosc).replace('.', ',') +
+      (jednostkaOpisu(w.opis) ? ' ' + jednostkaOpisu(w.opis) : '') + ' · ' + w.budowa + '</div>';
     lista.appendChild(div);
   });
 }
@@ -805,6 +814,7 @@ function wczytajWpisy() {
         '<div class="linia1"><span>' + w.dataZakupu + ' · ' + w.przeznaczenie + '</span>' +
         '<span>' + String(w.wartosc).replace('.', ',') + ' zł</span></div>' +
         '<div class="linia2">' + w.opis + ' · ' + String(w.ilosc).replace('.', ',') +
+        (jednostkaOpisu(w.opis) ? ' ' + jednostkaOpisu(w.opis) : '') +
         ' · ' + w.budowa + (w.dodatkoweInfo ? ' · ' + w.dodatkoweInfo : '') + '</div>' + akcja;
       var bp = div.querySelector('.btn-popraw');
       if (bp) bp.addEventListener('click', function () { rozpocznijEdycje(w); });
