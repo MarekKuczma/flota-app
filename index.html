@@ -20,6 +20,8 @@
     --bg-blad:#fce8e6; --tekst-blad:#a50e0e;
     --bg-akcentjasny:#fff1e6; --tekst-akcentjasny:#c2410c;
     --metryka-grad:linear-gradient(135deg, #fff7ed 0%, #fef2f2 100%);
+    --turkus:#06b6d4; --bg-turkus:#e0f7fb; --tekst-turkus:#0e7490;
+    --ikona-grad:linear-gradient(135deg, #0f2a43, #06b6d4);
   }
   [data-motyw="ciemny"]{
     --tlo:#0f1115; --karta:#1c1f26; --input-tlo:#262b34; --input-brzeg:#3a3f4a;
@@ -29,6 +31,7 @@
     --bg-blad:#451a17; --tekst-blad:#fca5a5;
     --bg-akcentjasny:#432614; --tekst-akcentjasny:#fb923c;
     --metryka-grad:linear-gradient(135deg, #2c2115 0%, #2b1c1c 100%);
+    --turkus:#22d3ee; --bg-turkus:#0e3a44; --tekst-turkus:#67e8f9;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0; background:var(--tlo); color:var(--tekst);
@@ -51,11 +54,16 @@
   .metryki{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;}
   .metryka{background:var(--metryka-grad);
     border-radius:10px; padding:12px;}
-  .metryka .m-et{font-size:13px; color:var(--szary);}
+  .metryka .m-et{font-size:13px; color:var(--szary); display:flex; align-items:center; gap:5px;}
+  .metryka .m-et .m-ikona{width:18px; height:18px; border-radius:50%; background:var(--ikona-grad);
+    color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:9px; flex:none;}
   .metryka .m-w{font-size:24px; font-weight:600; margin-top:2px;
     background:var(--gradient); -webkit-background-clip:text;
     background-clip:text; -webkit-text-fill-color:transparent; color:var(--akcent);}
-  .powitanie{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;}
+  .powitanie{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
+  .avatar-krag{width:42px; height:42px; border-radius:50%; background:var(--ikona-grad);
+    color:#fff; display:flex; align-items:center; justify-content:center;
+    font-weight:600; font-size:15px; flex:none;}
   .powitanie .p1{font-size:18px; font-weight:600;}
   .powitanie .p2{font-size:14px; color:var(--szary);}
   label{display:block; font-size:14px; font-weight:600; color:var(--szary);
@@ -68,8 +76,9 @@
     color:var(--tekst); min-height:48px;}
   input:focus,select:focus,textarea:focus{outline:none; border-color:var(--akcent);}
   textarea{min-height:72px; resize:vertical;}
-  .etykieta-typ{display:inline-block; background:var(--bg-akcentjasny); color:var(--tekst-akcentjasny);
+  .etykieta-typ{display:inline-block; background:var(--bg-turkus); color:var(--tekst-turkus);
     font-size:13px; font-weight:600; border-radius:8px; padding:3px 10px; margin-top:6px;}
+  label .lbl-ikona{margin-right:6px;}
   .blad-pola{color:var(--blad); font-size:14px; margin-top:4px; display:none;}
   .pole-blad input,.pole-blad select,.pole-blad textarea{border-color:var(--blad);}
   .pole-blad .blad-pola{display:block;}
@@ -83,7 +92,7 @@
   .przycisk-drugi{display:block; width:100%; background:var(--karta); color:var(--akcent);
     border:1.5px solid var(--akcent); font-size:16px; font-weight:600;
     border-radius:12px; padding:12px; min-height:48px; margin-top:10px;}
-  .przycisk-maly{background:var(--karta); color:var(--akcent); border:1.5px solid var(--akcent);
+  .przycisk-maly{background:var(--karta); color:var(--turkus); border:1.5px solid var(--turkus);
     border-radius:10px; font-size:15px; font-weight:600; padding:8px 14px; min-height:40px;}
   .przycisk-czerwony{background:var(--karta); color:var(--blad); border:1.5px solid var(--blad);
     border-radius:10px; font-size:15px; font-weight:600; padding:8px 14px; min-height:40px;}
@@ -99,13 +108,34 @@
   .komunikat.blad{display:block; background:var(--bg-blad); border:1px solid var(--blad); color:var(--tekst-blad);}
   .komunikat.uwaga{display:block; background:var(--bg-uwaga); border:1px solid var(--brzeg-uwaga); color:var(--tekst-uwaga);}
   .komunikat ul{margin:6px 0 0; padding-left:20px;}
-  .wpis{border-bottom:1px solid var(--linia); padding:12px 2px;}
-  .wpis:last-child{border-bottom:none;}
-  .wpis .linia1{display:flex; justify-content:space-between; font-weight:600; font-size:16px;}
-  .wpis .linia2{color:var(--szary); font-size:14px; margin-top:3px;}
+  .wpis{display:flex; gap:12px; background:var(--karta); border-radius:12px;
+    border-left:3px solid var(--turkus); box-shadow:0 1px 2px rgba(0,0,0,.06);
+    padding:12px 12px 12px 14px; margin-bottom:10px;}
+  .wpis:last-child{margin-bottom:0;}
+  .wpis .wpis-tresc{flex:1; min-width:0;}
+  .wpis .linia1{display:flex; justify-content:space-between; align-items:baseline; gap:8px;
+    font-weight:600; font-size:15px;}
+  .wpis .linia1 span:last-child{flex:none;}
+  .wpis .linia2{color:var(--szary); font-size:13px; margin-top:2px;}
+  .wpis .linia-data{color:var(--szary); font-size:12px; margin-top:2px;}
+  .wpis.anulowany{border-left-color:var(--linia); background:var(--tlo);}
   .wpis.anulowany .linia1,.wpis.anulowany .linia2{text-decoration:line-through; color:#9ca3af;}
-  .wpis .akcja{margin-top:8px; display:flex; gap:8px;}
-  .klodka{color:var(--szary); font-size:14px;}
+  .wpis .akcja{margin-top:10px; display:flex; gap:8px;}
+  .klodka{color:var(--szary); font-size:14px; margin-top:8px;}
+  .ikona-krag{width:38px; height:38px; border-radius:50%; background:var(--ikona-grad);
+    color:#fff; flex:none; display:flex; align-items:center; justify-content:center; font-size:17px;}
+  .wpis.anulowany .ikona-krag{background:var(--linia);}
+  .plakietka{display:inline-block; background:var(--bg-turkus); color:var(--tekst-turkus);
+    font-size:11px; font-weight:600; border-radius:7px; padding:2px 8px; margin-top:4px;}
+  .plakietka.plakietka-blad{background:var(--bg-blad); color:var(--tekst-blad);}
+  .mini-wpis{display:flex; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid var(--linia);}
+  .mini-wpis:last-child{border-bottom:none;}
+  .mini-wpis .ikona-krag{width:30px; height:30px; font-size:14px;}
+  .mini-wpis .m-tresc{flex:1; min-width:0;}
+  .mini-wpis .m-linia1{font-size:14px; font-weight:600; color:var(--tekst); white-space:nowrap;
+    overflow:hidden; text-overflow:ellipsis;}
+  .mini-wpis .m-linia2{font-size:12px; color:var(--szary); margin-top:1px;}
+  .mini-wpis .m-wartosc{font-size:14px; font-weight:600; color:var(--tekst); flex:none;}
   .kolejka-info{background:var(--bg-akcentjasny); color:var(--tekst-akcentjasny); border-radius:12px;
     padding:10px 14px; margin-bottom:12px; font-size:15px; display:none;}
   .odrzucony{background:var(--bg-blad); border-radius:10px; padding:10px; margin-top:8px; font-size:14px;}
@@ -168,19 +198,19 @@
   <div id="widokStart" class="ukryte">
     <div class="karta">
       <div class="powitanie">
+        <div class="avatar-krag" id="dAwatar">👤</div>
         <div>
           <div class="p1" id="dPowitanie">Cześć!</div>
           <div class="p2" id="dMiesiac"></div>
         </div>
-        <div style="font-size:26px;">⛽</div>
       </div>
       <div class="metryki">
         <div class="metryka">
-          <div class="m-et">Wpisy w tym miesiącu</div>
+          <div class="m-et"><span class="m-ikona">📋</span>Wpisy w tym miesiącu</div>
           <div class="m-w" id="dLiczba">—</div>
         </div>
         <div class="metryka">
-          <div class="m-et">Ostatni wpis</div>
+          <div class="m-et"><span class="m-ikona">🕐</span>Ostatni wpis</div>
           <div class="m-w" id="dOstatni" style="font-size:18px; padding-top:5px;">—</div>
         </div>
       </div>
@@ -216,50 +246,50 @@
       <h2 id="naglowekFormularza">Nowe tankowanie</h2>
       <form id="formularz" novalidate>
         <div class="pole" id="p-data">
-          <label>Data zakupu <span class="wym">*</span></label>
+          <label><span class="lbl-ikona">📅</span>Data zakupu <span class="wym">*</span></label>
           <input type="date" id="f-data">
           <div class="blad-pola" id="b-data"></div>
         </div>
         <div class="pole" id="p-przeznaczenie">
-          <label>Do czego (pojazd / sprzęt) <span class="wym">*</span></label>
+          <label><span class="lbl-ikona">🚜</span>Do czego (pojazd / sprzęt) <span class="wym">*</span></label>
           <select id="f-przeznaczenie"></select>
           <span class="etykieta-typ ukryte" id="typSprzetu"></span>
           <div class="blad-pola" id="b-przeznaczenie"></div>
         </div>
         <div class="pole" id="p-licznik">
-          <label>Stan licznika / motogodziny <span class="wym ukryte" id="licznikWym">*</span></label>
+          <label><span class="lbl-ikona">🔢</span>Stan licznika / motogodziny <span class="wym ukryte" id="licznikWym">*</span></label>
           <input type="text" inputmode="numeric" id="f-licznik" placeholder="np. 184632">
           <div class="blad-pola" id="b-licznik"></div>
         </div>
         <div class="pole" id="p-opis">
-          <label>Co kupiono <span class="wym">*</span></label>
+          <label><span class="lbl-ikona">⛽</span>Co kupiono <span class="wym">*</span></label>
           <select id="f-opis"></select>
           <div class="blad-pola" id="b-opis"></div>
         </div>
         <div class="pole" id="p-ilosc">
-          <label id="labelIlosc">Ilość (litry lub sztuki) <span class="wym">*</span></label>
+          <label id="labelIlosc"><span class="lbl-ikona">🧮</span>Ilość (litry lub sztuki) <span class="wym">*</span></label>
           <input type="text" inputmode="decimal" id="f-ilosc" placeholder="np. 45,5">
           <div class="blad-pola" id="b-ilosc"></div>
         </div>
         <div class="pole ukryte" id="p-pary">
-          <label>Tankowanie łączone — sprzęt i litry <span class="wym">*</span></label>
+          <label><span class="lbl-ikona">🔗</span>Tankowanie łączone — sprzęt i litry <span class="wym">*</span></label>
           <div id="paryLista"></div>
           <button type="button" class="przycisk-maly" id="paryDodaj">+ Dodaj kolejny sprzęt</button>
           <div id="paryPodglad" style="font-size:14px; color:var(--szary); margin-top:8px;"></div>
           <div class="blad-pola" id="b-pary"></div>
         </div>
         <div class="pole" id="p-wartosc">
-          <label>Wartość (zł) <span class="wym">*</span></label>
+          <label><span class="lbl-ikona">💰</span>Wartość (zł) <span class="wym">*</span></label>
           <input type="text" inputmode="decimal" id="f-wartosc" placeholder="np. 289,99">
           <div class="blad-pola" id="b-wartosc"></div>
         </div>
         <div class="pole" id="p-budowa">
-          <label>Budowa <span class="wym">*</span></label>
+          <label><span class="lbl-ikona">🏗️</span>Budowa <span class="wym">*</span></label>
           <select id="f-budowa"></select>
           <div class="blad-pola" id="b-budowa"></div>
         </div>
         <div class="pole" id="p-info">
-          <label>Dodatkowe informacje <span class="wym ukryte" id="infoWym">*</span></label>
+          <label><span class="lbl-ikona">📝</span>Dodatkowe informacje <span class="wym ukryte" id="infoWym">*</span></label>
           <textarea id="f-info" placeholder="np. uwagi do tankowania (można pominąć)"></textarea>
           <div class="blad-pola" id="b-info"></div>
         </div>
@@ -553,7 +583,7 @@ function przelaczPola() {
   else schowaj('licznikWym');
 
   var jednostkaTekst = o ? (o.czyPaliwo ? 'litry' : 'sztuki') : 'litry lub sztuki';
-  el('labelIlosc').innerHTML = 'Ilość (' + jednostkaTekst + ') <span class="wym">*</span>';
+  el('labelIlosc').innerHTML = '<span class="lbl-ikona">🧮</span>Ilość (' + jednostkaTekst + ') <span class="wym">*</span>';
 }
 
 // ---------- tankowanie łączone (pary sprzęt + litry) ----------
@@ -667,6 +697,24 @@ function formatKwote_(v) {
   var n = Number(v);
   if (isNaN(n)) return String(v);
   return n.toFixed(2).replace('.', ',');
+}
+
+// ---------- wygląd wpisów (ikony, nazwa, awatar) ----------
+function ikonaWpisu_(w) {
+  if (czyMix(w.przeznaczenie)) return '🔗';
+  var o = opisInfo(w.opis);
+  return (o && !o.czyPaliwo) ? '🧴' : '⛽';
+}
+function nazwaSprzetuWpisu_(w) {
+  var s = sprzetInfo(w.przeznaczenie);
+  return (s && s.model) ? (w.przeznaczenie + ' — ' + s.model) : w.przeznaczenie;
+}
+function inicjaly_(imie) {
+  if (!imie) return '👤';
+  var czesci = imie.trim().split(/\s+/);
+  var i = czesci[0] ? czesci[0].charAt(0) : '';
+  var j = czesci[1] ? czesci[1].charAt(0) : '';
+  return (i + j).toUpperCase() || '👤';
 }
 
 // ---------- walidacja frontowa ----------
@@ -927,6 +975,7 @@ function odswiezWpisyCache() {
 function rysujDashboard() {
   var imie = localStorage.getItem('flota_kierowca') || '';
   el('dPowitanie').textContent = imie ? 'Cześć, ' + imie.split(' ').pop() + '!' : 'Cześć!';
+  el('dAwatar').textContent = inicjaly_(imie);
   var teraz = new Date();
   el('dMiesiac').textContent = MIESIACE_PL[teraz.getMonth()] + ' ' + teraz.getFullYear();
 
@@ -944,11 +993,14 @@ function rysujDashboard() {
   lista.innerHTML = '';
   wpisy.slice(0, 3).forEach(function (w) {
     var div = document.createElement('div');
-    div.className = 'wpis';
-    div.innerHTML = '<div class="linia1"><span>' + w.dataZakupu.substring(5).split('-').reverse().join('.') +
-      ' · ' + w.przeznaczenie + '</span><span>' + String(w.wartosc).replace('.', ',') + ' zł</span></div>' +
-      '<div class="linia2">' + w.opis + ' · ' + formatIlosc_(w.ilosc, w.opis) +
-      (jednostkaOpisu(w.opis) ? ' ' + jednostkaOpisu(w.opis) : '') + ' · ' + w.budowa + '</div>';
+    div.className = 'mini-wpis';
+    div.innerHTML =
+      '<div class="ikona-krag">' + ikonaWpisu_(w) + '</div>' +
+      '<div class="m-tresc"><div class="m-linia1">' + nazwaSprzetuWpisu_(w) + '</div>' +
+      '<div class="m-linia2">' + w.dataZakupu.substring(5).split('-').reverse().join('.') +
+      ' · ' + w.opis + ' ' + formatIlosc_(w.ilosc, w.opis) +
+      (jednostkaOpisu(w.opis) ? jednostkaOpisu(w.opis) : '') + '</div></div>' +
+      '<div class="m-wartosc">' + String(w.wartosc).replace('.', ',') + ' zł</div>';
     lista.appendChild(div);
   });
 }
@@ -1047,21 +1099,31 @@ function renderujListeWpisow() {
   }
   lista.innerHTML = '';
   wpisy.forEach(function (w) {
+    var anulowany = w.status === 'Anulowany';
+    var mix = czyMix(w.przeznaczenie);
     var div = document.createElement('div');
-    div.className = 'wpis' + (w.status === 'Anulowany' ? ' anulowany' : '');
+    div.className = 'wpis' + (anulowany ? ' anulowany' : '');
+    var plakietki = '';
+    if (mix) plakietki += '<span class="plakietka">Łączone</span> ';
+    if (anulowany) plakietki += '<span class="plakietka plakietka-blad">Anulowany</span>';
     var akcja = '';
-    if (w.status !== 'Anulowany') {
+    if (!anulowany) {
       akcja = w.edytowalny
         ? '<div class="akcja"><button class="przycisk-maly btn-popraw">✏️ Popraw</button>' +
           '<button class="przycisk-czerwony btn-anuluj">🗑 Anuluj wpis</button></div>'
         : '<div class="akcja klodka">🔒 Edycja niemożliwa — skontaktuj się z Markiem</div>';
     }
     div.innerHTML =
-      '<div class="linia1"><span>' + w.dataZakupu + ' · ' + w.przeznaczenie + '</span>' +
+      '<div class="ikona-krag">' + ikonaWpisu_(w) + '</div>' +
+      '<div class="wpis-tresc">' +
+      '<div class="linia1"><span>' + nazwaSprzetuWpisu_(w) + '</span>' +
       '<span>' + String(w.wartosc).replace('.', ',') + ' zł</span></div>' +
+      (plakietki ? '<div>' + plakietki + '</div>' : '') +
       '<div class="linia2">' + w.opis + ' · ' + formatIlosc_(w.ilosc, w.opis) +
       (jednostkaOpisu(w.opis) ? ' ' + jednostkaOpisu(w.opis) : '') +
-      ' · ' + w.budowa + (w.dodatkoweInfo ? ' · ' + w.dodatkoweInfo : '') + '</div>' + akcja;
+      ' · ' + w.budowa + (w.dodatkoweInfo ? ' · ' + w.dodatkoweInfo : '') + '</div>' +
+      '<div class="linia-data">' + w.dataZakupu + '</div>' +
+      akcja + '</div>';
     var bp = div.querySelector('.btn-popraw');
     if (bp) bp.addEventListener('click', function () { rozpocznijEdycje(w); });
     var ba = div.querySelector('.btn-anuluj');
