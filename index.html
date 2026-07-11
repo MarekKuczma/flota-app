@@ -41,7 +41,7 @@
   .powitanie .p1{font-size:18px; font-weight:600;}
   .powitanie .p2{font-size:14px; color:var(--szary);}
   label{display:block; font-size:14px; font-weight:600; color:var(--szary);
-    margin:14px 0 5px;}
+    margin:22px 0 6px;}
   label:first-child{margin-top:0;}
   label .wym{color:var(--blad);}
   input,select,textarea{width:100%; font-size:18px; padding:12px;
@@ -70,6 +70,11 @@
     border-radius:10px; font-size:15px; font-weight:600; padding:8px 14px; min-height:40px;}
   .dwa{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;}
   .dwa .przycisk-drugi{margin-top:0;}
+  .para-wiersz{display:flex; gap:8px; margin-bottom:8px; align-items:center;}
+  .para-wiersz select{flex:2; min-height:44px;}
+  .para-wiersz input{flex:1; min-height:44px;}
+  .para-usun{background:none; border:none; color:var(--blad); font-size:22px;
+    line-height:1; padding:4px 8px; flex:none; min-height:auto;}
   .komunikat{border-radius:12px; padding:14px; margin:12px 0; font-size:16px; display:none;}
   .komunikat.ok{display:block; background:#e6f4ea; border:1px solid var(--ok); color:#135c26;}
   .komunikat.blad{display:block; background:#fce8e6; border:1px solid var(--blad); color:#a50e0e;}
@@ -217,6 +222,11 @@
         </div>
         <div class="pole" id="p-info">
           <label>Dodatkowe informacje <span class="wym ukryte" id="infoWym">*</span></label>
+          <div id="paryKontener" class="ukryte">
+            <div id="paryLista"></div>
+            <button type="button" class="przycisk-maly" id="paryDodaj">+ Dodaj kolejny sprzęt</button>
+            <div id="paryPodglad" style="font-size:14px; color:var(--szary); margin-top:8px;"></div>
+          </div>
           <textarea id="f-info" placeholder="np. uwagi do tankowania (można pominąć)"></textarea>
           <div class="blad-pola" id="b-info"></div>
         </div>
@@ -372,7 +382,8 @@ function wypelnijFormularz() {
   slowniki.sprzet.forEach(function (s) {
     if (s.nazwa === 'Inne' || s.typ === 'Mix') { koncowe.push(s); return; }
     var opt = document.createElement('option');
-    opt.value = s.nazwa; opt.textContent = s.nazwa;
+    opt.value = s.nazwa;
+    opt.textContent = s.model ? (s.model + ' ' + s.nazwa) : s.nazwa;
     prz.appendChild(opt);
   });
   koncowe.forEach(function (s) {
@@ -409,6 +420,10 @@ function czyInfoWymagane(przezn) {
   var s = sprzetInfo(przezn);
   return !!(s && s.typ === 'Mix');
 }
+function czyMix(przezn) {
+  var s = sprzetInfo(przezn);
+  return !!(s && s.typ === 'Mix');
+}
 
 function przelaczPola() {
   var przezn = el('f-przeznaczenie').value;
@@ -422,11 +437,24 @@ function przelaczPola() {
   if (czyLicznikPotrzebny(przezn)) pokaz('p-licznik');
   else schowaj('p-licznik');
 
-  if (czyInfoWymagane(przezn)) {
+  if (czyMix(przezn)) {
     pokaz('infoWym');
-    el('f-info').placeholder = 'OBOWIĄZKOWO napisz, czego dotyczy — np. 100L hidromek 1, 100L hidromek 2';
+    el('f-info').classList.add('ukryte');
+    pokaz('paryKontener');
+    if (!paryStan.length) paryStan = [{ sprzet: '', litry: '' }];
+    rysujPary();
+    odswiezPodgladPar();
+  } else if (czyInfoWymagane(przezn)) {
+    pokaz('infoWym');
+    el('f-info').classList.remove('ukryte');
+    schowaj('paryKontener');
+    paryStan = [];
+    el('f-info').placeholder = 'OBOWIĄZKOWO napisz, czego dotyczy';
   } else {
     schowaj('infoWym');
+    el('f-info').classList.remove('ukryte');
+    schowaj('paryKontener');
+    paryStan = [];
     el('f-info').placeholder = 'np. uwagi do tankowania (można pominąć)';
   }
   var o = opisInfo(el('f-opis').value);
@@ -436,6 +464,90 @@ function przelaczPola() {
   var jednostkaTekst = o ? (o.czyPaliwo ? 'litry' : 'sztuki') : 'litry lub sztuki';
   el('labelIlosc').innerHTML = 'Ilość (' + jednostkaTekst + ') <span class="wym">*</span>';
 }
+
+// ---------- tankowanie łączone (pary sprzęt + litry) ----------
+var paryStan = [];
+function sprzetDoPar() {
+  if (!slowniki) return [];
+  return slowniki.sprzet.filter(function (s) { return s.typ !== 'Mix' && s.nazwa !== 'Inne'; });
+}
+function formatLitry_(l) {
+  var r = Math.round(l * 10) / 10;
+  var s = String(r);
+  return s.indexOf('.') === -1 ? s : s.replace('.', ',');
+}
+function tekstZPar() {
+  var czesci = [];
+  paryStan.forEach(function (p) {
+    var l = liczba(p.litry);
+    if (p.sprzet && !isNaN(l) && l > 0) czesci.push(formatLitry_(l) + 'L ' + p.sprzet);
+  });
+  return czesci.join(' + ');
+}
+function sumaPar() {
+  return paryStan.reduce(function (acc, p) {
+    var l = liczba(p.litry);
+    return acc + (isNaN(l) ? 0 : l);
+  }, 0);
+}
+function sparsujPary_(tekst) {
+  if (!tekst) return [];
+  var wynik = [];
+  String(tekst).split('+').forEach(function (czesc) {
+    var m = czesc.trim().match(/^([\d.,]+)\s*L\s+(.+)$/i);
+    if (m) wynik.push({ sprzet: m[2].trim(), litry: m[1].replace('.', ',') });
+  });
+  return wynik;
+}
+function odswiezPodgladPar() {
+  var tekst = tekstZPar();
+  el('f-info').value = tekst;
+  el('paryPodglad').textContent = tekst
+    ? ('Zapisze się jako: ' + tekst)
+    : 'Uzupełnij sprzęt i litry dla przynajmniej jednej pozycji.';
+}
+function rysujPary() {
+  var kontener = el('paryLista');
+  kontener.innerHTML = '';
+  var opcje = sprzetDoPar();
+  paryStan.forEach(function (p, i) {
+    var wiersz = document.createElement('div');
+    wiersz.className = 'para-wiersz';
+    var sel = document.createElement('select');
+    sel.innerHTML = '<option value="">— sprzęt —</option>';
+    opcje.forEach(function (s) {
+      var opt = document.createElement('option');
+      opt.value = s.nazwa;
+      opt.textContent = s.model ? (s.model + ' ' + s.nazwa) : s.nazwa;
+      if (s.nazwa === p.sprzet) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.addEventListener('change', function () { paryStan[i].sprzet = sel.value; odswiezPodgladPar(); });
+    var inp = document.createElement('input');
+    inp.type = 'text'; inp.inputMode = 'decimal'; inp.placeholder = 'litry';
+    inp.value = p.litry;
+    inp.addEventListener('input', function () { paryStan[i].litry = inp.value; odswiezPodgladPar(); });
+    wiersz.appendChild(sel);
+    wiersz.appendChild(inp);
+    if (paryStan.length > 1) {
+      var usun = document.createElement('button');
+      usun.type = 'button'; usun.className = 'para-usun'; usun.textContent = '×';
+      usun.setAttribute('aria-label', 'Usuń pozycję');
+      usun.addEventListener('click', function () {
+        paryStan.splice(i, 1);
+        rysujPary();
+        odswiezPodgladPar();
+      });
+      wiersz.appendChild(usun);
+    }
+    kontener.appendChild(wiersz);
+  });
+}
+el('paryDodaj').addEventListener('click', function () {
+  paryStan.push({ sprzet: '', litry: '' });
+  rysujPary();
+  odswiezPodgladPar();
+});
 
 // ---------- jednostka ilości w listach ----------
 function jednostkaOpisu(nazwaOpisu) {
@@ -476,7 +588,16 @@ function walidujFormularz(d) {
     if (isNaN(lc) || lc < 0) bledy.licznik = 'Licznik musi być liczbą (bez minusów).';
   }
   if (czyInfoWymagane(d.przeznaczenie) && !d.dodatkoweInfo) {
-    bledy.info = 'Napisz, czego dotyczy ten zakup (jakie maszyny / co kupiono).';
+    bledy.info = czyMix(d.przeznaczenie)
+      ? 'Uzupełnij sprzęt i litry dla przynajmniej jednej pozycji.'
+      : 'Napisz, czego dotyczy ten zakup (jakie maszyny / co kupiono).';
+  }
+  if (czyMix(d.przeznaczenie) && !isNaN(il)) {
+    var suma = sumaPar();
+    if (Math.abs(suma - il) > 0.05) {
+      bledy.ilosc = 'Suma litrów w pozycjach (' + formatLitry_(suma) +
+        ') powinna być równa polu Ilość.';
+    }
   }
   return bledy;
 }
@@ -858,6 +979,7 @@ function rozpocznijEdycje(w) {
   el('f-licznik').value = w.licznik === '' ? '' : String(w.licznik);
   el('f-budowa').value = w.budowa;
   el('f-info').value = w.dodatkoweInfo;
+  paryStan = czyMix(w.przeznaczenie) ? sparsujPary_(w.dodatkoweInfo) : [];
   przelaczPola();
 }
 el('przyciskAnulujEdycje').addEventListener('click', zakonczEdycje);
