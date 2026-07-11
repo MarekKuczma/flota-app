@@ -7,11 +7,11 @@
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" href="./ikona-192.png">
 <link rel="apple-touch-icon" href="./ikona-192.png">
-<meta name="theme-color" content="#2563eb">
+<meta name="theme-color" content="#f97316">
 <style>
   :root{
-    --akcent:#2563eb; --akcent-c:#1e4fc4; --fiolet:#7c3aed;
-    --gradient:linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    --akcent:#f97316; --akcent-c:#c2410c; --fiolet:#dc2626;
+    --gradient:linear-gradient(135deg, #fbbf24 0%, #f97316 55%, #dc2626 100%);
     --tlo:#f4f6f8; --karta:#ffffff;
     --tekst:#1f2937; --szary:#6b7280; --blad:#d93025; --ok:#188038; --uwaga:#b45309;
   }
@@ -31,7 +31,7 @@
   .karta{background:var(--karta); border-radius:14px; padding:16px;
     box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:14px;}
   .metryki{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;}
-  .metryka{background:linear-gradient(135deg, #eef2ff 0%, #f5f0ff 100%);
+  .metryka{background:linear-gradient(135deg, #fff7ed 0%, #fef2f2 100%);
     border-radius:10px; padding:12px;}
   .metryka .m-et{font-size:13px; color:var(--szary);}
   .metryka .m-w{font-size:24px; font-weight:600; margin-top:2px;
@@ -49,7 +49,7 @@
     min-height:48px;}
   input:focus,select:focus,textarea:focus{outline:none; border-color:var(--akcent);}
   textarea{min-height:72px; resize:vertical;}
-  .etykieta-typ{display:inline-block; background:#e8f0fe; color:var(--akcent-c);
+  .etykieta-typ{display:inline-block; background:#fff1e6; color:var(--akcent-c);
     font-size:13px; font-weight:600; border-radius:8px; padding:3px 10px; margin-top:6px;}
   .blad-pola{color:var(--blad); font-size:14px; margin-top:4px; display:none;}
   .pole-blad input,.pole-blad select,.pole-blad textarea{border-color:var(--blad);}
@@ -58,8 +58,8 @@
   .przycisk{display:block; width:100%; background:var(--gradient); color:#fff;
     font-size:19px; font-weight:600; border:none; border-radius:12px;
     padding:15px; min-height:54px; margin-top:18px;
-    box-shadow:0 4px 12px rgba(37,99,235,.3);}
-  .przycisk:active{opacity:.85; box-shadow:0 2px 6px rgba(37,99,235,.3);}
+    box-shadow:0 4px 12px rgba(234,88,12,.35);}
+  .przycisk:active{opacity:.85; box-shadow:0 2px 6px rgba(234,88,12,.35);}
   .przycisk[disabled]{opacity:.6;}
   .przycisk-drugi{display:block; width:100%; background:#fff; color:var(--akcent);
     border:1.5px solid var(--akcent); font-size:16px; font-weight:600;
@@ -82,7 +82,7 @@
   .wpis.anulowany .linia1,.wpis.anulowany .linia2{text-decoration:line-through; color:#9ca3af;}
   .wpis .akcja{margin-top:8px; display:flex; gap:8px;}
   .klodka{color:var(--szary); font-size:14px;}
-  .kolejka-info{background:#e8f0fe; color:var(--akcent-c); border-radius:12px;
+  .kolejka-info{background:#fff1e6; color:var(--akcent-c); border-radius:12px;
     padding:10px 14px; margin-bottom:12px; font-size:15px; display:none;}
   .odrzucony{background:#fce8e6; border-radius:10px; padding:10px; margin-top:8px; font-size:14px;}
   .odrzucony .p{display:flex; gap:8px; margin-top:8px;}
