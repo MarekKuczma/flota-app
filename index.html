@@ -15,10 +15,20 @@
     --tlo:#f4f6f8; --karta:#ffffff; --input-tlo:#ffffff; --input-brzeg:#d1d5db;
     --tekst:#1f2937; --szary:#6b7280; --blad:#d93025; --ok:#188038; --uwaga:#b45309;
     --linia:#e5e7eb;
+    --bg-uwaga:#fef3c7; --brzeg-uwaga:#f59e0b; --tekst-uwaga:#92400e;
+    --bg-ok:#e6f4ea; --tekst-ok:#135c26;
+    --bg-blad:#fce8e6; --tekst-blad:#a50e0e;
+    --bg-akcentjasny:#fff1e6; --tekst-akcentjasny:#c2410c;
+    --metryka-grad:linear-gradient(135deg, #fff7ed 0%, #fef2f2 100%);
   }
   [data-motyw="ciemny"]{
     --tlo:#0f1115; --karta:#1c1f26; --input-tlo:#262b34; --input-brzeg:#3a3f4a;
     --tekst:#f0f1f3; --szary:#9aa1ad; --linia:#333844;
+    --bg-uwaga:#453615; --brzeg-uwaga:#8a5a12; --tekst-uwaga:#fcd34d;
+    --bg-ok:#123522; --tekst-ok:#86efac;
+    --bg-blad:#451a17; --tekst-blad:#fca5a5;
+    --bg-akcentjasny:#432614; --tekst-akcentjasny:#fb923c;
+    --metryka-grad:linear-gradient(135deg, #2c2115 0%, #2b1c1c 100%);
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0; background:var(--tlo); color:var(--tekst);
@@ -33,13 +43,13 @@
   #motywBtn{background:rgba(255,255,255,.2); border:none; border-radius:10px;
     width:40px; height:40px; font-size:18px; color:#fff; flex:none; min-height:auto;}
   main{max-width:560px; margin:0 auto; padding:14px 14px 90px;}
-  .baner{background:#fef3c7; border:1px solid #f59e0b; color:#92400e;
+  .baner{background:var(--bg-uwaga); border:1px solid var(--brzeg-uwaga); color:var(--tekst-uwaga);
     border-radius:12px; padding:12px 14px; margin-bottom:12px; font-size:15px;}
   .baner b{display:block; margin-bottom:2px;}
   .karta{background:var(--karta); border-radius:14px; padding:16px;
     box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:14px;}
   .metryki{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;}
-  .metryka{background:linear-gradient(135deg, #fff7ed 0%, #fef2f2 100%);
+  .metryka{background:var(--metryka-grad);
     border-radius:10px; padding:12px;}
   .metryka .m-et{font-size:13px; color:var(--szary);}
   .metryka .m-w{font-size:24px; font-weight:600; margin-top:2px;
@@ -58,7 +68,7 @@
     color:var(--tekst); min-height:48px;}
   input:focus,select:focus,textarea:focus{outline:none; border-color:var(--akcent);}
   textarea{min-height:72px; resize:vertical;}
-  .etykieta-typ{display:inline-block; background:#fff1e6; color:var(--akcent-c);
+  .etykieta-typ{display:inline-block; background:var(--bg-akcentjasny); color:var(--tekst-akcentjasny);
     font-size:13px; font-weight:600; border-radius:8px; padding:3px 10px; margin-top:6px;}
   .blad-pola{color:var(--blad); font-size:14px; margin-top:4px; display:none;}
   .pole-blad input,.pole-blad select,.pole-blad textarea{border-color:var(--blad);}
@@ -70,12 +80,12 @@
     box-shadow:0 4px 12px rgba(234,88,12,.35);}
   .przycisk:active{opacity:.85; box-shadow:0 2px 6px rgba(234,88,12,.35);}
   .przycisk[disabled]{opacity:.6;}
-  .przycisk-drugi{display:block; width:100%; background:#fff; color:var(--akcent);
+  .przycisk-drugi{display:block; width:100%; background:var(--karta); color:var(--akcent);
     border:1.5px solid var(--akcent); font-size:16px; font-weight:600;
     border-radius:12px; padding:12px; min-height:48px; margin-top:10px;}
-  .przycisk-maly{background:#fff; color:var(--akcent); border:1.5px solid var(--akcent);
+  .przycisk-maly{background:var(--karta); color:var(--akcent); border:1.5px solid var(--akcent);
     border-radius:10px; font-size:15px; font-weight:600; padding:8px 14px; min-height:40px;}
-  .przycisk-czerwony{background:#fff; color:var(--blad); border:1.5px solid var(--blad);
+  .przycisk-czerwony{background:var(--karta); color:var(--blad); border:1.5px solid var(--blad);
     border-radius:10px; font-size:15px; font-weight:600; padding:8px 14px; min-height:40px;}
   .dwa{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;}
   .dwa .przycisk-drugi{margin-top:0;}
@@ -85,9 +95,9 @@
   .para-usun{background:none; border:none; color:var(--blad); font-size:22px;
     line-height:1; padding:4px 8px; flex:none; min-height:auto;}
   .komunikat{border-radius:12px; padding:14px; margin:12px 0; font-size:16px; display:none;}
-  .komunikat.ok{display:block; background:#e6f4ea; border:1px solid var(--ok); color:#135c26;}
-  .komunikat.blad{display:block; background:#fce8e6; border:1px solid var(--blad); color:#a50e0e;}
-  .komunikat.uwaga{display:block; background:#fef3c7; border:1px solid #f59e0b; color:#92400e;}
+  .komunikat.ok{display:block; background:var(--bg-ok); border:1px solid var(--ok); color:var(--tekst-ok);}
+  .komunikat.blad{display:block; background:var(--bg-blad); border:1px solid var(--blad); color:var(--tekst-blad);}
+  .komunikat.uwaga{display:block; background:var(--bg-uwaga); border:1px solid var(--brzeg-uwaga); color:var(--tekst-uwaga);}
   .komunikat ul{margin:6px 0 0; padding-left:20px;}
   .wpis{border-bottom:1px solid var(--linia); padding:12px 2px;}
   .wpis:last-child{border-bottom:none;}
@@ -96,9 +106,9 @@
   .wpis.anulowany .linia1,.wpis.anulowany .linia2{text-decoration:line-through; color:#9ca3af;}
   .wpis .akcja{margin-top:8px; display:flex; gap:8px;}
   .klodka{color:var(--szary); font-size:14px;}
-  .kolejka-info{background:#fff1e6; color:var(--akcent-c); border-radius:12px;
+  .kolejka-info{background:var(--bg-akcentjasny); color:var(--tekst-akcentjasny); border-radius:12px;
     padding:10px 14px; margin-bottom:12px; font-size:15px; display:none;}
-  .odrzucony{background:#fce8e6; border-radius:10px; padding:10px; margin-top:8px; font-size:14px;}
+  .odrzucony{background:var(--bg-blad); border-radius:10px; padding:10px; margin-top:8px; font-size:14px;}
   .odrzucony .p{display:flex; gap:8px; margin-top:8px;}
   .sukces-ikona{font-size:56px; text-align:center; margin:10px 0 0;}
   .sukces-tekst{text-align:center; font-size:18px; font-weight:600; margin:6px 0 2px;}
@@ -214,13 +224,6 @@
           <input type="text" inputmode="numeric" id="f-licznik" placeholder="np. 184632">
           <div class="blad-pola" id="b-licznik"></div>
         </div>
-        <div class="pole ukryte" id="p-pary">
-          <label>Tankowanie łączone — sprzęt i litry <span class="wym">*</span></label>
-          <div id="paryLista"></div>
-          <button type="button" class="przycisk-maly" id="paryDodaj">+ Dodaj kolejny sprzęt</button>
-          <div id="paryPodglad" style="font-size:14px; color:var(--szary); margin-top:8px;"></div>
-          <div class="blad-pola" id="b-pary"></div>
-        </div>
         <div class="pole" id="p-opis">
           <label>Co kupiono <span class="wym">*</span></label>
           <select id="f-opis"></select>
@@ -230,6 +233,13 @@
           <label id="labelIlosc">Ilość (litry lub sztuki) <span class="wym">*</span></label>
           <input type="text" inputmode="decimal" id="f-ilosc" placeholder="np. 45,5">
           <div class="blad-pola" id="b-ilosc"></div>
+        </div>
+        <div class="pole ukryte" id="p-pary">
+          <label>Tankowanie łączone — sprzęt i litry <span class="wym">*</span></label>
+          <div id="paryLista"></div>
+          <button type="button" class="przycisk-maly" id="paryDodaj">+ Dodaj kolejny sprzęt</button>
+          <div id="paryPodglad" style="font-size:14px; color:var(--szary); margin-top:8px;"></div>
+          <div class="blad-pola" id="b-pary"></div>
         </div>
         <div class="pole" id="p-wartosc">
           <label>Wartość (zł) <span class="wym">*</span></label>
@@ -302,7 +312,7 @@ function schowaj(id){ el(id).classList.add('ukryte'); }
 function wczytajMotyw() {
   var m = localStorage.getItem('flota_motyw') || 'jasny';
   document.documentElement.setAttribute('data-motyw', m);
-  el('motywBtn').textContent = m === 'ciemny' ? '☀️' : '🌙';
+  el('motywBtn').textContent = m === 'ciemny' ? '🌙' : '☀️';
 }
 el('motywBtn').addEventListener('click', function () {
   var obecny = document.documentElement.getAttribute('data-motyw') === 'ciemny' ? 'ciemny' : 'jasny';
@@ -406,20 +416,16 @@ function zapiszWyborSprzetu_(nazwa) {
   localStorage.setItem('flota_czestosc_sprzet', JSON.stringify(cz));
 }
 
-function wypelnijFormularz() {
-  if (!slowniki) {
-    el('kartaFormularz').innerHTML = '<div class="srodek">Brak internetu przy pierwszym ' +
-      'uruchomieniu — połącz się z siecią i otwórz aplikację ponownie.</div>';
-    return;
-  }
-  var opis = el('f-opis');
-  opis.innerHTML = '<option value="">— wybierz —</option>';
-  slowniki.opisy.forEach(function (o) {
-    var opt = document.createElement('option');
-    opt.value = o.nazwa; opt.textContent = o.nazwa;
-    opis.appendChild(opt);
-  });
+function opcjaSprzetu_(s) {
+  var opt = document.createElement('option');
+  opt.value = s.nazwa;
+  opt.textContent = s.model ? (s.nazwa + ' — ' + s.model) : s.nazwa;
+  return opt;
+}
+function zbudujDropdownPrzeznaczenia_() {
+  if (!slowniki) return;
   var prz = el('f-przeznaczenie');
+  var poprzednia = prz.value;
   prz.innerHTML = '<option value="">— wybierz —</option>';
   var koncowe = [];
   var zwykle = [];
@@ -427,12 +433,6 @@ function wypelnijFormularz() {
     if (s.nazwa === 'Inne' || s.typ === 'Mix') { koncowe.push(s); return; }
     zwykle.push(s);
   });
-  function opcjaSprzetu_(s) {
-    var opt = document.createElement('option');
-    opt.value = s.nazwa;
-    opt.textContent = s.model ? (s.model + ' ' + s.nazwa) : s.nazwa;
-    return opt;
-  }
   var czestosc = pobierzCzestosc_();
   var czeste = zwykle.filter(function (s) { return czestosc[s.nazwa] > 0; })
     .sort(function (a, b) { return (czestosc[b.nazwa] || 0) - (czestosc[a.nazwa] || 0); })
@@ -455,6 +455,23 @@ function wypelnijFormularz() {
     opt.textContent = s.nazwa === 'Inne' ? 'Inne (wpisz szczegóły niżej)' : s.nazwa;
     prz.appendChild(opt);
   });
+  if (poprzednia) prz.value = poprzednia;
+}
+
+function wypelnijFormularz() {
+  if (!slowniki) {
+    el('kartaFormularz').innerHTML = '<div class="srodek">Brak internetu przy pierwszym ' +
+      'uruchomieniu — połącz się z siecią i otwórz aplikację ponownie.</div>';
+    return;
+  }
+  var opis = el('f-opis');
+  opis.innerHTML = '<option value="">— wybierz —</option>';
+  slowniki.opisy.forEach(function (o) {
+    var opt = document.createElement('option');
+    opt.value = o.nazwa; opt.textContent = o.nazwa;
+    opis.appendChild(opt);
+  });
+  zbudujDropdownPrzeznaczenia_();
   var bud = el('f-budowa');
   bud.innerHTML = '<option value="">— wybierz —</option>';
   slowniki.budowy.forEach(function (b) {
@@ -580,7 +597,7 @@ function rysujPary() {
     opcje.forEach(function (s) {
       var opt = document.createElement('option');
       opt.value = s.nazwa;
-      opt.textContent = s.model ? (s.model + ' ' + s.nazwa) : s.nazwa;
+      opt.textContent = s.model ? (s.nazwa + ' — ' + s.model) : s.nazwa;
       if (s.nazwa === p.sprzet) opt.selected = true;
       sel.appendChild(opt);
     });
@@ -709,7 +726,7 @@ el('formularz').addEventListener('submit', function (ev) {
   if (Object.keys(bledy).length) return;
 
   localStorage.setItem('flota_budowa', d.budowa);
-  if (!edytowanyWpis) zapiszWyborSprzetu_(d.przeznaczenie);
+  if (!edytowanyWpis) { zapiszWyborSprzetu_(d.przeznaczenie); zbudujDropdownPrzeznaczenia_(); }
   el('przyciskZapisz').disabled = true;
 
   if (edytowanyWpis) { wyslijEdycje(d); return; }
@@ -921,7 +938,7 @@ function rysujDashboard() {
     lista.appendChild(div);
   });
 }
-el('dNowy').addEventListener('click', function () { przelaczWidok('nowy'); });
+el('dNowy').addEventListener('click', function () { zakonczEdycje(); przelaczWidok('nowy'); });
 el('dWpisy').addEventListener('click', function () { przelaczWidok('wpisy'); });
 el('dMiesiacBtn').addEventListener('click', otworzDialogMiesiaca);
 
@@ -967,7 +984,7 @@ el('dialogTak').addEventListener('click', function () {
 
 // ---------- nawigacja ----------
 el('nawStart').addEventListener('click', function () { przelaczWidok('start'); });
-el('nawNowy').addEventListener('click', function () { przelaczWidok('nowy'); });
+el('nawNowy').addEventListener('click', function () { zakonczEdycje(); przelaczWidok('nowy'); });
 el('nawWpisy').addEventListener('click', function () { przelaczWidok('wpisy'); });
 function przelaczWidok(ktory) {
   ['widokStart', 'widokFormularz', 'widokWpisy', 'widokSukces'].forEach(schowaj);
