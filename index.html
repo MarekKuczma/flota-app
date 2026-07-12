@@ -1144,12 +1144,15 @@ function anulujWpis(w) {
   if (!confirm('Anulować wpis z ' + w.dataZakupu + ' (' +
     String(w.wartosc).replace('.', ',') + ' zł, ' + w.przeznaczenie + ')?\n\n' +
     'Wpis zostanie oznaczony jako anulowany i nie wejdzie do rozliczenia.')) return;
+  poczatekZapisu_(); // overlay „Zapisywanie…" — jak przy zapisie/edycji
   apiPost({ action: 'anuluj', id: w.id }).then(function (odp) {
+    koniecZapisu_();
     if (odp.ok) {
       wczytajWpisy();
       odswiezWpisyCache();
     } else alert('Nie udało się anulować:\n' + (odp.bledy || []).join('\n'));
   }).catch(function () {
+    koniecZapisu_();
     alert('Serwer chwilowo niedostępny — spróbuj za chwilę.');
   });
 }
