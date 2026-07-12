@@ -12,7 +12,7 @@
  * Po zmianie plikow aplikacji podbij numer wersji ponizej.
  */
 
-var WERSJA_CACHE = 'flota-shell-v12';
+var WERSJA_CACHE = 'flota-shell-v13';
 
 var PLIKI_SHELL = [
   './',

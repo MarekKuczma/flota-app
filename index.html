@@ -1122,7 +1122,7 @@ function renderujListeWpisow() {
       '<div class="linia2">' + w.opis + ' · ' + formatIlosc_(w.ilosc, w.opis) +
       (jednostkaOpisu(w.opis) ? ' ' + jednostkaOpisu(w.opis) : '') +
       ' · ' + w.budowa + (w.dodatkoweInfo ? ' · ' + w.dodatkoweInfo : '') + '</div>' +
-      '<div class="linia-data">' + w.dataZakupu + '</div>' +
+      '<div class="linia-data">' + w.dataZakupu + ' · ' + w.id + '</div>' +
       akcja + '</div>';
     var bp = div.querySelector('.btn-popraw');
     if (bp) bp.addEventListener('click', function () { rozpocznijEdycje(w); });
