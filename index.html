@@ -117,7 +117,11 @@
     font-weight:600; font-size:15px;}
   .wpis .linia1 span:last-child{flex:none;}
   .wpis .linia2{color:var(--szary); font-size:13px; margin-top:2px;}
-  .wpis .linia-data{color:var(--szary); font-size:12px; margin-top:2px;}
+  .wpis .linia-data{display:flex; justify-content:space-between; align-items:center;
+    color:var(--szary); font-size:12px; margin-top:4px;}
+  .plakietka-id{background:var(--bg-turkus); color:var(--tekst-turkus); font-weight:700;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:11px;
+    padding:2px 7px; border-radius:6px; flex:none;}
   .wpis.anulowany{border-left-color:var(--linia); background:var(--tlo);}
   .wpis.anulowany .linia1,.wpis.anulowany .linia2{text-decoration:line-through; color:#9ca3af;}
   .wpis .akcja{margin-top:10px; display:flex; gap:8px;}
@@ -702,8 +706,9 @@ function formatKwote_(v) {
 // ---------- wygląd wpisów (ikony, nazwa, awatar) ----------
 function ikonaWpisu_(w) {
   if (czyMix(w.przeznaczenie)) return '🔗';
+  if (w.opis === 'Autostrada') return '🎫';
   var o = opisInfo(w.opis);
-  return (o && !o.czyPaliwo) ? '🧴' : '⛽';
+  return (o && !o.czyPaliwo) ? '🛒' : '⛽';
 }
 function nazwaSprzetuWpisu_(w) {
   var s = sprzetInfo(w.przeznaczenie);
@@ -1122,7 +1127,8 @@ function renderujListeWpisow() {
       '<div class="linia2">' + w.opis + ' · ' + formatIlosc_(w.ilosc, w.opis) +
       (jednostkaOpisu(w.opis) ? ' ' + jednostkaOpisu(w.opis) : '') +
       ' · ' + w.budowa + (w.dodatkoweInfo ? ' · ' + w.dodatkoweInfo : '') + '</div>' +
-      '<div class="linia-data">' + w.dataZakupu + ' · ' + w.id + '</div>' +
+      '<div class="linia-data"><span>' + w.dataZakupu + '</span>' +
+      '<span class="plakietka-id">' + w.id + '</span></div>' +
       akcja + '</div>';
     var bp = div.querySelector('.btn-popraw');
     if (bp) bp.addEventListener('click', function () { rozpocznijEdycje(w); });
