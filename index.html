@@ -52,13 +52,14 @@
   .karta{background:var(--karta); border-radius:14px; padding:16px;
     box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:14px;}
   .metryki{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;}
-  .metryka{background:var(--metryka-grad);
-    border-radius:10px; padding:12px;}
-  .metryka .m-et{font-size:13px; color:var(--szary); display:flex; align-items:center; gap:5px;
-    min-height:34px;}
-  .metryka .m-et .m-ikona{width:18px; height:18px; border-radius:50%; background:var(--ikona-grad);
-    color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:9px; flex:none;}
-  .metryka .m-w{font-size:24px; font-weight:600; margin-top:2px;
+  .metryka{background:var(--metryka-grad); border-radius:10px; padding:12px;
+    display:flex; flex-direction:column; align-items:center; text-align:center;}
+  .metryka .m-et{font-size:13px; color:var(--szary); display:flex; align-items:center;
+    justify-content:center; gap:5px; min-height:34px;}
+  .metryka .m-et .m-ikona{width:20px; height:20px; border-radius:50%; background:#fff;
+    border:1.5px solid var(--turkus); box-sizing:border-box; display:inline-flex;
+    align-items:center; justify-content:center; font-size:11px; flex:none;}
+  .metryka .m-w{font-size:clamp(17px, 6vw, 24px); font-weight:600; margin-top:2px;
     background:var(--gradient); -webkit-background-clip:text;
     background-clip:text; -webkit-text-fill-color:transparent; color:var(--akcent);}
   .powitanie{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
@@ -216,8 +217,8 @@
           <div class="m-w" id="dLiczba">—</div>
         </div>
         <div class="metryka">
-          <div class="m-et"><span class="m-ikona">🕐</span>Ostatni wpis</div>
-          <div class="m-w" id="dOstatni">—</div>
+          <div class="m-et"><span class="m-ikona">💰</span>Suma w tym miesiącu</div>
+          <div class="m-w" id="dSuma">—</div>
         </div>
       </div>
       <button type="button" class="przycisk" style="margin-top:4px;" id="dNowy">＋ Nowe tankowanie</button>
@@ -990,7 +991,8 @@ function rysujDashboard() {
   var wpisy = wpisyCache().filter(function (w) { return w.status !== 'Anulowany'; });
   var wMiesiacu = wpisy.filter(function (w) { return w.miesiac === m; });
   el('dLiczba').textContent = String(wMiesiacu.length);
-  el('dOstatni').textContent = wpisy.length ? wpisy[0].dataZakupu.substring(5).split('-').reverse().join('.') : '—';
+  var sumaMiesiac = wMiesiacu.reduce(function (s, w) { return s + (Number(w.wartosc) || 0); }, 0);
+  el('dSuma').textContent = wMiesiacu.length ? (formatKwote_(sumaMiesiac) + ' zł') : '—';
 
   var lista = el('dLista');
   if (!wpisy.length) {
