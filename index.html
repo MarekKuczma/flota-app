@@ -537,12 +537,20 @@ function wypelnijFormularz() {
 el('f-przeznaczenie').addEventListener('change', przelaczPola);
 el('f-opis').addEventListener('change', przelaczPola);
 
-function czyLicznikPotrzebny(przezn) {
+// Widoczność pola (czy w ogóle je pokazać) — TAK i OPCJONALNIE = widoczne.
+function czyLicznikWidoczny(przezn) {
   if (!przezn || przezn === 'Inne') return false;
   var s = sprzetInfo(przezn);
   if (!s) return false;
   if (s.typ === 'Mix') return false;
   return s.maLicznik !== false;
+}
+// Obowiązkowość pola (czy blokować zapis bez wartości) — tylko TAK.
+// Sprzęt z OPCJONALNIE (np. koparka) pokazuje pole, ale pozwala zapisać bez licznika.
+function czyLicznikWymagany(przezn) {
+  if (!czyLicznikWidoczny(przezn)) return false;
+  var s = sprzetInfo(przezn);
+  return !!(s && s.licznikWymagany !== false);
 }
 function czyInfoWymagane(przezn) {
   if (przezn === 'Inne') return true;
@@ -563,7 +571,7 @@ function przelaczPola() {
     pokaz('typSprzetu');
   } else schowaj('typSprzetu');
 
-  if (czyLicznikPotrzebny(przezn)) pokaz('p-licznik');
+  if (czyLicznikWidoczny(przezn)) pokaz('p-licznik');
   else schowaj('p-licznik');
 
   if (czyMix(przezn)) {
@@ -586,7 +594,7 @@ function przelaczPola() {
     el('f-info').placeholder = 'np. uwagi do tankowania (można pominąć)';
   }
   var o = opisInfo(el('f-opis').value);
-  if (o && o.czyPaliwo && czyLicznikPotrzebny(przezn)) pokaz('licznikWym');
+  if (o && o.czyPaliwo && czyLicznikWymagany(przezn)) pokaz('licznikWym');
   else schowaj('licznikWym');
 
   var jednostkaTekst = o ? (o.czyPaliwo ? 'litry' : 'sztuki') : 'litry lub sztuki';
@@ -738,7 +746,7 @@ function walidujFormularz(d) {
   if (!d.przeznaczenie) bledy.przeznaczenie = 'Wybierz pojazd lub sprzęt.';
   if (!d.budowa) bledy.budowa = 'Wybierz budowę.';
   var o = opisInfo(d.opis);
-  if (o && o.czyPaliwo && czyLicznikPotrzebny(d.przeznaczenie) && !d.licznik) {
+  if (o && o.czyPaliwo && czyLicznikWymagany(d.przeznaczenie) && !d.licznik) {
     bledy.licznik = 'Przy tankowaniu paliwa podaj stan licznika.';
   }
   if (d.licznik) {
@@ -793,7 +801,7 @@ el('formularz').addEventListener('submit', function (ev) {
     wartosc: el('f-wartosc').value,
     przeznaczenie: przezn,
     typSprzetu: s ? s.typ : '',
-    licznik: czyLicznikPotrzebny(przezn) ? el('f-licznik').value : '',
+    licznik: czyLicznikWidoczny(przezn) ? el('f-licznik').value : '',
     budowa: el('f-budowa').value,
     dodatkoweInfo: el('f-info').value.trim()
   };
