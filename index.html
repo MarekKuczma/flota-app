@@ -568,7 +568,11 @@ function czyLicznikWymagany(przezn) {
 function czyInfoWymagane(przezn) {
   if (przezn === 'Inne') return true;
   var s = sprzetInfo(przezn);
-  return !!(s && s.typ === 'Mix');
+  if (s && s.typ === 'Mix') return true;
+  // Pozycje Co kupiono oznaczone w arkuszu jako "Wymaga opisu" (np. Kosmetyka,
+  // Inne) — patrz FEEDBACK-BETA-TESTY.md pkt 10.
+  var o = opisInfo(el('f-opis').value);
+  return !!(o && o.wymagaOpisu);
 }
 function czyMix(przezn) {
   var s = sprzetInfo(przezn);
@@ -788,9 +792,13 @@ function walidujFormularz(d) {
     if (isNaN(lc) || lc < 0) bledy.licznik = 'Licznik musi być liczbą (bez minusów).';
   }
   if (czyInfoWymagane(d.przeznaczenie) && !d.dodatkoweInfo) {
-    bledy.info = czyMix(d.przeznaczenie)
-      ? 'Uzupełnij sprzęt i litry dla przynajmniej jednej pozycji.'
-      : 'Napisz, czego dotyczy ten zakup (jakie maszyny / co kupiono).';
+    if (czyMix(d.przeznaczenie)) {
+      bledy.info = 'Uzupełnij sprzęt i litry dla przynajmniej jednej pozycji.';
+    } else if (d.przeznaczenie === 'Inne') {
+      bledy.info = 'Napisz, czego dotyczy ten zakup (jakie maszyny / co kupiono).';
+    } else {
+      bledy.info = 'Napisz, co dokładnie kupiłeś (np. jaki płyn, jakie części).';
+    }
   }
   if (czyMix(d.przeznaczenie) && !isNaN(il)) {
     var suma = sumaPar();
