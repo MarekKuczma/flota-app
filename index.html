@@ -220,8 +220,16 @@
           <div class="m-et"><span class="m-ikona">💰</span>Suma</div>
           <div class="m-w" id="dSuma">—</div>
         </div>
+        <div class="metryka">
+          <div class="m-et"><span class="m-ikona">⛽</span>Benzyna</div>
+          <div class="m-w" id="dBenzyna">—</div>
+        </div>
+        <div class="metryka">
+          <div class="m-et"><span class="m-ikona">⛽</span>Diesel</div>
+          <div class="m-w" id="dDiesel">—</div>
+        </div>
       </div>
-      <button type="button" class="przycisk" style="margin-top:4px;" id="dNowy">＋ Nowe tankowanie</button>
+      <button type="button" class="przycisk" style="margin-top:4px;" id="dNowy">＋ Nowy wpis</button>
       <button type="button" class="przycisk-drugi" id="dWpisy">📋 Moje wpisy</button>
       <button type="button" class="przycisk-drugi" id="dMiesiacBtn">✅ Zamykam miesiąc</button>
     </div>
@@ -250,7 +258,7 @@
   <div id="widokFormularz" class="ukryte">
     <div class="komunikat" id="komunikatWynik"></div>
     <div class="karta" id="kartaFormularz">
-      <h2 id="naglowekFormularza">Nowe tankowanie</h2>
+      <h2 id="naglowekFormularza">Nowy wpis</h2>
       <form id="formularz" novalidate>
         <div class="pole" id="p-data">
           <label><span class="lbl-ikona">📅</span>Data zakupu <span class="wym">*</span></label>
@@ -537,13 +545,18 @@ function wypelnijFormularz() {
 el('f-przeznaczenie').addEventListener('change', przelaczPola);
 el('f-opis').addEventListener('change', przelaczPola);
 
-// Widoczność pola (czy w ogóle je pokazać) — TAK i OPCJONALNIE = widoczne.
+// Widoczność pola (czy w ogóle je pokazać) — TAK i OPCJONALNIE = widoczne,
+// ORAZ kupowana pozycja musi być faktycznie paliwem (nie Autostrada, Kosmetyka
+// itp. — licznik nie ma z nimi nic wspólnego, patrz FEEDBACK-BETA-TESTY.md pkt 11).
 function czyLicznikWidoczny(przezn) {
   if (!przezn || przezn === 'Inne') return false;
   var s = sprzetInfo(przezn);
   if (!s) return false;
   if (s.typ === 'Mix') return false;
-  return s.maLicznik !== false;
+  if (s.maLicznik === false) return false;
+  var o = opisInfo(el('f-opis').value);
+  if (o && !o.czyPaliwo) return false;
+  return true;
 }
 // Obowiązkowość pola (czy blokować zapis bez wartości) — tylko TAK.
 // Sprzęt z OPCJONALNIE (np. koparka) pokazuje pole, ale pozwala zapisać bez licznika.
@@ -712,6 +725,27 @@ function formatKwote_(v) {
   var n = Number(v);
   if (isNaN(n)) return String(v);
   return n.toFixed(2).replace('.', ',');
+}
+// Jednostka licznika wg typu sprzętu (Sprzęt.B) — mapowanie ustalone z Markiem
+// 16.07.2026 (FEEDBACK-BETA-TESTY.md pkt 1): auta liczą km, koparki liczą mth,
+// sprzęt drobny/inne nie mają licznika w ogóle (nie pokazujemy nic).
+function jednostkaLicznika_(typSprzetu) {
+  if (typSprzetu === 'Samochód osobowy' || typSprzetu === 'Samochód ciężarowy' ||
+    typSprzetu === 'HDS') return 'km';
+  if (typSprzetu === 'Koparka' || typSprzetu === 'Koparko-ładowarka') return 'mth';
+  return '';
+}
+// Liczba z odstępem tysięcy, np. 182456 -> "182 456".
+function formatLicznik_(v) {
+  var n = Math.round(Number(v));
+  if (isNaN(n)) return String(v);
+  var s = String(Math.abs(n));
+  var wynik = '';
+  for (var i = 0; i < s.length; i++) {
+    if (i > 0 && (s.length - i) % 3 === 0) wynik += ' ';
+    wynik += s[i];
+  }
+  return (n < 0 ? '-' : '') + wynik;
 }
 
 // ---------- wygląd wpisów (ikony, nazwa, awatar) ----------
@@ -1002,6 +1036,15 @@ function rysujDashboard() {
   var sumaMiesiac = wMiesiacu.reduce(function (s, w) { return s + (Number(w.wartosc) || 0); }, 0);
   el('dSuma').textContent = wMiesiacu.length ? (formatKwote_(sumaMiesiac) + ' zł') : '—';
 
+  // Sumy litrów benzyny/diesla w miesiącu (FEEDBACK-BETA-TESTY.md pkt 2,
+  // uzgodnione 16.07.2026: tylko te dwa paliwa na razie, LPG/AdBlue pomijamy).
+  var sumaLitrow_ = function (nazwaOpisu) {
+    return wMiesiacu.filter(function (w) { return w.opis === nazwaOpisu; })
+      .reduce(function (s, w) { return s + (Number(w.ilosc) || 0); }, 0);
+  };
+  el('dBenzyna').textContent = wMiesiacu.length ? (formatKwote_(sumaLitrow_('Benzyna')) + ' l') : '—';
+  el('dDiesel').textContent = wMiesiacu.length ? (formatKwote_(sumaLitrow_('Diesel')) + ' l') : '—';
+
   var lista = el('dLista');
   if (!wpisy.length) {
     lista.innerHTML = '<div class="srodek" style="padding:16px;">Brak wpisów z 30 dni — dodaj pierwszy!</div>';
@@ -1017,7 +1060,7 @@ function rysujDashboard() {
       '<div class="m-linia2">' + w.dataZakupu.substring(5).split('-').reverse().join('.') +
       ' · ' + w.opis + ' ' + formatIlosc_(w.ilosc, w.opis) +
       (jednostkaOpisu(w.opis) ? jednostkaOpisu(w.opis) : '') + '</div></div>' +
-      '<div class="m-wartosc">' + String(w.wartosc).replace('.', ',') + ' zł</div>';
+      '<div class="m-wartosc">' + formatKwote_(w.wartosc) + ' zł</div>';
     lista.appendChild(div);
   });
 }
@@ -1134,11 +1177,14 @@ function renderujListeWpisow() {
       '<div class="ikona-krag">' + ikonaWpisu_(w) + '</div>' +
       '<div class="wpis-tresc">' +
       '<div class="linia1"><span>' + nazwaSprzetuWpisu_(w) + '</span>' +
-      '<span>' + String(w.wartosc).replace('.', ',') + ' zł</span></div>' +
+      '<span>' + formatKwote_(w.wartosc) + ' zł</span></div>' +
       (plakietki ? '<div>' + plakietki + '</div>' : '') +
       '<div class="linia2">' + w.opis + ' · ' + formatIlosc_(w.ilosc, w.opis) +
       (jednostkaOpisu(w.opis) ? ' ' + jednostkaOpisu(w.opis) : '') +
       ' · ' + w.budowa + (w.dodatkoweInfo ? ' · ' + w.dodatkoweInfo : '') + '</div>' +
+      (w.licznik !== '' ? '<div class="linia2">🔢 ' + formatLicznik_(w.licznik) +
+        (jednostkaLicznika_(w.typSprzetu) ? ' ' + jednostkaLicznika_(w.typSprzetu) : '') +
+        '</div>' : '') +
       '<div class="linia-data"><span>' + w.dataZakupu + '</span>' +
       '<span class="plakietka-id">' + w.id + '</span></div>' +
       akcja + '</div>';
@@ -1154,7 +1200,7 @@ el('pokazAnulowane').addEventListener('change', renderujListeWpisow);
 // ---------- anulowanie wpisu ----------
 function anulujWpis(w) {
   if (!confirm('Anulować wpis z ' + w.dataZakupu + ' (' +
-    String(w.wartosc).replace('.', ',') + ' zł, ' + w.przeznaczenie + ')?\n\n' +
+    formatKwote_(w.wartosc) + ' zł, ' + w.przeznaczenie + ')?\n\n' +
     'Wpis zostanie oznaczony jako anulowany i nie wejdzie do rozliczenia.')) return;
   poczatekZapisu_(); // overlay „Zapisywanie…" — jak przy zapisie/edycji
   apiPost({ action: 'anuluj', id: w.id }).then(function (odp) {
@@ -1191,7 +1237,7 @@ function rozpocznijEdycje(w) {
 el('przyciskAnulujEdycje').addEventListener('click', zakonczEdycje);
 function zakonczEdycje() {
   edytowanyWpis = null;
-  el('naglowekFormularza').textContent = 'Nowe tankowanie';
+  el('naglowekFormularza').textContent = 'Nowy wpis';
   el('przyciskZapisz').textContent = 'ZAPISZ';
   schowaj('przyciskAnulujEdycje');
   el('formularz').reset();
