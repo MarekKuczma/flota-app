@@ -197,7 +197,7 @@
     <div class="srodek">
       <p style="font-size:40px; margin:0;">🔑</p>
       <p><b>Otwórz aplikację ze swojego osobistego linku.</b></p>
-      <p style="font-size:15px;">Link dostałeś od Marka. Jeśli go nie masz — zadzwoń do Marka.</p>
+      <p style="font-size:15px;" id="brakKoduPodpowiedz">Link dostałeś od Marka. Jeśli go nie masz — zadzwoń do Marka.</p>
     </div>
   </div>
 
@@ -361,6 +361,28 @@ var kod = null;
 var slowniki = null;
 var edytowanyWpis = null;
 
+// Ekran "brak kodu" (FEEDBACK-BETA-TESTY.md pkt 8): dwie znane przyczyny
+// (link otwarty w wbudowanej przeglądarce WhatsApp/Messenger/Instagram —
+// osobny, izolowany localStorage; albo appka zainstalowana "Dodaj do ekranu
+// głównego" startująca z pustym localStorage) — nie wiemy, która wystąpiła
+// u konkretnego testera, więc dobieramy podpowiedź na podstawie user agenta,
+// zamiast jednego ogólnego tekstu. Obie ścieżki kończą się tą samą radą:
+// otwórz osobisty link w zwykłym Safari.
+function ustawPodpowiedzBrakKodu_() {
+  var ua = navigator.userAgent || '';
+  var wbudowana = /FBAN|FBAV|Instagram|WhatsApp|Messenger/i.test(ua);
+  var p = el('brakKoduPodpowiedz');
+  if (!p) return;
+  p.innerHTML = wbudowana
+    ? 'Wygląda na to, że link otworzył się wewnątrz innej aplikacji (WhatsApp / ' +
+      'Messenger / Instagram) — <b>skopiuj link i otwórz go w Safari</b>, to zwykle ' +
+      'pomaga. Jeśli link dostałeś od Marka i nadal nie działa — zadzwoń do Marka.'
+    : 'Appka spróbowała automatycznie znaleźć Twój kod i się nie udało. ' +
+      '<b>Otwórz swój osobisty link raz w zwykłej przeglądarce Safari</b> (nie z tej ' +
+      'ikonki), poczekaj aż strona się wczyta, a potem spróbuj otworzyć ikonkę ' +
+      'jeszcze raz. Link dostałeś od Marka. Jeśli go nie masz albo nadal nie działa ' +
+      '— zadzwoń do Marka.';
+}
 function el(id){ return document.getElementById(id); }
 function pokaz(id){ el(id).classList.remove('ukryte'); }
 function schowaj(id){ el(id).classList.add('ukryte'); }
@@ -379,19 +401,32 @@ el('motywBtn').addEventListener('click', function () {
 });
 wczytajMotyw();
 
-// ---------- start ----------
-window.addEventListener('load', function () {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./service-worker.js').catch(function(){});
-  }
-  var zUrl = new URLSearchParams(location.search).get('kod');
-  if (zUrl) {
-    localStorage.setItem('flota_kod', zUrl);
-    history.replaceState(null, '', location.pathname);
-  }
-  kod = localStorage.getItem('flota_kod');
-  if (!kod) { pokaz('widokBrakKodu'); return; }
+// ---------- przekaźnik kodu przez Cache Storage (FEEDBACK-BETA-TESTY.md pkt 8) ----------
+// iOS trzyma dla zainstalowanej ikonki (tryb "standalone") OSOBNY, izolowany
+// localStorage od karty Safari, w której kod się zapisał po otwarciu
+// osobistego linku — to udokumentowane, celowe zachowanie iOS, nie błąd.
+// Cache Storage jest, w odróżnieniu od localStorage, dzielone między oboma
+// kontekstami tego samego pochodzenia — używamy go jako przechowalni: zapis
+// przy każdym otwarciu z `?kod=`, odczyt gdy localStorage danego kontekstu
+// jest pusty (np. pierwsze uruchomienie z ikonki).
+var NAZWA_RELAY_KODU = 'flota-kod-relay';
+function zapiszKodDoRelay_(k) {
+  if (!('caches' in window)) return;
+  caches.open(NAZWA_RELAY_KODU).then(function (cache) {
+    cache.put('/__kod__', new Response(k));
+  }).catch(function () {});
+}
+function odczytajKodZRelay_() {
+  if (!('caches' in window)) return Promise.resolve(null);
+  return caches.open(NAZWA_RELAY_KODU).then(function (cache) {
+    return cache.match('/__kod__');
+  }).then(function (resp) {
+    return resp ? resp.text() : null;
+  }).catch(function () { return null; });
+}
 
+// ---------- start ----------
+function uruchomAplikacje_() {
   pokaz('nawigacja');
   el('kto').textContent = localStorage.getItem('flota_kierowca') || '';
   el('f-data').value = dzisiaj();
@@ -405,6 +440,30 @@ window.addEventListener('load', function () {
     odswiezWpisyCache();
     wczytajSlowniki(true).then(function(){ wypelnijFormularz(); });
   }
+}
+window.addEventListener('load', function () {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js').catch(function(){});
+  }
+  var zUrl = new URLSearchParams(location.search).get('kod');
+  if (zUrl) {
+    localStorage.setItem('flota_kod', zUrl);
+    zapiszKodDoRelay_(zUrl);
+    history.replaceState(null, '', location.pathname);
+  }
+  kod = localStorage.getItem('flota_kod');
+  if (kod) { uruchomAplikacje_(); return; }
+
+  odczytajKodZRelay_().then(function (zRelay) {
+    if (zRelay) {
+      localStorage.setItem('flota_kod', zRelay);
+      kod = zRelay;
+      uruchomAplikacje_();
+    } else {
+      ustawPodpowiedzBrakKodu_();
+      pokaz('widokBrakKodu');
+    }
+  });
 });
 window.addEventListener('online', function () { wyslijKolejke(); });
 

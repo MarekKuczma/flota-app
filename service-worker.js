@@ -12,7 +12,14 @@
  * Po zmianie plikow aplikacji podbij numer wersji ponizej.
  */
 
-var WERSJA_CACHE = 'flota-shell-v23';
+var WERSJA_CACHE = 'flota-shell-v25';
+
+// Przekaźnik kodu kierowcy między kartą Safari a zainstalowaną ikonką
+// (FEEDBACK-BETA-TESTY.md pkt 8, patrz też pwa/index.html — NAZWA_RELAY_KODU).
+// NIE kasować przy sprzątaniu starych cache — to jedyne miejsce, w którym
+// kod "przeżywa" między kontekstami na iOS; musi zostać dokładnie ta sama
+// nazwa co w index.html.
+var NAZWA_RELAY_KODU = 'flota-kod-relay';
 
 var PLIKI_SHELL = [
   './',
@@ -37,7 +44,7 @@ self.addEventListener('activate', function (event) {
   event.waitUntil(
     caches.keys().then(function (klucze) {
       return Promise.all(klucze.map(function (klucz) {
-        if (klucz !== WERSJA_CACHE) return caches.delete(klucz);
+        if (klucz !== WERSJA_CACHE && klucz !== NAZWA_RELAY_KODU) return caches.delete(klucz);
       }));
     }).then(function () {
       return self.clients.claim();
