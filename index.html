@@ -448,11 +448,18 @@ window.addEventListener('load', function () {
   var zUrl = new URLSearchParams(location.search).get('kod');
   if (zUrl) {
     localStorage.setItem('flota_kod', zUrl);
-    zapiszKodDoRelay_(zUrl);
     history.replaceState(null, '', location.pathname);
   }
   kod = localStorage.getItem('flota_kod');
-  if (kod) { uruchomAplikacje_(); return; }
+  if (kod) {
+    // Re-seeduj przekaźnik przy KAŻDYM udanym starcie w tym kontekście (nie
+    // tylko przy świeżym ?kod= w adresie) — inaczej odwiedziny w karcie
+    // Safari, gdzie link był już wcześniej otwarty (adres bez ?kod=, appka
+    // sama go usuwa po pierwszym użyciu), nigdy nie zasilały przekaźnika.
+    zapiszKodDoRelay_(kod);
+    uruchomAplikacje_();
+    return;
+  }
 
   odczytajKodZRelay_().then(function (zRelay) {
     if (zRelay) {
