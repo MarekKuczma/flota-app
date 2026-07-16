@@ -198,6 +198,12 @@
       <p style="font-size:40px; margin:0;">🔑</p>
       <p><b>Otwórz aplikację ze swojego osobistego linku.</b></p>
       <p style="font-size:15px;" id="brakKoduPodpowiedz">Link dostałeś od Marka. Jeśli go nie masz — zadzwoń do Marka.</p>
+      <div style="margin-top:16px; text-align:left;">
+        <p style="font-size:14px; margin:0 0 6px;">Masz swój kod od Marka? Wpisz go tutaj:</p>
+        <input type="text" id="fBrakKoduRecznie" placeholder="np. a1b2c3d4e5f6" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <div class="blad-pola" id="bBrakKoduRecznie"></div>
+        <button type="button" class="przycisk" style="margin-top:8px;" id="brakKoduZapisz">Zapisz i kontynuuj</button>
+      </div>
     </div>
   </div>
 
@@ -400,6 +406,25 @@ el('motywBtn').addEventListener('click', function () {
   wczytajMotyw();
 });
 wczytajMotyw();
+
+// ---------- ręczne wpisanie kodu (zabezpieczenie, FEEDBACK-BETA-TESTY.md pkt 8) ----------
+// Automatyczny przekaźnik przez Cache Storage zawiódł w praktyce na
+// niektórych iPhone'ach (przyczyna nie w pełni ustalona) — to jest gwarancja
+// dla kierowcy, że appka da się uruchomić niezależnie od tego, czy
+// mechanizm automatyczny zadziała. Marek podaje kod osobiście, gdy trzeba.
+function zapiszKodRecznie_() {
+  var wpisany = el('fBrakKoduRecznie').value.trim();
+  var blad = el('bBrakKoduRecznie');
+  if (!wpisany) { blad.textContent = 'Wpisz swój kod.'; return; }
+  blad.textContent = '';
+  localStorage.setItem('flota_kod', wpisany);
+  zapiszKodDoRelay_(wpisany);
+  location.reload();
+}
+el('brakKoduZapisz').addEventListener('click', zapiszKodRecznie_);
+el('fBrakKoduRecznie').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') { e.preventDefault(); zapiszKodRecznie_(); }
+});
 
 // ---------- przekaźnik kodu przez Cache Storage (FEEDBACK-BETA-TESTY.md pkt 8) ----------
 // iOS trzyma dla zainstalowanej ikonki (tryb "standalone") OSOBNY, izolowany
