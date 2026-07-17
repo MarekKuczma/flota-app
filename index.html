@@ -80,6 +80,7 @@
      width:100% i renderować się na swojej "naturalnej" szerokości, wychodząc
      poza kartę formularza (FEEDBACK-BETA-TESTY.md pkt 7). */
   input[type="date"]{-webkit-min-logical-width:0;}
+  input[type="date"]::-webkit-date-and-time-value{text-align:left;}
   input:focus,select:focus,textarea:focus{outline:none; border-color:var(--akcent);}
   textarea{min-height:72px; resize:vertical;}
   .etykieta-typ{display:inline-block; background:var(--bg-turkus); color:var(--tekst-turkus);
