@@ -155,7 +155,9 @@
     padding:10px 14px; margin-bottom:12px; font-size:15px; display:none;}
   .odrzucony{background:var(--bg-blad); border-radius:10px; padding:10px; margin-top:8px; font-size:14px;}
   .odrzucony .p{display:flex; gap:8px; margin-top:8px;}
-  .wpis-strzalka{color:var(--szary); font-size:12px; display:inline-block;
+  .wpis-strzalka{width:24px; height:24px; border-radius:50%; background:var(--bg-turkus);
+    color:var(--tekst-turkus); font-size:13px; font-weight:700; flex:none;
+    display:inline-flex; align-items:center; justify-content:center;
     margin-left:4px; transition:transform .15s;}
   .wpis.rozwiniety .wpis-strzalka{transform:rotate(180deg);}
   .wpis-szczegoly{margin-top:8px; padding-top:8px; border-top:1px dashed var(--linia);}
@@ -1428,7 +1430,7 @@ function renderujListeWpisow() {
         '</div>' : '') +
       '<div class="linia-data"><span>' + w.dataZakupu + '</span>' +
       '<span class="plakietka-id">' + w.id + '</span>' +
-      '<span class="wpis-strzalka">⌄</span></div>' +
+      '<span class="wpis-strzalka">▾</span></div>' +
       '<div class="wpis-szczegoly ukryte">' + szczegolyWpisuHtml_(w, mix) + '</div>' +
       akcja + '</div>';
     var tresc = div.querySelector('.wpis-tresc');
