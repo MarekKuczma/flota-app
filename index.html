@@ -73,9 +73,13 @@
   .pole{margin-top:0;}
   .pole + .pole{margin-top:22px;}
   label .wym{color:var(--blad);}
-  input,select,textarea{width:100%; font-size:18px; padding:12px;
+  input,select,textarea{width:100%; max-width:100%; min-width:0; font-size:18px; padding:12px;
     border:1.5px solid var(--input-brzeg); border-radius:10px; background:var(--input-tlo);
     color:var(--tekst); min-height:48px;}
+  /* iOS Safari: natywny kalendarz w input[type=date] potrafi zignorować
+     width:100% i renderować się na swojej "naturalnej" szerokości, wychodząc
+     poza kartę formularza (FEEDBACK-BETA-TESTY.md pkt 7). */
+  input[type="date"]{-webkit-min-logical-width:0;}
   input:focus,select:focus,textarea:focus{outline:none; border-color:var(--akcent);}
   textarea{min-height:72px; resize:vertical;}
   .etykieta-typ{display:inline-block; background:var(--bg-turkus); color:var(--tekst-turkus);
@@ -100,9 +104,12 @@
     border-radius:10px; font-size:15px; font-weight:600; padding:8px 14px; min-height:40px;}
   .dwa{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;}
   .dwa .przycisk-drugi{margin-top:0;}
-  .para-wiersz{display:flex; gap:8px; margin-bottom:8px; align-items:center;}
-  .para-wiersz select{flex:2; min-height:44px;}
-  .para-wiersz input{flex:1; min-height:44px;}
+  .para-item{margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--linia);}
+  .para-item:last-child{border-bottom:none; margin-bottom:0; padding-bottom:0;}
+  .para-wiersz{display:flex; gap:8px; align-items:center;}
+  .para-wiersz select{flex:1; min-height:44px; min-width:0;}
+  .para-wiersz-pola{display:flex; gap:8px; margin-top:8px;}
+  .para-wiersz-pola input{flex:1; min-height:44px; min-width:0;}
   .para-usun{background:none; border:none; color:var(--blad); font-size:22px;
     line-height:1; padding:4px 8px; flex:none; min-height:auto;}
   .komunikat{border-radius:12px; padding:14px; margin:12px 0; font-size:16px; display:none;}
@@ -298,6 +305,7 @@
           <button type="button" class="przycisk-maly" id="paryDodaj">+ Dodaj kolejny sprzęt</button>
           <div id="paryPodglad" style="font-size:14px; color:var(--szary); margin-top:8px;"></div>
           <div class="blad-pola" id="b-pary"></div>
+          <input type="hidden" id="f-licznikPary">
         </div>
         <div class="pole" id="p-wartosc">
           <label><span class="lbl-ikona">💰</span>Wartość (zł) <span class="wym">*</span></label>
@@ -685,7 +693,7 @@ function przelaczPola() {
   if (czyMix(przezn)) {
     schowaj('p-info');
     pokaz('p-pary');
-    if (!paryStan.length) paryStan = [{ sprzet: '', litry: '' }];
+    if (!paryStan.length) paryStan = [{ sprzet: '', litry: '', licznik: '' }];
     rysujPary();
     odswiezPodgladPar();
   } else if (czyInfoWymagane(przezn)) {
@@ -743,9 +751,43 @@ function sparsujPary_(tekst) {
   });
   return wynik;
 }
+// Stan licznika per sprzęt w parze (FEEDBACK-BETA-TESTY.md pkt 4) — osobna
+// kolumna w arkuszu (poza dodatkoweInfo), dane WYŁĄCZNIE wewnętrzne: nie
+// wchodzą do rozliczenia miesięcznego, służą Markowi do ręcznego podziału
+// przebiegu poza aplikacją. Format lustrzany do tekstZPar(), np.
+// "184632km Hidromek + 91234mth JCB 4CX". Stare wpisy sprzed tej zmiany mają
+// tu pustą wartość — nic nie domyślamy wstecz.
+function formatLicznikPary_(l) {
+  var r = Math.round(l * 10) / 10;
+  var s = String(r);
+  return s.indexOf('.') === -1 ? s : s.replace('.', ',');
+}
+function tekstLicznikowZPar_() {
+  var czesci = [];
+  paryStan.forEach(function (p) {
+    var l = liczba(p.licznik);
+    if (!p.sprzet || isNaN(l) || l < 0) return;
+    var info = sprzetInfo(p.sprzet);
+    if (!info || info.maLicznik === false) return;
+    czesci.push(formatLicznikPary_(l) + jednostkaLicznika_(info.typ) + ' ' + p.sprzet);
+  });
+  return czesci.join(' + ');
+}
+// Zwraca mapę {sprzet: licznikTekst} — używane przy wznawianiu edycji, żeby
+// dopasować zapisany stan licznika do właściwej pozycji w paryStan.
+function sparsujLicznikiPar_(tekst) {
+  var wynik = {};
+  if (!tekst) return wynik;
+  String(tekst).split('+').forEach(function (czesc) {
+    var m = czesc.trim().match(/^([\d.,]+)(?:km|mth)?\s+(.+)$/i);
+    if (m) wynik[m[2].trim()] = m[1].replace('.', ',');
+  });
+  return wynik;
+}
 function odswiezPodgladPar() {
   var tekst = tekstZPar();
   el('f-info').value = tekst;
+  el('f-licznikPary').value = tekstLicznikowZPar_();
   el('paryPodglad').textContent = tekst
     ? ('Zapisze się jako: ' + tekst)
     : 'Uzupełnij sprzęt i litry dla przynajmniej jednej pozycji.';
@@ -755,8 +797,11 @@ function rysujPary() {
   kontener.innerHTML = '';
   var opcje = sprzetDoPar();
   paryStan.forEach(function (p, i) {
-    var wiersz = document.createElement('div');
-    wiersz.className = 'para-wiersz';
+    var item = document.createElement('div');
+    item.className = 'para-item';
+
+    var gora = document.createElement('div');
+    gora.className = 'para-wiersz';
     var sel = document.createElement('select');
     sel.innerHTML = '<option value="">— sprzęt —</option>';
     opcje.forEach(function (s) {
@@ -766,13 +811,12 @@ function rysujPary() {
       if (s.nazwa === p.sprzet) opt.selected = true;
       sel.appendChild(opt);
     });
-    sel.addEventListener('change', function () { paryStan[i].sprzet = sel.value; odswiezPodgladPar(); });
-    var inp = document.createElement('input');
-    inp.type = 'text'; inp.inputMode = 'decimal'; inp.placeholder = 'litry';
-    inp.value = p.litry;
-    inp.addEventListener('input', function () { paryStan[i].litry = inp.value; odswiezPodgladPar(); });
-    wiersz.appendChild(sel);
-    wiersz.appendChild(inp);
+    sel.addEventListener('change', function () {
+      paryStan[i].sprzet = sel.value;
+      rysujPary(); // pole licznika zależy od wybranego sprzętu — przerysuj
+      odswiezPodgladPar();
+    });
+    gora.appendChild(sel);
     if (paryStan.length > 1) {
       var usun = document.createElement('button');
       usun.type = 'button'; usun.className = 'para-usun'; usun.textContent = '×';
@@ -782,13 +826,39 @@ function rysujPary() {
         rysujPary();
         odswiezPodgladPar();
       });
-      wiersz.appendChild(usun);
+      gora.appendChild(usun);
     }
-    kontener.appendChild(wiersz);
+    item.appendChild(gora);
+
+    var pola = document.createElement('div');
+    pola.className = 'para-wiersz-pola';
+    var inp = document.createElement('input');
+    inp.type = 'text'; inp.inputMode = 'decimal'; inp.placeholder = 'litry';
+    inp.value = p.litry;
+    inp.addEventListener('input', function () { paryStan[i].litry = inp.value; odswiezPodgladPar(); });
+    pola.appendChild(inp);
+
+    // Stan licznika TEGO sprzętu — tylko gdy on sam ma licznik (Sprzęt.F),
+    // ta sama zasada co przy pojedynczym tankowaniu (czyLicznikWidoczny).
+    var info = sprzetInfo(p.sprzet);
+    if (info && info.maLicznik !== false) {
+      var jedn = jednostkaLicznika_(info.typ);
+      var inpLicznik = document.createElement('input');
+      inpLicznik.type = 'text'; inpLicznik.inputMode = 'numeric';
+      inpLicznik.placeholder = 'licznik' + (jedn ? ' (' + jedn + ')' : '');
+      inpLicznik.value = p.licznik || '';
+      inpLicznik.addEventListener('input', function () { paryStan[i].licznik = inpLicznik.value; odswiezPodgladPar(); });
+      pola.appendChild(inpLicznik);
+    } else if (p.licznik) {
+      p.licznik = ''; // zmiana na sprzęt bez licznika — nie zostawiaj nieaktualnej wartości
+    }
+    item.appendChild(pola);
+
+    kontener.appendChild(item);
   });
 }
 el('paryDodaj').addEventListener('click', function () {
-  paryStan.push({ sprzet: '', litry: '' });
+  paryStan.push({ sprzet: '', litry: '', licznik: '' });
   rysujPary();
   odswiezPodgladPar();
 });
@@ -897,6 +967,19 @@ function walidujFormularz(d) {
       bledy.ilosc = 'Suma litrów w pozycjach (' + formatLitry_(suma) +
         ') powinna być równa polu Ilość.';
     }
+    // Stan licznika w parach jest opcjonalny (pkt 4), ale jeśli już wpisany,
+    // ma być poprawną liczbą.
+    var licznikBladPar = paryStan.some(function (p) {
+      if (!p.sprzet || !p.licznik) return false;
+      var info = sprzetInfo(p.sprzet);
+      if (!info || info.maLicznik === false) return false;
+      var lc = liczba(p.licznik);
+      return isNaN(lc) || lc < 0;
+    });
+    if (licznikBladPar) {
+      bledy.info = (bledy.info ? bledy.info + ' ' : '') +
+        'Stan licznika w jednej z pozycji jest nieprawidłowy (liczba bez minusa).';
+    }
   }
   return bledy;
 }
@@ -936,7 +1019,8 @@ el('formularz').addEventListener('submit', function (ev) {
     typSprzetu: s ? s.typ : '',
     licznik: czyLicznikWidoczny(przezn) ? el('f-licznik').value : '',
     budowa: el('f-budowa').value,
-    dodatkoweInfo: el('f-info').value.trim()
+    dodatkoweInfo: el('f-info').value.trim(),
+    licznikPary: czyMix(przezn) ? el('f-licznikPary').value : ''
   };
   var bledy = walidujFormularz(d);
   pokazBledyPol(bledy);
@@ -973,7 +1057,8 @@ function wyslijNowy(d, potwierdzenie) {
 function polaczZAkcja(d, akcja) {
   return { action: akcja, dataZakupu: d.dataZakupu, opis: d.opis, ilosc: d.ilosc,
     wartosc: d.wartosc, przeznaczenie: d.przeznaczenie, typSprzetu: d.typSprzetu,
-    licznik: d.licznik, budowa: d.budowa, dodatkoweInfo: d.dodatkoweInfo };
+    licznik: d.licznik, budowa: d.budowa, dodatkoweInfo: d.dodatkoweInfo,
+    licznikPary: d.licznikPary };
 }
 
 // ---------- ekran sukcesu ----------
@@ -1331,6 +1416,10 @@ function rozpocznijEdycje(w) {
   el('f-budowa').value = w.budowa;
   el('f-info').value = w.dodatkoweInfo;
   paryStan = czyMix(w.przeznaczenie) ? sparsujPary_(w.dodatkoweInfo) : [];
+  if (paryStan.length) {
+    var licznikiMapa = sparsujLicznikiPar_(w.licznikPary);
+    paryStan.forEach(function (p) { p.licznik = licznikiMapa[p.sprzet] || ''; });
+  }
   przelaczPola();
 }
 el('przyciskAnulujEdycje').addEventListener('click', zakonczEdycje);
@@ -1364,6 +1453,8 @@ function wyslijEdycje(d) {
   if (d.przeznaczenie !== w.przeznaczenie) { pola.przeznaczenie = d.przeznaczenie; pola.typSprzetu = d.typSprzetu; }
   if (d.budowa !== w.budowa) pola.budowa = d.budowa;
   if (d.dodatkoweInfo !== w.dodatkoweInfo) pola.dodatkoweInfo = d.dodatkoweInfo;
+  var staryLicznikPary = w.licznikPary || '';
+  if ((d.licznikPary || '') !== staryLicznikPary) pola.licznikPary = d.licznikPary;
 
   if (!Object.keys(pola).length) {
     koniecZapisu_();
