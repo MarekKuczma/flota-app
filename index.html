@@ -121,7 +121,7 @@
     border-left:3px solid var(--turkus); box-shadow:0 1px 2px rgba(0,0,0,.06);
     padding:12px 12px 12px 14px; margin-bottom:10px;}
   .wpis:last-child{margin-bottom:0;}
-  .wpis .wpis-tresc{flex:1; min-width:0;}
+  .wpis .wpis-tresc{flex:1; min-width:0; cursor:pointer;}
   .wpis .linia1{display:flex; justify-content:space-between; align-items:baseline; gap:8px;
     font-weight:600; font-size:15px;}
   .wpis .linia1 span:last-child{flex:none;}
@@ -155,6 +155,15 @@
     padding:10px 14px; margin-bottom:12px; font-size:15px; display:none;}
   .odrzucony{background:var(--bg-blad); border-radius:10px; padding:10px; margin-top:8px; font-size:14px;}
   .odrzucony .p{display:flex; gap:8px; margin-top:8px;}
+  .wpis-strzalka{color:var(--szary); font-size:12px; display:inline-block;
+    margin-left:4px; transition:transform .15s;}
+  .wpis.rozwiniety .wpis-strzalka{transform:rotate(180deg);}
+  .wpis-szczegoly{margin-top:8px; padding-top:8px; border-top:1px dashed var(--linia);}
+  .wsz-wiersz{display:flex; justify-content:space-between; gap:10px; font-size:13px;
+    color:var(--szary); margin-bottom:4px;}
+  .wsz-wiersz b{color:var(--tekst); font-weight:600; text-align:right;}
+  .wsz-naglowek{font-size:13px; color:var(--szary); margin:8px 0 4px;}
+  .wsz-pary{display:flex; flex-wrap:wrap; gap:6px;}
   .sukces-ikona{font-size:56px; text-align:center; margin:10px 0 0;}
   .sukces-tekst{text-align:center; font-size:18px; font-weight:600; margin:6px 0 2px;}
   .sukces-id{text-align:center; color:var(--szary); font-size:15px; margin:0 0 8px;}
@@ -1337,6 +1346,44 @@ function wczytajWpisy() {
     lista.innerHTML = '<div class="srodek">Serwer chwilowo niedostępny.</div>';
   });
 }
+// Rozwijane szczegóły kafelka w "Moje wpisy" (Marek, 17.07.2026) — czysto
+// wizualne, dane są już wczytane razem z listą (bez dodatkowych zapytań).
+// Dla wpisów łączonych (Mix) rozbijamy dodatkoweInfo/licznikPary z powrotem
+// na sprzęt→litry→licznik tymi samymi parserami, co przy wznawianiu edycji.
+function wierszSzczegol_(etykieta, wartosc) {
+  return '<div class="wsz-wiersz"><span>' + etykieta + '</span><b>' + wartosc + '</b></div>';
+}
+function szczegolyWpisuHtml_(w, mix) {
+  var wiersze =
+    wierszSzczegol_('Data zakupu', w.dataZakupu.split('-').reverse().join('.')) +
+    wierszSzczegol_('Co kupiono', w.opis) +
+    wierszSzczegol_('Ilość', formatIlosc_(w.ilosc, w.opis) +
+      (jednostkaOpisu(w.opis) ? ' ' + jednostkaOpisu(w.opis) : '')) +
+    wierszSzczegol_('Wartość', formatKwote_(w.wartosc) + ' zł') +
+    wierszSzczegol_('Budowa', w.budowa) +
+    wierszSzczegol_('Nr wpisu', w.id);
+  if (w.licznik !== '' && !mix) {
+    wiersze += wierszSzczegol_('Stan licznika', formatLicznik_(w.licznik) +
+      (jednostkaLicznika_(w.typSprzetu) ? ' ' + jednostkaLicznika_(w.typSprzetu) : ''));
+  }
+  if (!mix && w.dodatkoweInfo) wiersze += wierszSzczegol_('Dodatkowe informacje', w.dodatkoweInfo);
+  var html = '<div class="wsz-wiersze">' + wiersze + '</div>';
+  if (mix) {
+    var litry = sparsujPary_(w.dodatkoweInfo);
+    var liczniki = sparsujLicznikiPar_(w.licznikPary);
+    if (litry.length) {
+      html += '<div class="wsz-naglowek">Rozbicie tankowania łączonego:</div><div class="wsz-pary">' +
+        litry.map(function (p) {
+          var info = sprzetInfo(p.sprzet);
+          var jedn = info ? jednostkaLicznika_(info.typ) : '';
+          var lic = liczniki[p.sprzet];
+          return '<span class="etykieta-typ">' + p.sprzet + ' — ' + p.litry + ' l' +
+            (lic ? ' · licznik ' + lic + (jedn ? ' ' + jedn : '') : '') + '</span>';
+        }).join('') + '</div>';
+    }
+  }
+  return html;
+}
 function renderujListeWpisow() {
   var lista = el('listaWpisow');
   var pokazujAnulowane = el('pokazAnulowane').checked;
@@ -1380,12 +1427,21 @@ function renderujListeWpisow() {
         (jednostkaLicznika_(w.typSprzetu) ? ' ' + jednostkaLicznika_(w.typSprzetu) : '') +
         '</div>' : '') +
       '<div class="linia-data"><span>' + w.dataZakupu + '</span>' +
-      '<span class="plakietka-id">' + w.id + '</span></div>' +
+      '<span class="plakietka-id">' + w.id + '</span>' +
+      '<span class="wpis-strzalka">⌄</span></div>' +
+      '<div class="wpis-szczegoly ukryte">' + szczegolyWpisuHtml_(w, mix) + '</div>' +
       akcja + '</div>';
+    var tresc = div.querySelector('.wpis-tresc');
+    var szczegolyEl = div.querySelector('.wpis-szczegoly');
+    tresc.addEventListener('click', function (e) {
+      if (e.target.closest('.akcja')) return;
+      div.classList.toggle('rozwiniety');
+      szczegolyEl.classList.toggle('ukryte');
+    });
     var bp = div.querySelector('.btn-popraw');
-    if (bp) bp.addEventListener('click', function () { rozpocznijEdycje(w); });
+    if (bp) bp.addEventListener('click', function (e) { e.stopPropagation(); rozpocznijEdycje(w); });
     var ba = div.querySelector('.btn-anuluj');
-    if (ba) ba.addEventListener('click', function () { anulujWpis(w); });
+    if (ba) ba.addEventListener('click', function (e) { e.stopPropagation(); anulujWpis(w); });
     lista.appendChild(div);
   });
 }
