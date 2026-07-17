@@ -105,7 +105,7 @@
   .dwa{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;}
   .dwa .przycisk-drugi{margin-top:0;}
   .para-item{margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--linia);}
-  .para-item:last-child{border-bottom:none; margin-bottom:0; padding-bottom:0;}
+  .para-item:last-child{border-bottom:none; padding-bottom:0;}
   .para-wiersz{display:flex; gap:8px; align-items:center;}
   .para-wiersz select{flex:1; min-height:44px; min-width:0;}
   .para-wiersz-pola{display:flex; gap:8px; margin-top:8px;}
@@ -142,6 +142,7 @@
   .plakietka{display:inline-block; background:var(--bg-turkus); color:var(--tekst-turkus);
     font-size:11px; font-weight:600; border-radius:7px; padding:2px 8px; margin-top:4px;}
   .plakietka.plakietka-blad{background:var(--bg-blad); color:var(--tekst-blad);}
+  .plakietka-beta{margin-left:6px; vertical-align:middle;}
   .mini-wpis{display:flex; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid var(--linia);}
   .mini-wpis:last-child{border-bottom:none;}
   .mini-wpis .ikona-krag{width:30px; height:30px; font-size:14px;}
@@ -220,7 +221,8 @@
       <div class="powitanie">
         <div class="avatar-krag" id="dAwatar">👤</div>
         <div>
-          <div class="p1" id="dPowitanie">Cześć!</div>
+          <div class="p1"><span id="dPowitanie">Cześć!</span><span id="dBeta"
+            class="plakietka plakietka-beta ukryte">🧪 Beta-tester</span></div>
           <div class="p2" id="dMiesiac"></div>
         </div>
       </div>
@@ -1175,6 +1177,7 @@ function pobierzStatus() {
     if (!d.ok) return;
     if (d.kierowca) {
       localStorage.setItem('flota_kierowca', d.kierowca);
+      localStorage.setItem('flota_beta', d.beta ? 'TAK' : 'NIE');
       el('kto').textContent = d.kierowca;
       rysujDashboard();
     }
@@ -1200,6 +1203,7 @@ function odswiezWpisyCache() {
       localStorage.setItem('flota_wpisy', JSON.stringify({ czas: Date.now(), wpisy: d.wpisy }));
       if (d.kierowca) {
         localStorage.setItem('flota_kierowca', d.kierowca);
+        localStorage.setItem('flota_beta', d.beta ? 'TAK' : 'NIE');
         el('kto').textContent = d.kierowca;
       }
     }
@@ -1210,6 +1214,12 @@ function rysujDashboard() {
   var imie = localStorage.getItem('flota_kierowca') || '';
   el('dPowitanie').textContent = imie ? 'Cześć, ' + imie.split(' ').pop() + '!' : 'Cześć!';
   el('dAwatar').textContent = inicjaly_(imie);
+  // Odznaka dla beta-testerów (FEEDBACK-BETA-TESTY.md pkt 5) — wyłącznie
+  // odczyt z Kierowcy.F ("W pilocie"), bez osobnej logiki wygaszania: gdy
+  // Marek kiedyś przełączy kogoś na NIE, plakietka sama zniknie przy
+  // następnym uruchomieniu.
+  if (localStorage.getItem('flota_beta') === 'TAK') pokaz('dBeta');
+  else schowaj('dBeta');
   var teraz = new Date();
   el('dMiesiac').textContent = MIESIACE_PL[teraz.getMonth()] + ' ' + teraz.getFullYear();
 
