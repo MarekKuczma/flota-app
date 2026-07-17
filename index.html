@@ -260,7 +260,7 @@
       <div class="sukces-ikona" id="sIkona">✅</div>
       <div class="sukces-tekst" id="sTekst">Wpis dodany</div>
       <div class="sukces-id" id="sId"></div>
-      <div class="komunikat uwaga ukryte" id="sOstrzezenia" style="display:none;"></div>
+      <div class="komunikat uwaga ukryte" id="sOstrzezenia"></div>
       <button type="button" class="przycisk" id="sKolejny">＋ Dodaj kolejny wpis</button>
       <div class="dwa">
         <button type="button" class="przycisk-drugi" id="sWpisy">📋 Moje wpisy</button>
@@ -1069,10 +1069,10 @@ function pokazSukces(tekst, podtekst, ostrzezenia) {
   el('sId').textContent = podtekst || '';
   var so = el('sOstrzezenia');
   if (ostrzezenia && ostrzezenia.length) {
-    so.style.display = 'block';
+    so.classList.remove('ukryte');
     so.innerHTML = '<b>Zwróć uwagę:</b><ul>' +
       ostrzezenia.map(function (o) { return '<li>' + o + '</li>'; }).join('') + '</ul>';
-  } else { so.style.display = 'none'; so.innerHTML = ''; }
+  } else { so.classList.add('ukryte'); so.innerHTML = ''; }
   przelaczWidok('sukces');
 }
 el('sKolejny').addEventListener('click', function () {
