@@ -23,6 +23,7 @@
     --metryka-grad:linear-gradient(135deg, #fff7ed 0%, #fef2f2 100%);
     --turkus:#06b6d4; --bg-turkus:#e0f7fb; --tekst-turkus:#0e7490;
     --ikona-grad:linear-gradient(135deg, #0f2a43, #06b6d4);
+    --paleta-ikona:#fdba74;
   }
   [data-motyw="ciemny"]{
     --tlo:#0f1115; --karta:#1c1f26; --input-tlo:#262b34; --input-brzeg:#3a3f4a;
@@ -48,6 +49,7 @@
     --bg-akcentjasny:#eff6ff; --tekst-akcentjasny:#1d4ed8;
     --metryka-grad:linear-gradient(135deg, #eff6ff 0%, #e0edff 100%);
     --turkus:#f97316; --bg-turkus:#fff1e6; --tekst-turkus:#c2410c;
+    --paleta-ikona:#2563eb;
   }
   [data-motyw="ciemny"][data-paleta="niebieska"]{
     --bg-akcentjasny:#132447; --tekst-akcentjasny:#93c5fd;
@@ -65,7 +67,9 @@
   header .kto{font-size:14px; opacity:.9; margin-top:2px;}
   header .naglowek-tekst{flex:1; min-width:0;}
   #motywBtn,#paletaBtn{background:rgba(255,255,255,.2); border:none; border-radius:10px;
-    width:40px; height:40px; font-size:18px; color:#fff; flex:none; min-height:auto;}
+    width:40px; height:40px; font-size:18px; color:#fff; flex:none; min-height:auto;
+    display:inline-flex; align-items:center; justify-content:center;}
+  .ikona-paletki{fill:var(--paleta-ikona);}
   main{max-width:560px; margin:0 auto; padding:14px 14px 90px;}
   .baner{background:var(--bg-uwaga); border:1px solid var(--brzeg-uwaga); color:var(--tekst-uwaga);
     border-radius:12px; padding:12px 14px; margin-bottom:12px; font-size:15px;}
@@ -242,7 +246,15 @@
     <div class="kto" id="kto"></div>
   </div>
   <button type="button" id="motywBtn" aria-label="Zmień motyw">🌙</button>
-  <button type="button" id="paletaBtn" aria-label="Zmień paletę kolorów">🟠</button>
+  <button type="button" id="paletaBtn" aria-label="Zmień paletę kolorów">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path class="ikona-paletki" d="M12 2C6.48 2 2 6.15 2 11.2c0 3.1 2.6 4.4 4.4 4.4h1.7c.7 0 1.3.6 1.3 1.3 0 .4-.2.8-.5 1.1-.6.5-.9 1.2-.9 1.9 0 1.2 1.1 2.1 2.5 2.1 5.5 0 9.5-4.4 9.5-9.9C20 6.36 16.6 2 12 2Z"/>
+      <circle cx="7.5" cy="10.5" r="1.4" fill="#fff"/>
+      <circle cx="11.5" cy="7" r="1.4" fill="#fff"/>
+      <circle cx="16" cy="9" r="1.4" fill="#fff"/>
+      <circle cx="16" cy="13.5" r="1.4" fill="#fff"/>
+    </svg>
+  </button>
 </header>
 
 <main>
@@ -501,13 +513,13 @@ wczytajMotyw();
 // ---------- paleta kolorów (pomarańczowa/niebieska) ----------
 // Osobny, niezależny przełącznik obok jasny/ciemny (FEEDBACK-BETA-TESTY.md
 // pkt 3, 18.07.2026) — ten sam wzorzec co wczytajMotyw(): atrybut na <html>
-// + zapamiętanie w localStorage. Ikonka pokazuje AKTUALNIE aktywną paletę
-// (spójnie z motywBtn, które pokazuje aktualny motyw, nie akcję zmiany).
+// + zapamiętanie w localStorage. Ikonka paletki to teraz SVG (`.ikona-paletki`)
+// kolorowane samym CSS przez zmienną --paleta-ikona — JS tylko przełącza
+// atrybut, nie musi już podmieniać treści przycisku.
 function wczytajPalete_() {
   var p = localStorage.getItem('flota_paleta') || 'domyslna';
   if (p === 'niebieska') document.documentElement.setAttribute('data-paleta', 'niebieska');
   else document.documentElement.removeAttribute('data-paleta');
-  el('paletaBtn').textContent = p === 'niebieska' ? '🔵' : '🟠';
 }
 el('paletaBtn').addEventListener('click', function () {
   var obecna = document.documentElement.getAttribute('data-paleta') === 'niebieska' ? 'niebieska' : 'domyslna';
