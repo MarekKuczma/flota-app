@@ -521,6 +521,12 @@ function wczytajPalete_() {
   var p = localStorage.getItem('flota_paleta') || 'domyslna';
   if (p === 'niebieska') document.documentElement.setAttribute('data-paleta', 'niebieska');
   else document.documentElement.removeAttribute('data-paleta');
+  // Pasek systemowy telefonu (theme-color) — reaguje TYLKO na paletę, nie na
+  // tryb jasny/ciemny (decyzja Marka 20.07.2026). System przyjmuje jeden pełny
+  // kolor (gradientu tam być nie może), więc bierzemy główny akcent palety.
+  // Koszt zerowy — podmiana jednego atrybutu przy zmianie/wczytaniu palety.
+  var meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute('content', p === 'niebieska' ? '#2563eb' : '#f97316');
 }
 el('paletaBtn').addEventListener('click', function () {
   var obecna = document.documentElement.getAttribute('data-paleta') === 'niebieska' ? 'niebieska' : 'domyslna';
