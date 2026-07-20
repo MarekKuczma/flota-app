@@ -62,6 +62,7 @@
   .metryka .m-w{font-size:clamp(17px, 6vw, 24px); font-weight:600; margin-top:2px;
     background:var(--gradient); -webkit-background-clip:text;
     background-clip:text; -webkit-text-fill-color:transparent; color:var(--akcent);}
+  .metryka .m-sub{font-size:12px; color:var(--szary); margin-top:2px;}
   .powitanie{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
   .avatar-krag{width:42px; height:42px; border-radius:50%; background:var(--ikona-grad);
     color:#fff; display:flex; align-items:center; justify-content:center;
@@ -166,7 +167,16 @@
     display:inline-flex; align-items:center; justify-content:center;
     margin-left:4px; transition:transform .15s;}
   .wpis.rozwiniety .wpis-strzalka{transform:rotate(180deg);}
-  .wpis-szczegoly{margin-top:8px; padding-top:8px; border-top:1px dashed var(--linia);}
+  /* Animowane rozwijanie szczegółów (pkt 20): dedykowany mechanizm TYLKO dla
+     tego elementu — grid-template-rows 0fr→1fr animuje "auto" wysokość bez JS;
+     celowo NIE używa klasy .ukryte (display:none nie da się animować). */
+  .wpis-szczegoly{display:grid; grid-template-rows:0fr; opacity:0;
+    margin-top:0; padding-top:0; border-top:1px dashed transparent;
+    transition:grid-template-rows .25s ease, opacity .25s ease,
+      margin-top .25s ease, padding-top .25s ease;}
+  .wpis.rozwiniety .wpis-szczegoly{grid-template-rows:1fr; opacity:1;
+    margin-top:8px; padding-top:8px; border-top-color:var(--linia);}
+  .wpis-szczegoly .wsz-zawartosc{min-height:0; overflow:hidden;}
   .wsz-wiersz{display:flex; justify-content:space-between; gap:10px; font-size:13px;
     color:var(--szary); margin-bottom:4px;}
   .wsz-wiersz b{color:var(--tekst); font-weight:600; text-align:right;}
@@ -263,6 +273,7 @@
       </div>
       <button type="button" class="przycisk" style="margin-top:4px;" id="dNowy">＋ Nowy wpis</button>
       <button type="button" class="przycisk-drugi" id="dWpisy">📋 Moje wpisy</button>
+      <button type="button" class="przycisk-drugi" id="dPodsumowanie">📊 Podsumowanie miesiąca</button>
       <button type="button" class="przycisk-drugi" id="dMiesiacBtn">✅ Zamykam miesiąc</button>
     </div>
     <div class="karta">
@@ -344,6 +355,16 @@
         <button type="submit" class="przycisk" id="przyciskZapisz">ZAPISZ</button>
         <button type="button" class="przycisk-drugi ukryte" id="przyciskAnulujEdycje">Anuluj poprawianie</button>
       </form>
+    </div>
+  </div>
+
+  <!-- Podsumowanie miesiąca (pkt 19) -->
+  <div id="widokPodsumowanie" class="ukryte">
+    <div class="karta">
+      <h2 id="podsumowanieTytul">Podsumowanie miesiąca</h2>
+      <div class="metryki" id="podsumowanieGlowne"></div>
+      <div class="metryki" id="podsumowanieKafelki" style="margin-bottom:0;"></div>
+      <div class="srodek ukryte" id="podsumowaniePusto" style="padding:16px;">Brak wpisów w tym miesiącu.</div>
     </div>
   </div>
 
@@ -433,6 +454,13 @@ function ustawPodpowiedzBrakKodu_() {
 function el(id){ return document.getElementById(id); }
 function pokaz(id){ el(id).classList.remove('ukryte'); }
 function schowaj(id){ el(id).classList.add('ukryte'); }
+// Tekst wpisany przez kierowcę (Dodatkowe informacje itp.) wstawiany do
+// innerHTML — escapujemy, żeby renderował się dosłownie, a nie jako HTML
+// (poprawka 20.07.2026).
+function bezpiecznyTekst_(t) {
+  return String(t == null ? '' : t).replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
 // ---------- motyw (jasny/ciemny) ----------
 function wczytajMotyw() {
@@ -1176,8 +1204,8 @@ function odswiezKolejkeInfo() {
   if (oczekuje) html += '⏳ Wpisy czekające na wysłanie: <b>' + oczekuje + '</b>';
   odrzucone.forEach(function (w) {
     var e008 = (w.blad || '').indexOf('E008') !== -1;
-    html += '<div class="odrzucony"><b>Wpis odrzucony</b> (' + w.dane.dataZakupu + ', ' +
-      w.dane.ilosc + ' / ' + w.dane.wartosc + ' zł): ' + w.blad +
+    html += '<div class="odrzucony"><b>Wpis odrzucony</b> (' + bezpiecznyTekst_(w.dane.dataZakupu) + ', ' +
+      bezpiecznyTekst_(w.dane.ilosc) + ' / ' + bezpiecznyTekst_(w.dane.wartosc) + ' zł): ' + bezpiecznyTekst_(w.blad) +
       '<div class="p">' +
       '<button class="przycisk-maly" onclick="ponowWpis(' + w.tmp + ',' + (e008 ? 'true' : 'false') + ')">' +
       (e008 ? 'To nie duplikat — wyślij' : 'Spróbuj ponownie') + '</button>' +
@@ -1242,6 +1270,9 @@ function odswiezWpisyCache() {
   }).catch(function () { rysujDashboard(); });
 }
 function rysujDashboard() {
+  // Podsumowanie miesiąca (pkt 19) liczy z tego samego cache — jeśli jest
+  // otwarte, odśwież je razem z dashboardem (np. po dociągnięciu danych z sieci).
+  if (!el('widokPodsumowanie').classList.contains('ukryte')) rysujPodsumowanie();
   var imie = localStorage.getItem('flota_kierowca') || '';
   el('dPowitanie').textContent = imie ? 'Cześć, ' + imie.split(' ').pop() + '!' : 'Cześć!';
   el('dAwatar').textContent = inicjaly_(imie);
@@ -1291,7 +1322,80 @@ function rysujDashboard() {
 }
 el('dNowy').addEventListener('click', function () { zakonczEdycje(); przelaczWidok('nowy'); });
 el('dWpisy').addEventListener('click', function () { przelaczWidok('wpisy'); });
+el('dPodsumowanie').addEventListener('click', function () { przelaczWidok('podsumowanie'); });
 el('dMiesiacBtn').addEventListener('click', otworzDialogMiesiaca);
+
+// ---------- Podsumowanie miesiąca (pkt 19) ----------
+// Kolory kafelków: delikatne zabarwienie hsla (przezroczyste, więc działa
+// tak samo na jasnym i ciemnym motywie). Znane kategorie mają stałe odcienie,
+// nowe pozycje ze słownika Opisy dostają odcień z hasha nazwy — bez ręcznego
+// mapowania w kodzie przy każdej zmianie słownika.
+var ODCIENIE_KATEGORII = {
+  'Diesel': 210, 'Benzyna': 30, 'LPG': 130, 'AdBlue': 200,
+  'Płyny/oleje': 270, 'Kosmetyka': 320, 'Autostrada': 180
+};
+function odcienKategorii_(nazwa) {
+  if (ODCIENIE_KATEGORII.hasOwnProperty(nazwa)) return ODCIENIE_KATEGORII[nazwa];
+  var h = 0;
+  for (var i = 0; i < nazwa.length; i++) h = (h * 31 + nazwa.charCodeAt(i)) % 360;
+  return h;
+}
+function ikonaKategorii_(nazwa) {
+  if (nazwa === 'Autostrada') return '🎫';
+  var o = opisInfo(nazwa);
+  return (o && o.czyPaliwo) ? '⛽' : '🛒';
+}
+function kafelPodsumowania_(ikona, etykieta, wartosc, sub, odcien) {
+  var div = document.createElement('div');
+  div.className = 'metryka';
+  if (odcien != null) div.style.background = 'hsla(' + odcien + ', 70%, 50%, .13)';
+  div.innerHTML = '<div class="m-et"><span class="m-ikona">' + ikona + '</span>' +
+    bezpiecznyTekst_(etykieta) + '</div>' +
+    '<div class="m-w">' + wartosc + '</div>' +
+    (sub ? '<div class="m-sub">' + sub + '</div>' : '');
+  return div;
+}
+// Parametr `miesiac` na przyszłość (wybór miesięcy wstecz — pomysł Marka,
+// 20.07.2026) — dziś zawsze bieżący miesiąc kalendarzowy.
+function rysujPodsumowanie(miesiac) {
+  var m = miesiac || biezacyMiesiac_();
+  el('podsumowanieTytul').textContent = 'Podsumowanie — ' + nazwaMiesiaca_(m);
+  var wpisy = wpisyCache().filter(function (w) {
+    return w.status !== 'Anulowany' && w.miesiac === m;
+  });
+  var glowne = el('podsumowanieGlowne');
+  var kafelki = el('podsumowanieKafelki');
+  glowne.innerHTML = '';
+  kafelki.innerHTML = '';
+  if (!wpisy.length) {
+    pokaz('podsumowaniePusto');
+    return;
+  }
+  schowaj('podsumowaniePusto');
+
+  var sumaZl = wpisy.reduce(function (s, w) { return s + (Number(w.wartosc) || 0); }, 0);
+  glowne.appendChild(kafelPodsumowania_('📋', 'Wpisy', String(wpisy.length), '', null));
+  glowne.appendChild(kafelPodsumowania_('💰', 'Suma', formatKwote_(sumaZl) + ' zł', '', null));
+
+  // Agregacja per kategoria (Co kupiono): kwota + ilość w jednym kafelku
+  var kat = {};
+  wpisy.forEach(function (w) {
+    var k = kat[w.opis] = kat[w.opis] || { kwota: 0, ilosc: 0, wpisy: 0 };
+    k.kwota += Number(w.wartosc) || 0;
+    k.ilosc += Number(w.ilosc) || 0;
+    k.wpisy++;
+  });
+  Object.keys(kat).sort(function (a, b) { return kat[b].kwota - kat[a].kwota; })
+    .forEach(function (nazwa) {
+      var k = kat[nazwa];
+      var o = opisInfo(nazwa);
+      var sub = (o && o.czyPaliwo)
+        ? formatKwote_(k.ilosc) + ' l · ' + k.wpisy + (k.wpisy === 1 ? ' wpis' : ' wpisy(-ów)')
+        : Math.round(k.ilosc) + ' szt. · ' + k.wpisy + (k.wpisy === 1 ? ' wpis' : ' wpisy(-ów)');
+      kafelki.appendChild(kafelPodsumowania_(ikonaKategorii_(nazwa), nazwa,
+        formatKwote_(k.kwota) + ' zł', sub, odcienKategorii_(nazwa)));
+    });
+}
 
 // ---------- Zamykam miesiąc ----------
 function otworzDialogMiesiaca() {
@@ -1325,7 +1429,11 @@ el('dialogTak').addEventListener('click', function () {
       schowaj('baner');
       pokazSukces('Miesiąc zgłoszony', 'Dziękujemy! Marek dostał informację.', []);
       pobierzStatus();
-    } else pokazBladBackendu(odp.bledy);
+    } else {
+      // alert, nie pokazBladBackendu — tamten komunikat żyje w (ukrytym tu)
+      // widoku formularza, więc błąd był niewidoczny (poprawka 20.07.2026)
+      alert('Nie udało się zgłosić miesiąca:\n' + (odp.bledy || ['Nieznany błąd']).join('\n'));
+    }
   }).catch(function () {
     el('dialogTak').disabled = false;
     el('dialogMiesiac').close();
@@ -1338,13 +1446,19 @@ el('nawStart').addEventListener('click', function () { przelaczWidok('start'); }
 el('nawNowy').addEventListener('click', function () { zakonczEdycje(); przelaczWidok('nowy'); });
 el('nawWpisy').addEventListener('click', function () { przelaczWidok('wpisy'); });
 function przelaczWidok(ktory) {
-  ['widokStart', 'widokFormularz', 'widokWpisy', 'widokSukces'].forEach(schowaj);
-  el('nawStart').classList.toggle('aktywna', ktory === 'start');
+  ['widokStart', 'widokFormularz', 'widokWpisy', 'widokSukces', 'widokPodsumowanie'].forEach(schowaj);
+  // Podsumowanie to "dziecko" Startu (wejście z dashboardu) — podświetlamy Start.
+  el('nawStart').classList.toggle('aktywna', ktory === 'start' || ktory === 'podsumowanie');
   el('nawNowy').classList.toggle('aktywna', ktory === 'nowy');
   el('nawWpisy').classList.toggle('aktywna', ktory === 'wpisy');
   if (ktory === 'start') { pokaz('widokStart'); rysujDashboard(); }
   else if (ktory === 'nowy') pokaz('widokFormularz');
   else if (ktory === 'sukces') pokaz('widokSukces');
+  else if (ktory === 'podsumowanie') {
+    pokaz('widokPodsumowanie');
+    rysujPodsumowanie();
+    if (navigator.onLine) odswiezWpisyCache(); // świeże dane, gdy jest sieć
+  }
   else { pokaz('widokWpisy'); wczytajWpisy(); }
   window.scrollTo({ top: 0 });
 }
@@ -1388,7 +1502,7 @@ function szczegolyWpisuHtml_(w, mix) {
     wiersze += wierszSzczegol_('Stan licznika', formatLicznik_(w.licznik) +
       (jednostkaLicznika_(w.typSprzetu) ? ' ' + jednostkaLicznika_(w.typSprzetu) : ''));
   }
-  if (!mix && w.dodatkoweInfo) wiersze += wierszSzczegol_('Dodatkowe informacje', w.dodatkoweInfo);
+  if (!mix && w.dodatkoweInfo) wiersze += wierszSzczegol_('Dodatkowe informacje', bezpiecznyTekst_(w.dodatkoweInfo));
   var html = '<div class="wsz-wiersze">' + wiersze + '</div>';
   if (mix) {
     var litry = sparsujPary_(w.dodatkoweInfo);
@@ -1399,8 +1513,9 @@ function szczegolyWpisuHtml_(w, mix) {
           var info = sprzetInfo(p.sprzet);
           var jedn = info ? jednostkaLicznika_(info.typ) : '';
           var lic = liczniki[p.sprzet];
-          return '<span class="etykieta-typ">' + p.sprzet + ' — ' + p.litry + ' l' +
-            (lic ? ' · licznik ' + lic + (jedn ? ' ' + jedn : '') : '') + '</span>';
+          return '<span class="etykieta-typ">' + bezpiecznyTekst_(p.sprzet) + ' — ' +
+            bezpiecznyTekst_(p.litry) + ' l' +
+            (lic ? ' · licznik ' + bezpiecznyTekst_(lic) + (jedn ? ' ' + jedn : '') : '') + '</span>';
         }).join('') + '</div>';
     }
   }
@@ -1460,21 +1575,21 @@ function renderujListeWpisow() {
       (plakietki ? '<div>' + plakietki + '</div>' : '') +
       '<div class="linia2">' + w.opis + ' · ' + formatIlosc_(w.ilosc, w.opis) +
       (jednostkaOpisu(w.opis) ? ' ' + jednostkaOpisu(w.opis) : '') +
-      ' · ' + w.budowa + (w.dodatkoweInfo ? ' · ' + w.dodatkoweInfo : '') + '</div>' +
+      ' · ' + w.budowa + (w.dodatkoweInfo ? ' · ' + bezpiecznyTekst_(w.dodatkoweInfo) : '') + '</div>' +
       (w.licznik !== '' ? '<div class="linia2">🔢 ' + formatLicznik_(w.licznik) +
         (jednostkaLicznika_(w.typSprzetu) ? ' ' + jednostkaLicznika_(w.typSprzetu) : '') +
         '</div>' : '') +
       '<div class="linia-data"><span>' + w.dataZakupu + '</span>' +
       '<span class="plakietka-id">' + w.id + '</span>' +
       '<span class="wpis-strzalka">▾</span></div>' +
-      '<div class="wpis-szczegoly ukryte">' + szczegolyWpisuHtml_(w, mix) + '</div>' +
+      // Animowane rozwijanie (pkt 20): wrapper .wsz-zawartosc + klasa
+      // .rozwiniety na kafelku — bez .ukryte (patrz CSS .wpis-szczegoly).
+      '<div class="wpis-szczegoly"><div class="wsz-zawartosc">' + szczegolyWpisuHtml_(w, mix) + '</div></div>' +
       akcja + '</div>';
     var tresc = div.querySelector('.wpis-tresc');
-    var szczegolyEl = div.querySelector('.wpis-szczegoly');
     tresc.addEventListener('click', function (e) {
       if (e.target.closest('.akcja')) return;
       div.classList.toggle('rozwiniety');
-      szczegolyEl.classList.toggle('ukryte');
     });
     var bp = div.querySelector('.btn-popraw');
     if (bp) bp.addEventListener('click', function (e) { e.stopPropagation(); rozpocznijEdycje(w); });
@@ -1504,6 +1619,21 @@ function anulujWpis(w) {
 }
 
 // ---------- edycja ----------
+// Ustawia wartość selecta; gdy pozycji nie ma na liście (słownik zmienił się
+// od czasu zapisu wpisu — sprzęt/opis/budowa dezaktywowane), dokłada ją z
+// dopiskiem "(nieaktywny)" zamiast zostawiać pusty select i mylący błąd
+// "Wybierz..." (poprawka 20.07.2026). Serwer i tak zweryfikuje wartość (E002).
+function ustawWartoscSelect_(id, wartosc) {
+  var sel = el(id);
+  sel.value = wartosc;
+  if (wartosc && sel.value !== wartosc) {
+    var opt = document.createElement('option');
+    opt.value = wartosc;
+    opt.textContent = wartosc + ' (nieaktywny)';
+    sel.appendChild(opt);
+    sel.value = wartosc;
+  }
+}
 function rozpocznijEdycje(w) {
   edytowanyWpis = w;
   przelaczWidok('nowy');
@@ -1512,12 +1642,12 @@ function rozpocznijEdycje(w) {
   pokaz('przyciskAnulujEdycje');
   el('komunikatWynik').className = 'komunikat';
   el('f-data').value = w.dataZakupu;
-  el('f-opis').value = w.opis;
+  ustawWartoscSelect_('f-opis', w.opis);
   el('f-ilosc').value = formatIlosc_(w.ilosc, w.opis);
   el('f-wartosc').value = formatKwote_(w.wartosc);
-  el('f-przeznaczenie').value = w.przeznaczenie;
+  ustawWartoscSelect_('f-przeznaczenie', w.przeznaczenie);
   el('f-licznik').value = w.licznik === '' ? '' : String(w.licznik);
-  el('f-budowa').value = w.budowa;
+  ustawWartoscSelect_('f-budowa', w.budowa);
   el('f-info').value = w.dodatkoweInfo;
   paryStan = czyMix(w.przeznaczenie) ? sparsujPary_(w.dodatkoweInfo) : [];
   if (paryStan.length) {
