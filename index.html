@@ -1451,25 +1451,36 @@ function rysujPodsumowanie(miesiac) {
 }
 
 // ---------- Zamykam miesiąc ----------
+// Lista miesięcy do zamknięcia = zaległe (przeszłe miesiące z aktywnymi
+// wpisami, jeszcze niezamknięte i niezadeklarowane — dokładnie to, co
+// backend liczy dla banera „status") + zawsze bieżący miesiąc kalendarzowy.
+// Wcześniej pokazywaliśmy sztywno 3 miesiące wstecz z kalendarza, nawet gdy
+// aplikacji wtedy nie było i kierowca nie miał tam ani jednego wpisu — te
+// puste pozycje myliły (poprawka 20.07.2026). Odświeżamy status na świeżo,
+// bo dialog i tak wymaga internetu.
 function otworzDialogMiesiaca() {
   if (!navigator.onLine) { alert('„Zamykam miesiąc" wymaga internetu.'); return; }
-  var sel = el('wyborMiesiaca');
-  sel.innerHTML = '';
-  var teraz = new Date();
-  for (var i = 1; i <= 3; i++) {
-    var d = new Date(teraz.getFullYear(), teraz.getMonth() - i, 1);
-    var v = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2);
-    var opt = document.createElement('option');
-    opt.value = v;
-    opt.textContent = MIESIACE_PL[d.getMonth()] + ' ' + d.getFullYear();
-    sel.appendChild(opt);
-  }
-  var vBiez = teraz.getFullYear() + '-' + ('0' + (teraz.getMonth() + 1)).slice(-2);
-  var optB = document.createElement('option');
-  optB.value = vBiez;
-  optB.textContent = MIESIACE_PL[teraz.getMonth()] + ' ' + teraz.getFullYear() + ' (bieżący)';
-  sel.appendChild(optB);
-  el('dialogMiesiac').showModal();
+  apiGet('status').then(function (d) {
+    var zalegle = (d && d.ok && d.zalegleMiesiace) ? d.zalegleMiesiace.slice() : [];
+    var sel = el('wyborMiesiaca');
+    sel.innerHTML = '';
+    zalegle.sort().forEach(function (v) {         // najstarszy zaległy u góry
+      var opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = nazwaMiesiaca_(v);
+      sel.appendChild(opt);
+    });
+    var teraz = new Date();
+    var vBiez = teraz.getFullYear() + '-' + ('0' + (teraz.getMonth() + 1)).slice(-2);
+    var optB = document.createElement('option');   // bieżący — zawsze dostępny
+    optB.value = vBiez;
+    optB.textContent = MIESIACE_PL[teraz.getMonth()] + ' ' + teraz.getFullYear() + ' (bieżący)';
+    sel.appendChild(optB);
+    sel.selectedIndex = 0;   // domyślnie najstarszy zaległy, a jak brak — bieżący
+    el('dialogMiesiac').showModal();
+  }).catch(function () {
+    alert('Serwer chwilowo niedostępny — spróbuj za chwilę.');
+  });
 }
 el('dialogNie').addEventListener('click', function () { el('dialogMiesiac').close(); });
 el('dialogTak').addEventListener('click', function () {
