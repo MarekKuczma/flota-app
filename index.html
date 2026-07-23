@@ -348,15 +348,19 @@
           <span class="etykieta-typ ukryte" id="typSprzetu"></span>
           <div class="blad-pola" id="b-przeznaczenie"></div>
         </div>
-        <div class="pole" id="p-licznik">
-          <label><span class="lbl-ikona">🔢</span>Stan licznika / motogodziny <span class="wym ukryte" id="licznikWym">*</span></label>
-          <input type="text" inputmode="numeric" id="f-licznik" placeholder="np. 184632">
-          <div class="blad-pola" id="b-licznik"></div>
-        </div>
         <div class="pole" id="p-opis">
           <label><span class="lbl-ikona">⛽</span>Co kupiono <span class="wym">*</span></label>
           <select id="f-opis"></select>
           <div class="blad-pola" id="b-opis"></div>
+        </div>
+        <!-- Stan licznika PO „Co kupiono": jego widoczność zależy i od pojazdu,
+             i od „Co kupiono" (czyPaliwo) — trzymanie go wyżej powodowało
+             migotanie (pokazywał się po wyborze auta, znikał po wyborze
+             Autostrady). Przestawione pod „Co kupiono" 20.07.2026 (prośba Marka). -->
+        <div class="pole" id="p-licznik">
+          <label><span class="lbl-ikona">🔢</span>Stan licznika / motogodziny <span class="wym ukryte" id="licznikWym">*</span></label>
+          <input type="text" inputmode="numeric" id="f-licznik" placeholder="np. 184632">
+          <div class="blad-pola" id="b-licznik"></div>
         </div>
         <div class="pole" id="p-ilosc">
           <label id="labelIlosc"><span class="lbl-ikona">🧮</span>Ilość (litry lub sztuki) <span class="wym">*</span></label>
@@ -1183,6 +1187,12 @@ function polaczZAkcja(d, akcja) {
 }
 
 // ---------- ekran sukcesu ----------
+// Usuwa techniczny przedrostek kodu (np. „E008: ", „W004: ") z komunikatu —
+// kierowca widzi sam czytelny tekst; kod zostaje po stronie serwera (logika/
+// logi). Jedno miejsce dla wszystkich błędów i ostrzeżeń (decyzja Marka
+// 20.07.2026).
+function bezKodu_(s) { return String(s).replace(/^[EW]\d{3}:\s*/, ''); }
+
 function pokazSukces(tekst, podtekst, ostrzezenia) {
   el('sTekst').textContent = tekst;
   el('sId').textContent = podtekst || '';
@@ -1190,7 +1200,7 @@ function pokazSukces(tekst, podtekst, ostrzezenia) {
   if (ostrzezenia && ostrzezenia.length) {
     so.classList.remove('ukryte');
     so.innerHTML = '<b>Zwróć uwagę:</b><ul>' +
-      ostrzezenia.map(function (o) { return '<li>' + o + '</li>'; }).join('') + '</ul>';
+      ostrzezenia.map(function (o) { return '<li>' + bezKodu_(o) + '</li>'; }).join('') + '</ul>';
   } else { so.classList.add('ukryte'); so.innerHTML = ''; }
   przelaczWidok('sukces');
 }
@@ -1204,7 +1214,7 @@ function pokazBladBackendu(bledy) {
   var k = el('komunikatWynik');
   k.className = 'komunikat blad';
   k.innerHTML = '<b>Nie zapisano:</b><ul>' +
-    (bledy || ['Nieznany błąd']).map(function (b) { return '<li>' + b + '</li>'; }).join('') +
+    (bledy || ['Nieznany błąd']).map(function (b) { return '<li>' + bezKodu_(b) + '</li>'; }).join('') +
     '</ul>';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -1503,7 +1513,7 @@ el('dialogTak').addEventListener('click', function () {
     } else {
       // alert, nie pokazBladBackendu — tamten komunikat żyje w (ukrytym tu)
       // widoku formularza, więc błąd był niewidoczny (poprawka 20.07.2026)
-      alert('Nie udało się zgłosić miesiąca:\n' + (odp.bledy || ['Nieznany błąd']).join('\n'));
+      alert('Nie udało się zgłosić miesiąca:\n' + (odp.bledy || ['Nieznany błąd']).map(bezKodu_).join('\n'));
     }
   }).catch(function () {
     el('dialogTak').disabled = false;
@@ -1682,7 +1692,7 @@ function anulujWpis(w) {
     if (odp.ok) {
       wczytajWpisy();
       odswiezWpisyCache();
-    } else alert('Nie udało się anulować:\n' + (odp.bledy || []).join('\n'));
+    } else alert('Nie udało się anulować:\n' + (odp.bledy || []).map(bezKodu_).join('\n'));
   }).catch(function () {
     koniecZapisu_();
     alert('Serwer chwilowo niedostępny — spróbuj za chwilę.');
