@@ -428,7 +428,7 @@
 
 <div class="overlay-zapis ukryte" id="overlayZapis">
   <div class="spinner"></div>
-  <div class="tekst">Zapisywanie… proszę czekać</div>
+  <div class="tekst" id="overlayTekst">Zapisywanie… proszę czekać</div>
 </div>
 
 <dialog id="dialogMiesiac">
@@ -1147,14 +1147,24 @@ function pokazKomunikatZapis(bledy) {
   if (k.scrollIntoView) k.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
+// ---------- overlay ładowania (współdzielony) ----------
+// Pełnoekranowy overlay przykrywa też przyciski pod spodem, więc od razu blokuje
+// wielokrotne klikanie w trakcie oczekiwania na serwer (Marek klikał „Zamykam
+// miesiąc" kilka razy, bo nic się nie działo, i okno otwierało się kilkukrotnie).
+function pokazOverlay(tekst) {
+  el('overlayTekst').textContent = tekst || 'Proszę czekać…';
+  pokaz('overlayZapis');
+}
+function schowajOverlay() { schowaj('overlayZapis'); }
+
 // ---------- zapis ----------
 function poczatekZapisu_() {
   el('przyciskZapisz').disabled = true;
-  pokaz('overlayZapis');
+  pokazOverlay('Zapisywanie… proszę czekać');
 }
 function koniecZapisu_() {
   el('przyciskZapisz').disabled = false;
-  schowaj('overlayZapis');
+  schowajOverlay();
 }
 el('formularz').addEventListener('submit', function (ev) {
   ev.preventDefault();
@@ -1503,6 +1513,7 @@ function rysujPodsumowanie(miesiac) {
 // bo dialog i tak wymaga internetu.
 function otworzDialogMiesiaca() {
   if (!navigator.onLine) { alert('„Zamykam miesiąc" wymaga internetu.'); return; }
+  pokazOverlay('Chwileczkę…');   // przykrywa przycisk = blokuje kolejne kliknięcia
   apiGet('status').then(function (d) {
     var zalegle = (d && d.ok && d.zalegleMiesiace) ? d.zalegleMiesiace.slice() : [];
     var sel = el('wyborMiesiaca');
@@ -1520,8 +1531,10 @@ function otworzDialogMiesiaca() {
     optB.textContent = MIESIACE_PL[teraz.getMonth()] + ' ' + teraz.getFullYear() + ' (bieżący)';
     sel.appendChild(optB);
     sel.selectedIndex = 0;   // domyślnie najstarszy zaległy, a jak brak — bieżący
+    schowajOverlay();
     el('dialogMiesiac').showModal();
   }).catch(function () {
+    schowajOverlay();
     alert('Serwer chwilowo niedostępny — spróbuj za chwilę.');
   });
 }
@@ -1763,7 +1776,12 @@ function rozpocznijEdycje(w) {
   }
   przelaczPola();
 }
-el('przyciskAnulujEdycje').addEventListener('click', zakonczEdycje);
+// Po „Anuluj poprawianie" wracamy do „Moje wpisy" — to stamtąd użytkownik
+// wszedł w edycję (prośba Marka 23.07.2026), a nie do pustego „Nowy wpis".
+el('przyciskAnulujEdycje').addEventListener('click', function () {
+  zakonczEdycje();
+  przelaczWidok('wpisy');
+});
 function zakonczEdycje() {
   edytowanyWpis = null;
   el('naglowekFormularza').textContent = 'Nowy wpis';
