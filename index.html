@@ -1229,7 +1229,12 @@ function polaczZAkcja(d, akcja) {
 // 20.07.2026).
 function bezKodu_(s) { return String(s).replace(/^[EW]\d{3}:\s*/, ''); }
 
-function pokazSukces(tekst, podtekst, ostrzezenia) {
+// Tryb ekranu sukcesu: po NOWYM wpisie głównym przyciskiem jest „Dodaj kolejny
+// wpis"; po EDYCJI — „Moje wpisy" (tam użytkownik był, prośba Marka 23.07.2026).
+// Zamieniamy tylko etykiety i akcje górnego (głównego) i bocznego przycisku —
+// bez ruszania układu/klas, żeby nie rozjechać siatki .dwa.
+var sukcesPoEdycji = false;
+function pokazSukces(tekst, podtekst, ostrzezenia, poEdycji) {
   el('sTekst').textContent = tekst;
   el('sId').textContent = podtekst || '';
   var so = el('sOstrzezenia');
@@ -1238,13 +1243,22 @@ function pokazSukces(tekst, podtekst, ostrzezenia) {
     so.innerHTML = '<b>Zwróć uwagę:</b><ul>' +
       ostrzezenia.map(function (o) { return '<li>' + bezKodu_(o) + '</li>'; }).join('') + '</ul>';
   } else { so.classList.add('ukryte'); so.innerHTML = ''; }
+  sukcesPoEdycji = !!poEdycji;
+  el('sKolejny').textContent = sukcesPoEdycji ? '📋 Moje wpisy' : '＋ Dodaj kolejny wpis';
+  el('sWpisy').textContent = sukcesPoEdycji ? '＋ Dodaj kolejny wpis' : '📋 Moje wpisy';
   przelaczWidok('sukces');
 }
+// Górny (główny) przycisk: po edycji → Moje wpisy, po nowym → nowy wpis.
 el('sKolejny').addEventListener('click', function () {
+  if (sukcesPoEdycji) { przelaczWidok('wpisy'); return; }
   zakonczEdycje();
   przelaczWidok('nowy');
 });
-el('sWpisy').addEventListener('click', function () { przelaczWidok('wpisy'); });
+// Boczny przycisk: odwrotnie do górnego.
+el('sWpisy').addEventListener('click', function () {
+  if (sukcesPoEdycji) { zakonczEdycje(); przelaczWidok('nowy'); return; }
+  przelaczWidok('wpisy');
+});
 el('sStart').addEventListener('click', function () { przelaczWidok('start'); });
 function pokazBladBackendu(bledy) {
   var k = el('komunikatWynik');
@@ -1825,7 +1839,7 @@ function wyslijEdycje(d) {
     koniecZapisu_();
     if (odp.ok) {
       zakonczEdycje();
-      pokazSukces('Wpis poprawiony', 'Numer wpisu: ' + odp.id, odp.ostrzezenia);
+      pokazSukces('Wpis poprawiony', 'Numer wpisu: ' + odp.id, odp.ostrzezenia, true);
       odswiezWpisyCache();
     } else pokazBladBackendu(odp.bledy);
   }).catch(function () {
