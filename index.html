@@ -1141,10 +1141,10 @@ function pokazKomunikatZapis(bledy) {
   k.className = 'komunikat blad';
   k.innerHTML = '<b>Nie zapisano — sprawdź zaznaczone na czerwono pole' +
     (nazwy.length > 1 ? 'a' : '') + ':</b> ' + nazwy.join(', ') + '.';
-  var pierwszy = klucze[0];
-  var poleId = (pierwszy === 'info' && wMix) ? 'p-pary' : MAPA_POL[pierwszy];
-  var pole = el(poleId);
-  if (pole && pole.scrollIntoView) pole.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // Przewijamy do samego komunikatu (przy ZAPISZ), a NIE do pierwszego pola —
+  // skok do pola wyżej chował komunikat pod krawędzią ekranu (zgłoszone przez
+  // Marka 20.07.2026). Kierowca i tak patrzy na przycisk po kliknięciu.
+  if (k.scrollIntoView) k.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 // ---------- zapis ----------
