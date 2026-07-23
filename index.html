@@ -390,6 +390,10 @@
           <textarea id="f-info" placeholder="np. uwagi do tankowania (można pominąć)"></textarea>
           <div class="blad-pola" id="b-info"></div>
         </div>
+        <!-- Zbiorczy komunikat tuż przy ZAPISZ: czerwone pola bywają wyżej i
+             poza ekranem, kierowca klikał ZAPISZ w kółko nie wiedząc, czemu nic
+             się nie dzieje (prośba Marka 20.07.2026). -->
+        <div class="komunikat blad ukryte" id="komunikatZapis" style="margin-bottom:12px;"></div>
         <button type="submit" class="przycisk" id="przyciskZapisz">ZAPISZ</button>
         <button type="button" class="przycisk-drugi ukryte" id="przyciskAnulujEdycje">Anuluj poprawianie</button>
       </form>
@@ -1121,6 +1125,27 @@ function pokazBledyPol(bledy) {
     if (b) b.textContent = bledy[k] || '';
   });
 }
+// Zbiorczy komunikat przy ZAPISZ + przewinięcie do pierwszego błędnego pola.
+// Nazwy i kolejność jak w formularzu, żeby lista czytała się od góry do dołu.
+var KOLEJNOSC_POL = ['data', 'przeznaczenie', 'opis', 'licznik', 'ilosc', 'wartosc', 'budowa', 'info'];
+var NAZWY_POL = { data: 'Data zakupu', przeznaczenie: 'Do czego', opis: 'Co kupiono',
+  licznik: 'Stan licznika', ilosc: 'Ilość', wartosc: 'Wartość', budowa: 'Budowa',
+  info: 'Dodatkowe informacje' };
+function pokazKomunikatZapis(bledy) {
+  var wMix = czyMix(el('f-przeznaczenie').value);
+  var klucze = KOLEJNOSC_POL.filter(function (k) { return bledy[k]; });
+  var nazwy = klucze.map(function (k) {
+    return (k === 'info' && wMix) ? 'Tankowanie łączone' : NAZWY_POL[k];
+  });
+  var k = el('komunikatZapis');
+  k.className = 'komunikat blad';
+  k.innerHTML = '<b>Nie zapisano — sprawdź zaznaczone na czerwono pole' +
+    (nazwy.length > 1 ? 'a' : '') + ':</b> ' + nazwy.join(', ') + '.';
+  var pierwszy = klucze[0];
+  var poleId = (pierwszy === 'info' && wMix) ? 'p-pary' : MAPA_POL[pierwszy];
+  var pole = el(poleId);
+  if (pole && pole.scrollIntoView) pole.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 
 // ---------- zapis ----------
 function poczatekZapisu_() {
@@ -1149,7 +1174,8 @@ el('formularz').addEventListener('submit', function (ev) {
   };
   var bledy = walidujFormularz(d);
   pokazBledyPol(bledy);
-  if (Object.keys(bledy).length) return;
+  if (Object.keys(bledy).length) { pokazKomunikatZapis(bledy); return; }
+  schowaj('komunikatZapis');
 
   localStorage.setItem('flota_budowa', d.budowa);
   if (!edytowanyWpis) { zapiszWyborSprzetu_(d.przeznaczenie); zbudujDropdownPrzeznaczenia_(); }
@@ -1749,6 +1775,7 @@ function zakonczEdycje() {
   if (ostatnia) el('f-budowa').value = ostatnia;
   el('komunikatWynik').className = 'komunikat';
   pokazBledyPol({});
+  schowaj('komunikatZapis');
   przelaczPola();
 }
 function wyslijEdycje(d) {
