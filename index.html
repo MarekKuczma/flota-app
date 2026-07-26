@@ -1555,10 +1555,13 @@ function otworzDialogMiesiaca() {
 el('dialogNie').addEventListener('click', function () { el('dialogMiesiac').close(); });
 el('dialogTak').addEventListener('click', function () {
   var m = el('wyborMiesiaca').value;
-  el('dialogTak').disabled = true;
+  // Zamykamy dialog PRZED overlayem — dialog (showModal) jest w warstwie
+  // wierzchniej, więc overlay pod nim by nie było widać. Zamknięcie dialogu od
+  // razu blokuje też podwójne kliknięcie (prośba Marka o overlay 24.07.2026).
+  el('dialogMiesiac').close();
+  pokazOverlay('Zamykanie miesiąca…');
   apiPost({ action: 'deklaracja', miesiac: m }).then(function (odp) {
-    el('dialogTak').disabled = false;
-    el('dialogMiesiac').close();
+    schowajOverlay();
     if (odp.ok) {
       schowaj('baner');
       pokazSukces('Miesiąc zgłoszony', 'Dziękujemy! Marek dostał informację.', []);
@@ -1569,8 +1572,7 @@ el('dialogTak').addEventListener('click', function () {
       alert('Nie udało się zgłosić miesiąca:\n' + (odp.bledy || ['Nieznany błąd']).map(bezKodu_).join('\n'));
     }
   }).catch(function () {
-    el('dialogTak').disabled = false;
-    el('dialogMiesiac').close();
+    schowajOverlay();
     alert('Serwer chwilowo niedostępny — spróbuj za chwilę.');
   });
 });
