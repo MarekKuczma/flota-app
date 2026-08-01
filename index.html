@@ -306,7 +306,6 @@
         </div>
       </div>
       <button type="button" class="przycisk" style="margin-top:4px;" id="dNowy">＋ Nowy wpis</button>
-      <button type="button" class="przycisk-drugi" id="dWpisy">📋 Moje wpisy</button>
       <button type="button" class="przycisk-drugi" id="dPodsumowanie">📊 Podsumowanie miesiąca</button>
       <button type="button" class="przycisk-drugi" id="dMiesiacBtn">✅ Zamykam miesiąc</button>
     </div>
@@ -1521,7 +1520,6 @@ function rysujDashboard() {
   });
 }
 el('dNowy').addEventListener('click', function () { zakonczEdycje(); przelaczWidok('nowy'); });
-el('dWpisy').addEventListener('click', function () { przelaczWidok('wpisy'); });
 el('dPodsumowanie').addEventListener('click', function () { przelaczWidok('podsumowanie'); });
 el('dMiesiacBtn').addEventListener('click', otworzDialogMiesiaca);
 
