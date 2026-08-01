@@ -682,6 +682,13 @@ window.addEventListener('load', function () {
   });
 });
 window.addEventListener('online', function () { wyslijKolejke(); });
+// W-03 (01.08.2026, przeniesione z ewidencji): na telefonie zdarzenie
+// „online" bywa niewiarygodne — system potrafi go nie wysłać, gdy
+// aplikacja była w tle. Powrót do aplikacji to drugi, pewniejszy moment
+// na próbę wysyłki kolejki.
+document.addEventListener('visibilitychange', function () {
+  if (!document.hidden && navigator.onLine) wyslijKolejke();
+});
 
 // ---------- API ----------
 function apiGet(action, dodatkowe) {
@@ -1333,6 +1340,22 @@ function dodajDoKolejki(d) {
   odswiezKolejkeInfo();
 }
 var wysylanie = false;
+// W-03 (01.08.2026): naprawa wyścigu — funkcja NIE trzyma już jednej
+// „zamrożonej" kopii listy przez cały czas wysyłki. Każdy zapis do
+// localStorage najpierw odczytuje AKTUALNY stan i zmienia w nim tylko
+// jeden konkretny wpis (po `tmp`) — inaczej wpis dodany w trakcie
+// wysyłki (np. kierowca zapisuje kolejny formularz, gdy poprzedni wciąż
+// leci do serwera) trafiał do localStorage, ale kolejny zapis z tej
+// funkcji nadpisywał całość starą kopią i nowy wpis znikał bez śladu.
+function ustawStatusWKolejce_(tmp, zmiany) {
+  var aktualna = kolejka();
+  var wpis = aktualna.filter(function (w) { return w.tmp === tmp; })[0];
+  if (wpis) {
+    for (var klucz in zmiany) wpis[klucz] = zmiany[klucz];
+    zapiszKolejke(aktualna);
+  }
+  return aktualna;
+}
 function wyslijKolejke() {
   if (wysylanie) return;
   var k = kolejka();
@@ -1342,7 +1365,7 @@ function wyslijKolejke() {
   (function nastepny(i) {
     if (i >= k.length) {
       wysylanie = false;
-      zapiszKolejke(k.filter(function (w) { return w.status !== 'wyslany'; }));
+      zapiszKolejke(kolejka().filter(function (w) { return w.status !== 'wyslany'; }));
       odswiezKolejkeInfo();
       odswiezWpisyCache();
       return;
@@ -1351,13 +1374,11 @@ function wyslijKolejke() {
     var pakiet = polaczZAkcja(k[i].dane, 'nowy');
     if (k[i].potwierdzDuplikat) pakiet.potwierdzDuplikat = true;
     apiPost(pakiet).then(function (odp) {
-      if (odp.ok) k[i].status = 'wyslany';
-      else { k[i].status = 'odrzucony'; k[i].blad = (odp.bledy || []).join('; '); }
-      zapiszKolejke(k);
+      if (odp.ok) ustawStatusWKolejce_(k[i].tmp, { status: 'wyslany' });
+      else ustawStatusWKolejce_(k[i].tmp, { status: 'odrzucony', blad: (odp.bledy || []).join('; ') });
       nastepny(i + 1);
     }).catch(function () {
       wysylanie = false;
-      zapiszKolejke(k);
       odswiezKolejkeInfo();
     });
   })(0);
@@ -1395,6 +1416,10 @@ function ponowWpis(tmp, potwierdz) {
   if (navigator.onLine) wyslijKolejke();
 }
 function usunWpis(tmp) {
+  // W-03 (01.08.2026, przeniesione z ewidencji): kasowało bezpowrotnie
+  // jednym kliknięciem — jedno przypadkowe dotknięcie i wpis znika bez
+  // śladu, bez możliwości cofnięcia.
+  if (!confirm('Usunąć ten wpis z kolejki? Nie zostanie zapisany w rozliczeniu.')) return;
   zapiszKolejke(kolejka().filter(function (w) { return w.tmp !== tmp; }));
   odswiezKolejkeInfo();
 }
