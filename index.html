@@ -512,6 +512,12 @@ function odrzucKodFloty_(wiadomosc) {
   if ('caches' in window) caches.delete(NAZWA_RELAY_KODU).catch(function () {});
   kod = null;
 
+  // Nie wystarczy schować pasek nawigacji — widok, w którym kierowca akurat
+  // był (np. widokStart z dashboardem), zostaje pod spodem widoczny razem
+  // z ekranem „brak kodu" (złapane na screenshocie Marka, 01.08.2026).
+  // Ta sama lista co w przelaczWidok().
+  ['widokStart', 'widokFormularz', 'widokWpisy', 'widokSukces', 'widokPodsumowanie']
+    .forEach(schowaj);
   schowaj('nawigacja');
   ustawPodpowiedzBrakKodu_();
   var p = el('brakKoduPodpowiedz');
