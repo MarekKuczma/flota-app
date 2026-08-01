@@ -149,6 +149,12 @@
   .wpisy-naglowek-miesiac:first-child{margin-top:0;}
   .plakietka-zalegly{background:var(--bg-uwaga); color:var(--tekst-uwaga);
     text-transform:none; letter-spacing:normal; margin-left:6px; vertical-align:middle;}
+  /* F-49 (01.08.2026): nagłówek zamkniętego/zadeklarowanego miesiąca —
+     klikalny, rozwija/zwija podgląd wpisów bez możliwości edycji. */
+  .wpisy-naglowek-miesiac.zwijalny{cursor:pointer; display:flex; align-items:center;
+    justify-content:space-between; user-select:none;}
+  .naglowek-strzalka{transition:transform .15s ease; margin-left:auto;}
+  .wpisy-naglowek-miesiac.rozwiniety .naglowek-strzalka{transform:rotate(90deg);}
   .wpis{display:flex; gap:12px; background:var(--karta); border-radius:12px;
     border-left:3px solid var(--turkus); box-shadow:0 1px 2px rgba(0,0,0,.06);
     padding:12px 12px 12px 14px; margin-bottom:10px;}
@@ -1750,23 +1756,46 @@ function renderujListeWpisow() {
     return;
   }
   lista.innerHTML = '';
-  // Nagłówki miesięcy — tylko gdy lista faktycznie obejmuje więcej niż jeden
-  // miesiąc (bieżący + zaległe, patrz komentarz przy nazwaMiesiaca_ wyżej).
+  // Grupowanie po miesiącu — nagłówki tylko gdy lista faktycznie obejmuje
+  // więcej niż jeden miesiąc (bieżący + max 2 wstecz, patrz F-49 w API.gs).
   // Kierowca bez zaległości widzi listę dokładnie tak jak dotąd, bez nagłówka.
-  var miesiaceNaListe = {};
-  wpisy.forEach(function (w) { miesiaceNaListe[w.miesiac] = true; });
-  var pokazNaglowki = Object.keys(miesiaceNaListe).length > 1;
-  var biezacy = biezacyMiesiac_();
-  var ostatniMiesiac = null;
+  var grupy = [];
+  var mapaGrup = {};
   wpisy.forEach(function (w) {
-    if (pokazNaglowki && w.miesiac !== ostatniMiesiac) {
-      ostatniMiesiac = w.miesiac;
-      var naglowek = document.createElement('div');
-      naglowek.className = 'wpisy-naglowek-miesiac';
-      naglowek.innerHTML = nazwaMiesiaca_(w.miesiac) +
-        (w.miesiac === biezacy ? '' : ' <span class="plakietka plakietka-zalegly">zaległy</span>');
-      lista.appendChild(naglowek);
+    if (!mapaGrup[w.miesiac]) {
+      mapaGrup[w.miesiac] = { miesiac: w.miesiac, zwiniety: !!w.zwiniety, wpisy: [] };
+      grupy.push(mapaGrup[w.miesiac]);
     }
+    mapaGrup[w.miesiac].wpisy.push(w);
+  });
+  var pokazNaglowki = grupy.length > 1;
+  var biezacy = biezacyMiesiac_();
+  grupy.forEach(function (grupa) {
+    var kontenerMiesiaca = lista;
+    if (pokazNaglowki) {
+      var naglowek = document.createElement('div');
+      naglowek.className = 'wpisy-naglowek-miesiac' + (grupa.zwiniety ? ' zwijalny' : '');
+      naglowek.innerHTML = nazwaMiesiaca_(grupa.miesiac) +
+        (grupa.miesiac === biezacy ? '' :
+          grupa.zwiniety ? ' <span class="plakietka">zamknięty — podgląd</span>'
+                         : ' <span class="plakietka plakietka-zalegly">zaległy</span>') +
+        (grupa.zwiniety ? ' <span class="naglowek-strzalka">▸</span>' : '');
+      lista.appendChild(naglowek);
+      kontenerMiesiaca = document.createElement('div');
+      // F-49 (01.08.2026): zamknięty/zadeklarowany miesiąc — zwinięty
+      // domyślnie, tylko podgląd po rozwinięciu nagłówka. Bieżący/otwarty
+      // miesiąc zostaje rozwinięty tak jak dotąd.
+      if (grupa.zwiniety) kontenerMiesiaca.classList.add('ukryte');
+      lista.appendChild(kontenerMiesiaca);
+      naglowek.addEventListener('click', function () {
+        kontenerMiesiaca.classList.toggle('ukryte');
+        naglowek.classList.toggle('rozwiniety');
+      });
+    }
+    grupa.wpisy.forEach(function (w) { renderujWpis_(kontenerMiesiaca, w); });
+  });
+}
+function renderujWpis_(kontenerMiesiaca, w) {
     var anulowany = w.status === 'Anulowany';
     var mix = czyMix(w.przeznaczenie);
     var div = document.createElement('div');
@@ -1809,8 +1838,7 @@ function renderujListeWpisow() {
     if (bp) bp.addEventListener('click', function (e) { e.stopPropagation(); rozpocznijEdycje(w); });
     var ba = div.querySelector('.btn-anuluj');
     if (ba) ba.addEventListener('click', function (e) { e.stopPropagation(); anulujWpis(w); });
-    lista.appendChild(div);
-  });
+    kontenerMiesiaca.appendChild(div);
 }
 el('pokazAnulowane').addEventListener('change', renderujListeWpisow);
 
