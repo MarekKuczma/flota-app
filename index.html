@@ -586,8 +586,17 @@ wczytajPalete_();
 function zapiszKodRecznie_() {
   var wpisany = el('fBrakKoduRecznie').value.trim();
   var blad = el('bBrakKoduRecznie');
-  if (!wpisany) { blad.textContent = 'Wpisz swój kod.'; return; }
+  // F-21 (01.08.2026): .blad-pola ma domyślnie display:none w CSS (widoczne
+  // tylko wewnątrz .pole-blad) — samo ustawienie textContent nie pokazywało
+  // komunikatu. To pole nie jest owinięte w .pole-blad, więc przełączamy
+  // display bezpośrednio.
+  if (!wpisany) {
+    blad.textContent = 'Wpisz swój kod.';
+    blad.style.display = 'block';
+    return;
+  }
   blad.textContent = '';
+  blad.style.display = 'none';
   localStorage.setItem('flota_kod', wpisany);
   zapiszKodDoRelay_(wpisany);
   location.reload();
