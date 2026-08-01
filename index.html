@@ -395,6 +395,10 @@
              się nie dzieje (prośba Marka 20.07.2026). -->
         <div class="komunikat blad ukryte" id="komunikatZapis" style="margin-bottom:12px;"></div>
         <button type="submit" class="przycisk" id="przyciskZapisz">ZAPISZ</button>
+        <!-- F-22 (01.08.2026, zgłoszenie Marka z 26.07): czyści pola i wraca
+             od razu na dashboard, bez pytania — widoczny tylko przy nowym
+             wpisie, w edycji zastępuje go "Anuluj poprawianie" poniżej. -->
+        <button type="button" class="przycisk-drugi" id="przyciskAnulujNowy">Anuluj</button>
         <button type="button" class="przycisk-drugi ukryte" id="przyciskAnulujEdycje">Anuluj poprawianie</button>
       </form>
     </div>
@@ -1826,6 +1830,7 @@ function rozpocznijEdycje(w) {
   przelaczWidok('nowy');
   el('naglowekFormularza').textContent = 'Poprawiam wpis ' + w.id;
   el('przyciskZapisz').textContent = 'ZAPISZ POPRAWKĘ';
+  schowaj('przyciskAnulujNowy');
   pokaz('przyciskAnulujEdycje');
   el('komunikatWynik').className = 'komunikat';
   el('f-data').value = w.dataZakupu;
@@ -1849,10 +1854,17 @@ el('przyciskAnulujEdycje').addEventListener('click', function () {
   zakonczEdycje();
   przelaczWidok('wpisy');
 });
+// F-22 (01.08.2026): „Anuluj" na świeżym formularzu — czyści pola i wraca
+// od razu na dashboard, bez pytania (decyzja Marka: zawsze bez potwierdzenia).
+el('przyciskAnulujNowy').addEventListener('click', function () {
+  zakonczEdycje();
+  przelaczWidok('start');
+});
 function zakonczEdycje() {
   edytowanyWpis = null;
   el('naglowekFormularza').textContent = 'Nowy wpis';
   el('przyciskZapisz').textContent = 'ZAPISZ';
+  pokaz('przyciskAnulujNowy');
   schowaj('przyciskAnulujEdycje');
   el('formularz').reset();
   el('f-data').value = dzisiaj();
