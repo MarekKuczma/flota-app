@@ -768,6 +768,17 @@ function opcjaSprzetu_(s) {
   opt.textContent = s.model ? (s.nazwa + ' — ' + s.model) : s.nazwa;
   return opt;
 }
+// F-50 (01.08.2026): kolejność kategorii jak w ewidencji (rangaTypu_ w API.gs
+// ewidencji, D71) — auta przed maszynami. Osobna kopia, projekty nie dzielą kodu.
+function rangaTypu_(typ) {
+  var t = String(typ || '').toLowerCase();
+  if (t.indexOf('osobow') !== -1) return 0;
+  if (t.indexOf('dostaw') !== -1 || t.indexOf('bus') !== -1 || t.indexOf('ciężarow') !== -1) return 1;
+  if (t.indexOf('kopark') !== -1 || t.indexOf('ładowarka') !== -1) return 2;
+  if (t.indexOf('hds') !== -1 || t.indexOf('dźwig') !== -1) return 3;
+  if (t.indexOf('przyczep') !== -1) return 4;
+  return 5;
+}
 function zbudujDropdownPrzeznaczenia_() {
   if (!slowniki) return;
   var prz = el('f-przeznaczenie');
@@ -788,13 +799,22 @@ function zbudujDropdownPrzeznaczenia_() {
     gCzeste.label = 'Często wybierane';
     czeste.forEach(function (s) { gCzeste.appendChild(opcjaSprzetu_(s)); });
     prz.appendChild(gCzeste);
-    var gWszystkie = document.createElement('optgroup');
-    gWszystkie.label = 'Wszystkie';
-    zwykle.forEach(function (s) { gWszystkie.appendChild(opcjaSprzetu_(s)); });
-    prz.appendChild(gWszystkie);
-  } else {
-    zwykle.forEach(function (s) { prz.appendChild(opcjaSprzetu_(s)); });
   }
+  // F-50 (01.08.2026): reszta pozycji pogrupowana na kategorie wg typu
+  // sprzętu (wzorem ewidencji) zamiast jednej płaskiej grupy „Wszystkie".
+  var grupy = {}, kolejnoscTypow = [];
+  zwykle.forEach(function (s) {
+    var typ = s.typ || 'Inne';
+    if (!grupy[typ]) { grupy[typ] = []; kolejnoscTypow.push(typ); }
+    grupy[typ].push(s);
+  });
+  kolejnoscTypow.sort(function (a, b) { return rangaTypu_(a) - rangaTypu_(b); });
+  kolejnoscTypow.forEach(function (typ) {
+    var g = document.createElement('optgroup');
+    g.label = typ;
+    grupy[typ].forEach(function (s) { g.appendChild(opcjaSprzetu_(s)); });
+    prz.appendChild(g);
+  });
   koncowe.forEach(function (s) {
     var opt = document.createElement('option');
     opt.value = s.nazwa;
