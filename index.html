@@ -265,6 +265,10 @@
 
 <main>
   <div class="baner ukryte" id="baner"></div>
+  <!-- W-05 (01.08.2026): komunikat Marka — ukryty gdy brak treści, ten sam
+       styl co baner zaległego miesiąca (bg-uwaga/tekst-uwaga), oddzielny
+       element, żeby nie mieszać dwóch różnych powodów wyświetlania. -->
+  <div class="baner ukryte" id="komunikatMarka"></div>
   <div class="kolejka-info" id="kolejkaInfo"></div>
 
   <!-- Brak kodu -->
@@ -1469,6 +1473,14 @@ function pobierzStatus() {
         'Masz wpisy za ten miesiąc — jeśli to już wszystkie, kliknij „Zamykam miesiąc".';
       pokaz('baner');
     } else schowaj('baner');
+    // W-05 (01.08.2026): komunikat/y Marka — może być więcej niż jeden
+    // naraz (np. ogólny + osobisty), pokazujemy wszystkie pod sobą.
+    if (d.komunikaty && d.komunikaty.length) {
+      el('komunikatMarka').innerHTML = d.komunikaty.map(function (t) {
+        return '<div>' + bezpiecznyTekst_(t) + '</div>';
+      }).join('');
+      pokaz('komunikatMarka');
+    } else schowaj('komunikatMarka');
   }).catch(function () {});
 }
 
