@@ -74,6 +74,17 @@
   .baner{background:var(--bg-uwaga); border:1px solid var(--brzeg-uwaga); color:var(--tekst-uwaga);
     border-radius:12px; padding:12px 14px; margin-bottom:12px; font-size:15px;}
   .baner b{display:block; margin-bottom:2px;}
+  /* W-05 (01.08.2026): komunikat Marka — osobny styl od baneru ostrzeżeń,
+     żeby mocniej rzucał się w oczy (akcent appki zamiast bursztynu). Kolor
+     przez --akcent/--bg-akcentjasny/--tekst-akcentjasny — auto-dopasowuje
+     się do palety i motywu, bez osobnego kodu na ciemny motyw. */
+  .komunikat-marka{background:var(--bg-akcentjasny); border-left:4px solid var(--akcent);
+    border-radius:0 12px 12px 0; padding:12px 14px 14px; margin-bottom:12px; color:var(--tekst-akcentjasny);}
+  .km-tytul{display:flex; align-items:center; gap:8px; font-weight:700; font-size:14px; margin-bottom:8px;}
+  .km-wiersz{display:flex; align-items:center; gap:8px; font-size:15px; line-height:1.4; margin-bottom:6px;}
+  .km-wiersz:last-child{margin-bottom:0;}
+  .km-znaczek{width:20px; height:20px; border-radius:50%; background:var(--akcent); color:#fff;
+    font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; flex:none;}
   .karta{background:var(--karta); border-radius:14px; padding:16px;
     box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:14px;}
   .metryki{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;}
@@ -265,10 +276,8 @@
 
 <main>
   <div class="baner ukryte" id="baner"></div>
-  <!-- W-05 (01.08.2026): komunikat Marka — ukryty gdy brak treści, ten sam
-       styl co baner zaległego miesiąca (bg-uwaga/tekst-uwaga), oddzielny
-       element, żeby nie mieszać dwóch różnych powodów wyświetlania. -->
-  <div class="baner ukryte" id="komunikatMarka"></div>
+  <!-- W-05 (01.08.2026): komunikat Marka — ukryty gdy brak treści. -->
+  <div class="komunikat-marka ukryte" id="komunikatMarka"></div>
   <div class="kolejka-info" id="kolejkaInfo"></div>
 
   <!-- Brak kodu -->
@@ -1474,11 +1483,16 @@ function pobierzStatus() {
       pokaz('baner');
     } else schowaj('baner');
     // W-05 (01.08.2026): komunikat/y Marka — może być więcej niż jeden
-    // naraz (np. ogólny + osobisty), pokazujemy wszystkie pod sobą.
+    // naraz (np. ogólny + osobisty), pokazujemy wszystkie pod sobą, każdy
+    // ze znaczkiem „›" (prośba Marka — bardziej graficzny niż goły „>",
+    // ten sam styl kółka co strzałka rozwijania wpisu).
     if (d.komunikaty && d.komunikaty.length) {
-      el('komunikatMarka').innerHTML = d.komunikaty.map(function (t) {
-        return '<div>' + bezpiecznyTekst_(t) + '</div>';
-      }).join('');
+      el('komunikatMarka').innerHTML =
+        '<div class="km-tytul"><span>📢</span><span>Wiadomość od Marka</span></div>' +
+        d.komunikaty.map(function (t) {
+          return '<div class="km-wiersz"><span class="km-znaczek">›</span><span>' +
+            bezpiecznyTekst_(t) + '</span></div>';
+        }).join('');
       pokaz('komunikatMarka');
     } else schowaj('komunikatMarka');
   }).catch(function () {});
