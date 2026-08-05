@@ -356,6 +356,18 @@
     <div class="komunikat" id="komunikatWynik"></div>
     <div class="karta" id="kartaFormularz">
       <h2 id="naglowekFormularza">Nowy wpis</h2>
+      <!-- F-56 (05.08.2026): wklejenie SMS-a od Orlenu (mFlota) — uzupełnia
+           data/ilość/wartość/co kupiono, a „Do czego" gdy rejestracja z SMS-a
+           pasuje do sprzętu w słowniku. Front-only, opcjonalne — usuwalne
+           przez skasowanie tego bloku + #kartaSmsOrlen niżej + JS między
+           znacznikami F-56 START/KONIEC. -->
+      <div class="karta" id="kartaSmsOrlen" style="margin-bottom:14px; padding:12px 14px;">
+        <button type="button" class="przycisk-maly" id="smsOrlenPrzelacznik" style="width:100%; text-align:left;">📋 Wklej SMS z Orlenu (opcjonalnie)</button>
+        <div id="smsOrlenPanel" class="ukryte" style="margin-top:10px;">
+          <textarea id="smsOrlenTekst" placeholder="Wklej tu treść SMS-a od Orlenu (mFlota)"></textarea>
+          <div class="komunikat" id="smsOrlenWynik" style="margin:8px 0 0;"></div>
+        </div>
+      </div>
       <form id="formularz" novalidate>
         <div class="pole" id="p-data">
           <label><span class="lbl-ikona">📅</span>Data zakupu <span class="wym">*</span></label>
@@ -764,6 +776,80 @@ function opisInfo(nazwa) {
   }
   return null;
 }
+
+// ========== F-56 (05.08.2026) START: wklejenie SMS-a od Orlenu ==========
+// Słowa kluczowe z nazwy produktu w SMS-ie → dokładna nazwa pozycji w
+// słowniku Opisy. Sprawdzane w kolejności, pierwsze trafienie wygrywa.
+// Jeśli pozycja nie istnieje/jest nieaktywna w słowniku (opisInfo zwróci
+// null), dopasujOpisSms_ i tak zwraca '' — pole zostaje puste, bez błędu.
+var ALIASY_PALIWA_SMS_ = [
+  [/LPG|GAZ/i, 'LPG'],
+  [/DIESEL/i, 'Diesel'],
+  [/\b95\b|\b98\b|\bPB\b/i, 'Benzyna'],
+  [/ADBLUE/i, 'AdBlue - Z dystrybutora'],
+  [/PL\.?\s*S\.?|SPRYSKIWACZ/i, 'Płyn do spryskiwaczy']
+];
+function normalizujRejestracje_(t) {
+  return String(t || '').replace(/\s+/g, '').toUpperCase();
+}
+function dopasujOpisSms_(produkt) {
+  for (var i = 0; i < ALIASY_PALIWA_SMS_.length; i++) {
+    if (ALIASY_PALIWA_SMS_[i][0].test(produkt) && opisInfo(ALIASY_PALIWA_SMS_[i][1])) {
+      return ALIASY_PALIWA_SMS_[i][1];
+    }
+  }
+  return '';
+}
+// Dopasowanie po rejestracji ignoruje spacje/wielkość liter (arkusz ma
+// „WP 7740R", SMS ma „WP7740R") — samego zapisu w arkuszu nigdy nie zmienia.
+function dopasujPojazdSms_(rejestracja) {
+  if (!slowniki || !rejestracja || /^BRAK/i.test(rejestracja)) return '';
+  var norm = normalizujRejestracje_(rejestracja);
+  for (var i = 0; i < slowniki.sprzet.length; i++) {
+    if (normalizujRejestracje_(slowniki.sprzet[i].nazwa) === norm) return slowniki.sprzet[i].nazwa;
+  }
+  return '';
+}
+function parsujSmsOrlen_(tekst) {
+  var wz = /mFLOTA ORLEN:\s*(\d{4}-\d{2}-\d{2})\s+\d{2}:\d{2},\s*stacja\s+[\d\/]+,\s*(.+?):\s*([\d.,]+)\s*(L|SZT)(?:,\s*kwota|\s*za)\s*([\d.,]+)\s*PLN,\s*karta\s*\d+,\s*rej\.\s*([^\s.]+)/i;
+  var m = tekst.match(wz);
+  if (!m) return null;
+  return { data: m[1], produkt: m[2].trim(), ilosc: m[3], kwota: m[5], rejestracja: m[6] };
+}
+function obsluzWklejenieSms_() {
+  var tekst = el('smsOrlenTekst').value;
+  var wynikEl = el('smsOrlenWynik');
+  if (!tekst.trim()) { wynikEl.className = 'komunikat'; wynikEl.textContent = ''; return; }
+  var dane = parsujSmsOrlen_(tekst);
+  if (!dane) {
+    wynikEl.className = 'komunikat uwaga';
+    wynikEl.textContent = 'Nie rozpoznano formatu SMS-a — uzupełnij pola ręcznie.';
+    return;
+  }
+  el('f-data').value = dane.data;
+  var iloscN = liczba(dane.ilosc);
+  var kwotaN = liczba(dane.kwota);
+  var opisDopasowany = dopasujOpisSms_(dane.produkt);
+  if (opisDopasowany) ustawWartoscSelect_('f-opis', opisDopasowany);
+  el('f-ilosc').value = !isNaN(iloscN) ? (opisDopasowany ? formatIlosc_(iloscN, opisDopasowany) : formatKwote_(iloscN)) : dane.ilosc;
+  el('f-wartosc').value = !isNaN(kwotaN) ? formatKwote_(kwotaN) : dane.kwota;
+  var pojazdDopasowany = dopasujPojazdSms_(dane.rejestracja);
+  if (pojazdDopasowany) ustawWartoscSelect_('f-przeznaczenie', pojazdDopasowany);
+  przelaczPola();
+  var czesci = [];
+  czesci.push(opisDopasowany ? ('rozpoznano „' + opisDopasowany + '"') : ('nierozpoznany produkt „' + dane.produkt + '" — wybierz ręcznie'));
+  czesci.push(pojazdDopasowany ? 'pojazd dopasowany po rejestracji' : 'rejestracja nierozpoznana — wybierz pojazd ręcznie');
+  wynikEl.className = 'komunikat ' + (opisDopasowany && pojazdDopasowany ? 'ok' : 'uwaga');
+  wynikEl.textContent = 'Uzupełniono z SMS-a datę, ilość i wartość; ' + czesci.join('; ') + '.';
+}
+el('smsOrlenPrzelacznik').addEventListener('click', function () {
+  el('smsOrlenPanel').classList.toggle('ukryte');
+});
+el('smsOrlenTekst').addEventListener('input', function () {
+  clearTimeout(window._smsOrlenTimer_);
+  window._smsOrlenTimer_ = setTimeout(obsluzWklejenieSms_, 200);
+});
+// ========== F-56 KONIEC ==========
 
 // ---------- częstość wyboru sprzętu (podpowiedzi w dropdownie) ----------
 function pobierzCzestosc_() {
