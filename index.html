@@ -2016,6 +2016,10 @@ function ustawWartoscSelect_(id, wartosc) {
 function rozpocznijEdycje(w) {
   edytowanyWpis = w;
   przelaczWidok('nowy');
+  // F-56 poprawka (07.08.2026, z przeglądu): panel „Wklej SMS" schowany w
+  // trybie edycji — wklejenie SMS-a nadpisałoby pola poprawianego wpisu.
+  // Wraca w zakonczEdycje() razem z czyszczeniem pola.
+  schowaj('kartaSmsOrlen');
   el('naglowekFormularza').textContent = 'Poprawiam wpis ' + w.id;
   el('przyciskZapisz').textContent = 'ZAPISZ POPRAWKĘ';
   schowaj('przyciskAnulujNowy');
@@ -2052,6 +2056,14 @@ function zakonczEdycje() {
   edytowanyWpis = null;
   el('naglowekFormularza').textContent = 'Nowy wpis';
   el('przyciskZapisz').textContent = 'ZAPISZ';
+  // F-56 poprawka (07.08.2026, z przeglądu): panel SMS wraca (chowany na czas
+  // edycji) i jest czyszczony — formularz.reset() go nie obejmuje (textarea
+  // poza <form>), więc stary SMS wisiał w polu przy kolejnym wpisie.
+  pokaz('kartaSmsOrlen');
+  el('smsOrlenTekst').value = '';
+  el('smsOrlenWynik').className = 'komunikat';
+  el('smsOrlenWynik').textContent = '';
+  el('smsOrlenPanel').classList.add('ukryte');
   pokaz('przyciskAnulujNowy');
   schowaj('przyciskAnulujEdycje');
   el('formularz').reset();
