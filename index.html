@@ -164,7 +164,14 @@
      klikalny, rozwija/zwija podgląd wpisów bez możliwości edycji. */
   .wpisy-naglowek-miesiac.zwijalny{cursor:pointer; display:flex; align-items:center;
     justify-content:space-between; user-select:none;}
-  .naglowek-strzalka{transition:transform .15s ease; margin-left:auto;}
+  /* W-11 (07.08.2026): to samo kółko z tłem co przy strzałce rozwijania
+     wpisu (.wpis-strzalka) — wcześniej był tu goły znak bez tła i dwa
+     bardzo podobne elementy wyglądały inaczej. Sama rotacja bez zmian. */
+  .naglowek-strzalka{width:24px; height:24px; border-radius:50%;
+    background:var(--bg-turkus); color:var(--tekst-turkus);
+    font-size:13px; font-weight:700; flex:none;
+    display:inline-flex; align-items:center; justify-content:center;
+    transition:transform .15s ease; margin-left:auto;}
   .wpisy-naglowek-miesiac.rozwiniety .naglowek-strzalka{transform:rotate(90deg);}
   .wpis{display:flex; gap:12px; background:var(--karta); border-radius:12px;
     border-left:3px solid var(--turkus); box-shadow:0 1px 2px rgba(0,0,0,.06);
