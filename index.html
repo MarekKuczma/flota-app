@@ -1454,8 +1454,12 @@ el('sStart').addEventListener('click', function () { przelaczWidok('start'); });
 function pokazBladBackendu(bledy) {
   var k = el('komunikatWynik');
   k.className = 'komunikat blad';
+  // F-63 (09.08.2026): komunikaty błędów potrafią zawierać tekst wpisany
+  // przez kierowcę (backend zwraca np. „przeznaczenie: <to co wpisał>"),
+  // więc przed wstawieniem do innerHTML przepuszczamy je przez
+  // bezpiecznyTekst_ — inaczej wpisany `<...>` renderowałby się jako HTML.
   k.innerHTML = '<b>Nie zapisano:</b><ul>' +
-    (bledy || ['Nieznany błąd']).map(function (b) { return '<li>' + bezKodu_(b) + '</li>'; }).join('') +
+    (bledy || ['Nieznany błąd']).map(function (b) { return '<li>' + bezpiecznyTekst_(bezKodu_(b)) + '</li>'; }).join('') +
     '</ul>';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -1754,6 +1758,24 @@ function rysujPodsumowanie(miesiac) {
 // bo dialog i tak wymaga internetu.
 function otworzDialogMiesiaca() {
   if (!navigator.onLine) { alert('„Zamykam miesiąc" wymaga internetu.'); return; }
+  // F-61 (09.08.2026): nie pozwól zgłosić zamknięcia miesiąca, gdy w telefonie
+  // wiszą jeszcze niewysłane wpisy. Bez tego kierowca deklaruje „skończyłem",
+  // a po wysłaniu kolejki wpisy odbijają się o zamknięty miesiąc (E012) i giną
+  // z rozliczenia bez żadnego sygnału u Marka. Blokujemy, dopóki kolejka nie
+  // opustoszeje (statusy „oczekuje" = niewysłane, „odrzucony" = wymaga uwagi).
+  var doWyslania = kolejka().filter(function (w) {
+    return w.status === 'oczekuje' || w.status === 'odrzucony';
+  });
+  if (doWyslania.length) {
+    var ile = doWyslania.length;
+    alert('Masz jeszcze ' + ile + ' ' +
+      (ile === 1 ? 'wpis do wysłania' : (ile < 5 ? 'wpisy do wysłania' : 'wpisów do wysłania')) +
+      ' (zakładka „Moje wpisy").\n\nNajpierw poczekaj, aż wszystko się wyśle, ' +
+      'a dopiero potem kliknij „Zamykam miesiąc" — inaczej te wpisy nie trafią ' +
+      'do rozliczenia.');
+    wyslijKolejke();   // spróbuj od razu opróżnić kolejkę
+    return;
+  }
   pokazOverlay('Chwileczkę…');   // przykrywa przycisk = blokuje kolejne kliknięcia
   apiGet('status').then(function (d) {
     var zalegle = (d && d.ok && d.zalegleMiesiace) ? d.zalegleMiesiace.slice() : [];
