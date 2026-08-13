@@ -262,6 +262,22 @@
     border-top-color:#fff; border-radius:50%; animation:kreciSie .8s linear infinite;}
   .overlay-zapis .tekst{color:#fff; font-size:16px; font-weight:600;}
   @keyframes kreciSie{to{transform:rotate(360deg);}}
+
+  /* Z-80: pasek nad listą „Moje wpisy". Lista rysuje się od razu z pamięci
+     telefonu, a w tle leci pobranie świeżych danych — ten pasek mówi wprost,
+     że to, co widać, może być jeszcze nieaktualne. Bez niego kierowca nie miał
+     jak odróżnić „to są wszystkie moje wpisy" od „trwa dociąganie". */
+  .pasek-odswiezania{display:flex; align-items:center; gap:8px; margin:0 0 10px;
+    padding:7px 11px; border-radius:9px; font-size:13px; line-height:1.35;}
+  .pasek-odswiezania.ladowanie{background:rgba(41,128,185,.12); color:#1f6391;}
+  .pasek-odswiezania.offline{background:rgba(243,156,18,.14); color:#8a5b00;}
+  .pasek-odswiezania .mini-spinner{width:13px; height:13px; flex:none;
+    border:2px solid rgba(31,99,145,.28); border-top-color:#1f6391;
+    border-radius:50%; animation:kreciSie .8s linear infinite;}
+  [data-motyw="ciemny"] .pasek-odswiezania.ladowanie{background:rgba(41,128,185,.22); color:#8fc4e8;}
+  [data-motyw="ciemny"] .pasek-odswiezania.offline{background:rgba(243,156,18,.2); color:#f0c060;}
+  [data-motyw="ciemny"] .pasek-odswiezania .mini-spinner{
+    border-color:rgba(143,196,232,.3); border-top-color:#8fc4e8;}
 </style>
 </head>
 <body>
@@ -458,6 +474,7 @@
     <div class="karta">
       <h2>Moje wpisy</h2>
       <label class="zgoda"><input type="checkbox" id="pokazAnulowane"> Pokaż anulowane</label>
+      <div id="pasekWpisow" class="pasek-odswiezania ukryte"></div>
       <div id="listaWpisow"><div class="srodek">Ładowanie…</div></div>
     </div>
   </div>
@@ -1636,6 +1653,15 @@ function odswiezWpisyCache() {
   apiGet('mojeWpisy').then(function (d) {
     if (d && d.ok) {
       localStorage.setItem('flota_wpisy', JSON.stringify({ czas: Date.now(), wpisy: d.wpisy }));
+      // Z-80: ta funkcja jest JEDYNYM miejscem, przez które przechodzi każdy
+      // zapis (nowy wpis, kolejka offline, anulowanie) — więc tu, a nie
+      // w trzech osobnych miejscach, utrzymujemy spójność listy z cache.
+      // Gdy ekran „Moje wpisy" jest akurat otwarty, przerysowujemy go od razu.
+      ostatnieWpisy = d.wpisy;
+      if (!el('widokWpisy').classList.contains('ukryte')) {
+        renderujListeWpisow();
+        pokazPasekWpisow_(null);
+      }
       if (d.kierowca) {
         localStorage.setItem('flota_kierowca', d.kierowca);
         localStorage.setItem('flota_beta', d.beta ? 'TAK' : 'NIE');
@@ -1859,21 +1885,107 @@ function przelaczWidok(ktory) {
 
 // ---------- Moje wpisy ----------
 var ostatnieWpisy = [];
-function wczytajWpisy() {
-  var lista = el('listaWpisow');
-  if (!navigator.onLine) {
-    lista.innerHTML = '<div class="srodek">„Moje wpisy" wymagają internetu.</div>';
+// Z-80 (14.08.2026): „Moje wpisy" rysują się NAJPIERW z pamięci telefonu,
+// a świeże dane dociągają się w tle.
+//
+// Dotąd ten ekran zawsze pokazywał „Ładowanie…" i czekał na serwer — mimo że
+// cache `flota_wpisy` istniał i korzystał z niego pulpit oraz podsumowanie.
+// Sama lista go nie używała. Zgłoszone przez Marka 14.08.2026: kierowca zrobił
+// wpisy, zamknął appkę, a gdy chciał je komuś pokazać, musiał czekać na pustym
+// ekranie. Na budowie ze słabym zasięgiem to nie sekunda, tylko kilkanaście.
+//
+// Warunek, bez którego to by SZKODZIŁO: cache musi być wiarygodny. Lista bez
+// właśnie zapisanego wpisu zachęca kierowcę, żeby wpisał go drugi raz — czyli
+// generuje dokładnie ten duplikat, z którym walczymy (E008, Z-77). Dlatego
+// każdy zapis przechodzi przez `odswiezWpisyCache()`, a pasek wyżej mówi
+// wprost, kiedy dane mogą być jeszcze nieaktualne.
+function pokazPasekWpisow_(tryb, czasCache) {
+  var p = el('pasekWpisow');
+  if (!p) return;
+  if (!tryb) { p.className = 'pasek-odswiezania ukryte'; p.innerHTML = ''; return; }
+  if (tryb === 'ladowanie') {
+    p.className = 'pasek-odswiezania ladowanie';
+    p.innerHTML = '<span class="mini-spinner"></span><span>Odświeżam listę…</span>';
     return;
   }
-  lista.innerHTML = '<div class="srodek">Ładowanie…</div>';
+  p.className = 'pasek-odswiezania offline';
+  var tekst = '⚠ Brak połączenia — pokazane dane pochodzą z ' + wiekCache_(czasCache) + '.';
+  // Bez tego zdania kierowca, który zapisał wpis offline, nie widzi go na
+  // liście i wpisuje drugi raz. Kolejka nie trafia do „Moich wpisów", dopóki
+  // nie dojdzie do serwera — trzeba to powiedzieć wprost.
+  var czeka = oczekujaceWKolejce_();
+  if (czeka) {
+    tekst += ' ' + czeka + (czeka === 1 ? ' wpis czeka' : ' wpisy/-ów czeka') +
+      ' w kolejce i nie ma go jeszcze na tej liście.';
+  }
+  p.innerHTML = '<span>' + tekst + '</span>';
+}
+/** Ile wpisów czeka w kolejce offline na wysłanie. */
+function oczekujaceWKolejce_() {
+  return kolejka().filter(function (w) { return w.status === 'oczekuje'; }).length;
+}
+/** Czytelny wiek danych z cache, do paska offline. */
+function wiekCache_(czas) {
+  if (!czas) return 'ostatniego pobrania';
+  var min = Math.round((Date.now() - czas) / 60000);
+  if (min < 2) return 'przed chwilą';
+  if (min < 60) return 'sprzed ' + min + ' min';
+  var godz = Math.round(min / 60);
+  if (godz < 24) return 'sprzed ' + godz + (godz === 1 ? ' godziny' : ' godzin');
+  var dni = Math.round(godz / 24);
+  return 'sprzed ' + dni + (dni === 1 ? ' dnia' : ' dni');
+}
+
+function wczytajWpisy() {
+  var lista = el('listaWpisow');
+  var surowy;
+  try { surowy = JSON.parse(localStorage.getItem('flota_wpisy')) || null; }
+  catch (e) { surowy = null; }
+  var maCache = !!(surowy && surowy.wpisy && surowy.wpisy.length);
+
+  // 1. Natychmiast to, co mamy — żeby ekran nigdy nie był pusty.
+  if (maCache) {
+    ostatnieWpisy = surowy.wpisy;
+    renderujListeWpisow();
+  }
+
+  // 2. Bez sieci zostajemy przy cache, ale mówimy o tym wprost.
+  if (!navigator.onLine) {
+    if (!maCache) {
+      var czekaBezCache = oczekujaceWKolejce_();
+      lista.innerHTML = '<div class="srodek">„Moje wpisy" wymagają internetu.' +
+        (czekaBezCache ? '<br>' + czekaBezCache +
+          (czekaBezCache === 1 ? ' wpis czeka' : ' wpisy/-ów czeka') + ' w kolejce na wysłanie.' : '') +
+        '</div>';
+      pokazPasekWpisow_(null);
+    } else {
+      pokazPasekWpisow_('offline', surowy.czas);
+    }
+    return;
+  }
+
+  // 3. Z siecią — dociągamy świeże w tle.
+  if (!maCache) lista.innerHTML = '<div class="srodek">Ładowanie…</div>';
+  pokazPasekWpisow_('ladowanie');
+
   apiGet('mojeWpisy').then(function (d) {
-    if (!d.ok) { lista.innerHTML = '<div class="srodek">' + (d.bledy || ['Błąd']).join('; ') + '</div>'; return; }
+    if (!d.ok) {
+      pokazPasekWpisow_(null);
+      // Mamy cache — nie kasujemy go komunikatem błędu; kierowca woli
+      // widzieć swoje wpisy niż czerwony napis.
+      if (!maCache) {
+        lista.innerHTML = '<div class="srodek">' + (d.bledy || ['Błąd']).join('; ') + '</div>';
+      }
+      return;
+    }
     localStorage.setItem('flota_wpisy', JSON.stringify({ czas: Date.now(), wpisy: d.wpisy }));
     if (d.kierowca) el('kto').textContent = d.kierowca;
     ostatnieWpisy = d.wpisy;
     renderujListeWpisow();
+    pokazPasekWpisow_(null);
   }).catch(function () {
-    lista.innerHTML = '<div class="srodek">Serwer chwilowo niedostępny.</div>';
+    pokazPasekWpisow_(null);
+    if (!maCache) lista.innerHTML = '<div class="srodek">Serwer chwilowo niedostępny.</div>';
   });
 }
 // Rozwijane szczegóły kafelka w "Moje wpisy" (Marek, 17.07.2026) — czysto
