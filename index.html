@@ -1516,8 +1516,32 @@ function wyslijKolejke() {
     var pakiet = polaczZAkcja(k[i].dane, 'nowy');
     if (k[i].potwierdzDuplikat) pakiet.potwierdzDuplikat = true;
     apiPost(pakiet).then(function (odp) {
-      if (odp.ok) ustawStatusWKolejce_(k[i].tmp, { status: 'wyslany' });
-      else ustawStatusWKolejce_(k[i].tmp, { status: 'odrzucony', blad: (odp.bledy || []).join('; ') });
+      if (odp.ok) {
+        ustawStatusWKolejce_(k[i].tmp, { status: 'wyslany' });
+      } else if ((odp.bledy || []).join(' ').indexOf('E013') !== -1) {
+        // Z-76 (13.08.2026): E013 („serwer chwilowo zajęty") to JEDYNY błąd
+        // z definicji PRZEJŚCIOWY — znaczy „spróbuj za chwilę", nie „wpis jest
+        // zły". Dotąd flota miała tu jedno `else` i wrzucała go do „odrzucony",
+        // czyli kierowca widział czerwoną kartę z przyciskiem „Usuń" przy
+        // wpisie, który sam by przeszedł kilka sekund później. Realny scenariusz
+        // (nie teoretyczny): Marek uruchamia archiwizację miesiąca, ta trzyma
+        // blokadę zapisu (`LockService`) przez cały czas trwania, a kierowca
+        // akurat wtedy zapisuje tankowanie → E013 → „odrzucony" → część ludzi
+        // kliknie „Usuń" i wpis znika bezpowrotnie. We flocie dane idą do
+        // rozliczenia pieniędzy, więc to strata, nie niedogodność.
+        //
+        // Rozwiązanie przeniesione 1:1 z ewidencji, gdzie działa od 01.08
+        // (W-01): zostawiamy wpis jako „oczekuje" i PRZERYWAMY pętlę wysyłki.
+        // Przerwanie jest celowe — skoro serwer jest zajęty, kolejne wpisy
+        // z paczki dostałyby to samo. Kolejka ruszy sama przy najbliższym
+        // odzyskaniu zasięgu / powrocie do appki.
+        ustawStatusWKolejce_(k[i].tmp, { status: 'oczekuje' });
+        wysylanie = false;
+        odswiezKolejkeInfo();
+        return;
+      } else {
+        ustawStatusWKolejce_(k[i].tmp, { status: 'odrzucony', blad: (odp.bledy || []).join('; ') });
+      }
       nastepny(i + 1);
     }).catch(function () {
       wysylanie = false;
