@@ -22,6 +22,15 @@
     --bg-akcentjasny:#fff1e6; --tekst-akcentjasny:#c2410c;
     --metryka-grad:linear-gradient(135deg, #fff7ed 0%, #fef2f2 100%);
     --turkus:#06b6d4; --bg-turkus:#e0f7fb; --tekst-turkus:#0e7490;
+    /* Z-81: kolory obracającej się obwódki (conic-gradient) — te same barwy
+       co w --gradient danej palety, tylko rozłożone na okrąg; efekt nie
+       wprowadza do appki żadnego nowego koloru. --glow-krycie: poświata na
+       jasnym tle rozlewa się w brudną plamę, na ciemnym może być mocniejsza.
+       --beta-poswiata: kolor pulsu plakietki beta = --turkus danej palety
+       (w niebieskiej robi się pomarańczowy, jak cała plakietka). */
+    --stozek:#fbbf24,#f97316,#dc2626,#f97316,#fbbf24;
+    --glow-krycie:.40;
+    --beta-poswiata:rgba(6,182,212,.55);
     --ikona-grad:linear-gradient(135deg, #0f2a43, #06b6d4);
     --paleta-ikona:#fdba74;
   }
@@ -34,6 +43,8 @@
     --bg-akcentjasny:#432614; --tekst-akcentjasny:#fb923c;
     --metryka-grad:linear-gradient(135deg, #2c2115 0%, #2b1c1c 100%);
     --turkus:#22d3ee; --bg-turkus:#0e3a44; --tekst-turkus:#67e8f9;
+    --glow-krycie:.70;                       /* Z-81 */
+    --beta-poswiata:rgba(34,211,238,.55);    /* Z-81 */
   }
   /* Opcjonalna paleta niebiesko-pomarańczowa (FEEDBACK-BETA-TESTY.md pkt 3,
      18.07.2026) — drugi, niezależny przełącznik obok jasny/ciemny (patrz
@@ -50,11 +61,15 @@
     --metryka-grad:linear-gradient(135deg, #eff6ff 0%, #e0edff 100%);
     --turkus:#f97316; --bg-turkus:#fff1e6; --tekst-turkus:#c2410c;
     --paleta-ikona:#2563eb;
+    --stozek:#60a5fa,#2563eb,#1e3a8a,#2563eb,#60a5fa;   /* Z-81 */
+    --beta-poswiata:rgba(249,115,22,.55);                /* Z-81 */
   }
   [data-motyw="ciemny"][data-paleta="niebieska"]{
     --bg-akcentjasny:#132447; --tekst-akcentjasny:#93c5fd;
     --metryka-grad:linear-gradient(135deg, #16233d 0%, #1b2a44 100%);
     --turkus:#fb923c; --bg-turkus:#432614; --tekst-turkus:#fb923c;
+    --stozek:#93c5fd,#60a5fa,#2563eb,#60a5fa,#93c5fd;   /* Z-81 */
+    --beta-poswiata:rgba(251,146,60,.55);                /* Z-81 */
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0; background:var(--tlo); color:var(--tekst);
@@ -118,7 +133,19 @@
      poza kartę formularza (FEEDBACK-BETA-TESTY.md pkt 7). */
   input[type="date"]{-webkit-min-logical-width:0; -webkit-appearance:none; appearance:none;}
   input[type="date"]::-webkit-date-and-time-value{text-align:left;}
-  input:focus,select:focus,textarea:focus{outline:none; border-color:var(--akcent);}
+  /* Z-81 (F3): aktywne pole dostaje obracającą się ramkę w kolorach palety.
+     Trik: border robi się przezroczysty, a ramkę rysują dwa tła — wnętrze
+     (padding-box) zasłania środek conic-gradientu (border-box). Poza fokusem
+     pole wygląda dokładnie jak dotąd. */
+  input:focus,select:focus,textarea:focus{outline:none;
+    border-color:transparent;
+    background:linear-gradient(var(--input-tlo), var(--input-tlo)) padding-box,
+               conic-gradient(from var(--kat), var(--stozek)) border-box;
+    animation:obrot 3s linear infinite;}
+  /* Błąd WYGRYWA z fokusem — kolorowa wirująca ramka na źle wypełnionym
+     polu to sprzeczny sygnał. */
+  .pole-blad input:focus,.pole-blad select:focus,.pole-blad textarea:focus{
+    border-color:var(--blad); background:var(--input-tlo); animation:none;}
   textarea{min-height:72px; resize:vertical;}
   .etykieta-typ{display:inline-block; background:var(--bg-turkus); color:var(--tekst-turkus);
     font-size:13px; font-weight:600; border-radius:8px; padding:3px 10px; margin-top:6px;}
@@ -278,6 +305,78 @@
   [data-motyw="ciemny"] .pasek-odswiezania.offline{background:rgba(243,156,18,.2); color:#f0c060;}
   [data-motyw="ciemny"] .pasek-odswiezania .mini-spinner{
     border-color:rgba(143,196,232,.3); border-top-color:#8fc4e8;}
+
+  /* ================= Z-81: obracające się obwódki „glow" =================
+     Sedno triku: ramki nie da się animować gradientem wprost, więc
+     opakowanie z paddingiem dostaje conic-gradient jako TŁO, a wnętrze
+     zasłania środek. Kąt animujemy zmienną zarejestrowaną przez @property
+     (bez rejestracji przeglądarka nie umie interpolować kąta — wtedy
+     obwódka jest statyczna, co jest akceptowalnym fallbackiem, np. iOS
+     przed 16.4). Identyczny blok w ewidencji — zmieniasz tu, zmień i tam. */
+  @property --kat { syntax:'<angle>'; initial-value:0deg; inherits:true; }
+  @keyframes obrot { to { --kat:360deg; } }
+
+  /* --- przycisk główny („＋ Nowy wpis", „ZAPISZ") — wariant A ---
+     isolation:isolate jest KONIECZNE: bez niego poświata (::after,
+     z-index:-1) spada za tło karty i znika. */
+  .przycisk-glow{position:relative; isolation:isolate; padding:2px;
+    border-radius:14px; margin-top:18px;
+    background:conic-gradient(from var(--kat), var(--stozek));
+    animation:obrot 4s linear infinite;}
+  .przycisk-glow::after{content:''; position:absolute; inset:2px;
+    border-radius:12px;
+    background:conic-gradient(from var(--kat), var(--stozek));
+    filter:blur(13px); opacity:var(--glow-krycie); z-index:-1;}
+  .przycisk-glow .przycisk{margin-top:0;}
+
+  /* --- pasek „Odświeżam listę…" — wariant B (jeden błysk po obwodzie) ---
+     Kolor błysku z koloru paska (niebieski), NIE z palety appki: pasek to
+     komunikat stanu, nie element marki. */
+  .pasek-glow{padding:1.5px; border-radius:10.5px; margin:0 0 10px;
+    background:conic-gradient(from var(--kat),
+      transparent 0deg, transparent 235deg,
+      rgba(41,128,185,.45) 300deg, #2980b9 342deg,
+      rgba(41,128,185,.45) 358deg, transparent 360deg);
+    animation:obrot 2.6s linear infinite;}
+  /* Tło paska jest półprzezroczyste — pod spód musi wejść kolor tła strony,
+     inaczej przez pasek prześwituje gradient obwódki. */
+  .pasek-glow .pasek-odswiezania{margin:0;
+    background:linear-gradient(rgba(41,128,185,.12), rgba(41,128,185,.12)) var(--tlo);}
+  [data-motyw="ciemny"] .pasek-glow{
+    background:conic-gradient(from var(--kat),
+      transparent 0deg, transparent 235deg,
+      rgba(143,196,232,.4) 300deg, #8fc4e8 342deg,
+      rgba(143,196,232,.4) 358deg, transparent 360deg);}
+  [data-motyw="ciemny"] .pasek-glow .pasek-odswiezania{
+    background:linear-gradient(rgba(41,128,185,.22), rgba(41,128,185,.22)) var(--tlo);}
+
+  /* --- plakietka beta-testera — spokojne pulsowanie (B3) ---
+     Kolor z --beta-poswiata = --turkus palety, więc w palecie niebieskiej
+     puls jest pomarańczowy, tak jak sama plakietka. */
+  .plakietka-beta{animation:oddechBeta 2.8s ease-in-out infinite;}
+  @keyframes oddechBeta{
+    0%,100%{ box-shadow:0 0 0 0 rgba(0,0,0,0); }
+    50%    { box-shadow:0 0 9px 1px var(--beta-poswiata); }
+  }
+
+  /* --- pole z błędem: statyczna czerwona poświata (bez pulsowania — kilka
+     pulsujących na czerwono pól to panika, nie informacja), a PIERWSZE
+     błędne pole pulsuje dwa razy i przestaje: „zacznij tutaj". --- */
+  .pole-blad input,.pole-blad select,.pole-blad textarea{
+    box-shadow:0 0 0 3px rgba(217,48,37,.14), 0 0 12px rgba(217,48,37,.30);}
+  .pole-blad-puls input,.pole-blad-puls select,.pole-blad-puls textarea{
+    animation:pulsBledu .9s ease-in-out 2;}
+  @keyframes pulsBledu{
+    0%,100%{ box-shadow:0 0 0 3px rgba(217,48,37,.14), 0 0 12px rgba(217,48,37,.30); }
+    50%    { box-shadow:0 0 0 5px rgba(217,48,37,.26), 0 0 22px rgba(217,48,37,.55); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .przycisk-glow, .przycisk-glow::after, .pasek-glow,
+    .plakietka-beta, .pole-blad-puls input, .pole-blad-puls select,
+    .pole-blad-puls textarea, input:focus, select:focus, textarea:focus{
+      animation:none; }
+  }
 </style>
 </head>
 <body>
@@ -349,7 +448,11 @@
           <div class="m-w" id="dDiesel">—</div>
         </div>
       </div>
-      <button type="button" class="przycisk" style="margin-top:4px;" id="dNowy">＋ Nowy wpis</button>
+      <!-- Z-81: opakowanie .przycisk-glow = obracająca się obwódka; przycisk
+           w środku bez zmian (id, typ, handler). -->
+      <div class="przycisk-glow" style="margin-top:4px;">
+        <button type="button" class="przycisk" id="dNowy">＋ Nowy wpis</button>
+      </div>
       <button type="button" class="przycisk-drugi" id="dPodsumowanie">📊 Podsumowanie miesiąca</button>
       <button type="button" class="przycisk-drugi" id="dMiesiacBtn">✅ Zamykam miesiąc</button>
     </div>
@@ -449,7 +552,10 @@
              poza ekranem, kierowca klikał ZAPISZ w kółko nie wiedząc, czemu nic
              się nie dzieje (prośba Marka 20.07.2026). -->
         <div class="komunikat blad ukryte" id="komunikatZapis" style="margin-bottom:12px;"></div>
-        <button type="submit" class="przycisk" id="przyciskZapisz">ZAPISZ</button>
+        <!-- Z-81: glow zostaje też przy „ZAPISZ POPRAWKĘ" (decyzja Marka). -->
+        <div class="przycisk-glow">
+          <button type="submit" class="przycisk" id="przyciskZapisz">ZAPISZ</button>
+        </div>
         <!-- F-22 (01.08.2026, zgłoszenie Marka z 26.07): czyści pola i wraca
              od razu na dashboard, bez pytania — widoczny tylko przy nowym
              wpisie, w edycji zastępuje go "Anuluj poprawianie" poniżej. -->
@@ -1336,9 +1442,20 @@ function pokazBledyPol(bledy) {
     var bladId = (k === 'info' && wMix) ? 'b-pary' : ('b-' + k);
     var pole = el(poleId);
     pole.classList.toggle('pole-blad', !!bledy[k]);
+    pole.classList.remove('pole-blad-puls');
     var b = el(bladId);
     if (b) b.textContent = bledy[k] || '';
   });
+  // Z-81: PIERWSZE błędne pole (w kolejności formularza) pulsuje dwa razy
+  // i przestaje — „zacznij tutaj". requestAnimationFrame po remove wyżej,
+  // żeby animacja restartowała się też przy kolejnym kliknięciu ZAPISZ.
+  for (var i = 0; i < KOLEJNOSC_POL.length; i++) {
+    var k2 = KOLEJNOSC_POL[i];
+    if (!bledy[k2]) continue;
+    var cel = el((k2 === 'info' && wMix) ? 'p-pary' : MAPA_POL[k2]);
+    requestAnimationFrame(function () { cel.classList.add('pole-blad-puls'); });
+    break;
+  }
 }
 // Zbiorczy komunikat przy ZAPISZ + przewinięcie do pierwszego błędnego pola.
 // Nazwy i kolejność jak w formularzu, żeby lista czytała się od góry do dołu.
@@ -1904,8 +2021,11 @@ function pokazPasekWpisow_(tryb, czasCache) {
   if (!p) return;
   if (!tryb) { p.className = 'pasek-odswiezania ukryte'; p.innerHTML = ''; return; }
   if (tryb === 'ladowanie') {
-    p.className = 'pasek-odswiezania ladowanie';
-    p.innerHTML = '<span class="mini-spinner"></span><span>Odświeżam listę…</span>';
+    // Z-81: obwódka z biegnącym błyskiem wokół paska (klasa .pasek-glow na
+    // zewnętrznym elemencie, właściwy pasek jako wnętrze).
+    p.className = 'pasek-glow';
+    p.innerHTML = '<div class="pasek-odswiezania ladowanie">' +
+      '<span class="mini-spinner"></span><span>Odświeżam listę…</span></div>';
     return;
   }
   p.className = 'pasek-odswiezania offline';
