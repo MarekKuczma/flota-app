@@ -1965,8 +1965,15 @@ function pobierzStatus() {
     if (d.kierowca) {
       localStorage.setItem('flota_kierowca', d.kierowca);
       localStorage.setItem('flota_beta', d.beta ? 'TAK' : 'NIE');
-      localStorage.setItem('flota_palety_specjalne', d.paletySpecjalne ? 'TAK' : 'NIE');   // Z-83
-      wczytajPalete_();   // Z-83: uprawnienie mogło się właśnie zmienić
+      // Z-83 poprawka (zgłoszenie Marka: „RGB pokazuje się po jakimś czasie"):
+      // pole `paletySpecjalne` przychodzi TYLKO w odpowiedzi `status` —
+      // odpowiedź `mojeWpisy` go nie ma. Bezwarunkowy zapis robił z `undefined`
+      // NIE i każde odświeżenie listy w tle cofało paletę do domyślnej.
+      // Flagę wolno nadpisać wyłącznie, gdy serwer faktycznie ją przysłał.
+      if (typeof d.paletySpecjalne !== 'undefined') {
+        localStorage.setItem('flota_palety_specjalne', d.paletySpecjalne ? 'TAK' : 'NIE');
+        wczytajPalete_();
+      }
       el('kto').textContent = d.kierowca;
       rysujDashboard();
     }
@@ -2015,8 +2022,11 @@ function odswiezWpisyCache() {
       if (d.kierowca) {
         localStorage.setItem('flota_kierowca', d.kierowca);
         localStorage.setItem('flota_beta', d.beta ? 'TAK' : 'NIE');
-        localStorage.setItem('flota_palety_specjalne', d.paletySpecjalne ? 'TAK' : 'NIE');   // Z-83
-        wczytajPalete_();
+        // Z-83 poprawka: patrz komentarz przy bliźniaczym zapisie wyżej.
+        if (typeof d.paletySpecjalne !== 'undefined') {
+          localStorage.setItem('flota_palety_specjalne', d.paletySpecjalne ? 'TAK' : 'NIE');
+          wczytajPalete_();
+        }
         el('kto').textContent = d.kierowca;
       }
     } else if (d && bledyMajaKod_(d.bledy, 'E011')) {
