@@ -441,16 +441,9 @@
   [data-paleta="rgb"] header::after{content:''; position:absolute; inset:0; pointer-events:none;
     background:linear-gradient(105deg, transparent 36%, rgba(255,255,255,.38) 50%, transparent 64%);
     transform:translateX(-130%); animation:przebiegPolysk 5.5s ease-in-out infinite;}
-  /* --- 4. aurora: powolne plamy koloru pod treścią --- */
-  @keyframes aurora { to { transform:translate3d(0,-7%,0) scale(1.18); } }
-  [data-paleta="rgb"] main{position:relative;}
-  [data-paleta="rgb"] main::before{content:''; position:absolute; inset:-10%; z-index:0;
-    pointer-events:none;
-    background:radial-gradient(38% 20% at 18% 10%, rgba(168,85,247,.28), transparent 70%),
-               radial-gradient(34% 18% at 86% 30%, rgba(34,211,238,.22), transparent 70%),
-               radial-gradient(44% 22% at 52% 80%, rgba(255,45,149,.18), transparent 70%);
-    animation:aurora 15s ease-in-out infinite alternate;}
-  [data-paleta="rgb"] main > *{position:relative; z-index:1;}
+  /* Z-83: aurora USUNIĘTA 15.08.2026 — na prawdziwym telefonie plama
+     (inset:-10%) wystawała poza ekran i robiła boczne przewijanie
+     („psuje skalę aplikacji" — Marek). Reszta efektów zostaje. */
   /* --- 5. kółka: wirujący tęczowy pierścień --- */
   [data-paleta="rgb"] .ikona-krag{border-color:transparent;
     background:linear-gradient(var(--karta), var(--karta)) padding-box,
@@ -506,8 +499,7 @@
   @media (prefers-reduced-motion: reduce){
     [data-paleta="rgb"] header, [data-paleta="rgb"] .przycisk, [data-paleta="rgb"] .metryka .m-w,
     [data-paleta="rgb"] .avatar-krag, [data-paleta="rgb"] .avatar-pierscien,
-    [data-paleta="rgb"] header::after, [data-paleta="rgb"] main::before,
-    [data-paleta="rgb"] .ikona-krag, [data-paleta="rgb"] .metryka .m-et .m-ikona,
+    [data-paleta="rgb"] header::after,     [data-paleta="rgb"] .ikona-krag, [data-paleta="rgb"] .metryka .m-et .m-ikona,
     [data-paleta="rgb"] nav button.aktywna::after, [data-paleta="rgb"] .sukces-ikona::before,
     [data-paleta="rgb"] .sukces-ikona::after, [data-paleta="rgb"] .plakietka-beta{ animation:none; }
   }
