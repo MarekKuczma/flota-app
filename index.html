@@ -796,6 +796,14 @@
 </dialog>
 
 <script src="./config.js"></script>
+<!-- Z-83: wybierak palet. Lista budowana z JS (PALETY), bo pozycja RGB
+     pojawia się tylko przy fladze z serwera. -->
+<div class="zaslona" id="zaslonaPalet"></div>
+<div class="arkusz-palet" id="arkuszPalet" role="dialog" aria-label="Kolory aplikacji">
+  <h3>Kolory aplikacji</h3>
+  <p class="pod">Wybór zapamiętuje się na tym telefonie.</p>
+  <div id="listaPalet"></div>
+</div>
 <script>
 'use strict';
 /* ===== ROZLICZENIE FLOTY RINKON — aplikacja kierowcy (v2: dashboard) ===== */
@@ -2620,13 +2628,5 @@ function wyslijEdycje(d) {
   });
 }
 </script>
-<!-- Z-83: wybierak palet. Lista budowana z JS (PALETY), bo pozycja RGB
-     pojawia się tylko przy fladze z serwera. -->
-<div class="zaslona" id="zaslonaPalet"></div>
-<div class="arkusz-palet" id="arkuszPalet" role="dialog" aria-label="Kolory aplikacji">
-  <h3>Kolory aplikacji</h3>
-  <p class="pod">Wybór zapamiętuje się na tym telefonie.</p>
-  <div id="listaPalet"></div>
-</div>
 </body>
 </html>
