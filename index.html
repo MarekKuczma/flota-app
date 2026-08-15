@@ -377,16 +377,65 @@
     .pole-blad-puls textarea, input:focus, select:focus, textarea:focus{
       animation:none; }
   }
+  /* Z-82: ikony konturowe — kolor z `color` rodzica (currentColor), rozmiar
+     z font-size kontenera (1em). Patrz sprite na początku <body>. */
+  .ikona{width:1em; height:1em; flex:none; vertical-align:-.125em;
+    fill:none; stroke:currentColor; stroke-width:1.75;
+    stroke-linecap:round; stroke-linejoin:round;}
 </style>
 </head>
 <body>
+<!-- ===== Z-82: sprite ikon (ikony/ikony-sprite.svg) — wspólny dla obu appek.
+     Zasady: 24x24, kontur 1.75, currentColor; <symbol> BEZ atrybutów
+     fill/stroke (dziedziczenie z reguły .ikona na końcu <style>). Rodzina
+     pojazdów 1:1 z "Panel Floty.html" (rodzajIcon v51) = ta sama, którą
+     ewidencja ma w ikonaTypu (D57). Dokumentacja: instrukcja ikony.txt ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="ic-car" viewBox="0 0 24 24"><path d="M5 13l1.5-4.5A2 2 0 018.4 7h7.2a2 2 0 011.9 1.5L19 13"/><path d="M4 13h16a1 1 0 011 1v3h-2"/><path d="M5 17H3v-3a1 1 0 011-1"/><circle cx="7.5" cy="17" r="1.8"/><circle cx="16.5" cy="17" r="1.8"/><path d="M9.5 17h5"/></symbol>
+<symbol id="ic-bus" viewBox="0 0 24 24"><path d="M3 13l2-6h11l3 6"/><path d="M3 13h18v5h-2"/><path d="M7 18H5v-5"/><circle cx="8" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M10 18h5"/></symbol>
+<symbol id="ic-digger" viewBox="0 0 24 24"><path d="M3 18h10"/><circle cx="5" cy="18" r="1.6"/><circle cx="11" cy="18" r="1.6"/><path d="M4 15h8v-4H6l-2 4z"/><path d="M12 12l4-6 4 2-3 5"/><path d="M20 8l1 4-3 1"/></symbol>
+<symbol id="ic-hds" viewBox="0 0 24 24"><path d="M3 13l2-6h6l2 6"/><path d="M3 13h18v5h-2"/><path d="M7 18H5v-5"/><circle cx="8" cy="18" r="2"/><circle cx="17" cy="18" r="2"/><path d="M13 7l6-3"/><path d="M19 4v5"/><path d="M19 9l-1.5 1.5"/></symbol>
+<symbol id="ic-trailer" viewBox="0 0 24 24"><rect x="2" y="8" width="15" height="7" rx="1"/><path d="M17 12h5"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="12" cy="17.5" r="1.8"/></symbol>
+<symbol id="ic-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></symbol>
+<symbol id="ic-clip" viewBox="0 0 24 24"><path d="M9 4.5h6M9 4.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 4.5M9 4.5H7a1.5 1.5 0 0 0-1.5 1.5v13A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5V6A1.5 1.5 0 0 0 17 4.5h-2M9 4.5v2h6v-2M9 11h6M9 15h4"/></symbol>
+<symbol id="ic-money" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="11" rx="2"/><circle cx="12" cy="12.5" r="2.6"/><path d="M6 10.2v0M18 15v0"/></symbol>
+<symbol id="ic-fuel" viewBox="0 0 24 24"><path d="M5 20.5V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v14.5M3.8 20.5h10.4M5.8 10h6.4M13 12.5h1.6a1.4 1.4 0 0 1 1.4 1.4v3.1a1.5 1.5 0 0 0 3 0V9.6a2 2 0 0 0-.6-1.4L16 5.8"/></symbol>
+<symbol id="ic-cal" viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4M8 14h2M14 14h2M8 17h2"/></symbol>
+<symbol id="ic-gauge" viewBox="0 0 24 24"><path d="M4.5 15.5a8 8 0 1 1 15 0"/><path d="M12 13.5 15.5 9"/><circle cx="12" cy="14.5" r="1.2"/><path d="M4.5 19h15"/></symbol>
+<symbol id="ic-drop" viewBox="0 0 24 24"><path d="M12 3.5s6 6.6 6 10.7a6 6 0 0 1-12 0C6 10.1 12 3.5 12 3.5Z"/><path d="M9.5 14.5a2.6 2.6 0 0 0 2.2 2.5"/></symbol>
+<symbol id="ic-site" viewBox="0 0 24 24"><path d="M4 20.5h16M7 20.5V9l10-4.5v16M10.5 9.5v2.5M13.5 8.5v3.5M10.5 15v2.5M13.5 14.5V18"/></symbol>
+<symbol id="ic-chart" viewBox="0 0 24 24"><path d="M4 4.5v14a1.5 1.5 0 0 0 1.5 1.5H20M8.5 16v-4M12.5 16V8.5M16.5 16v-6"/></symbol>
+<symbol id="ic-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="m8.3 12.3 2.5 2.6 4.9-5.4"/></symbol>
+<symbol id="ic-home" viewBox="0 0 24 24"><path d="m4 11 8-7 8 7M6.5 9.5v9A1.5 1.5 0 0 0 8 20h8a1.5 1.5 0 0 0 1.5-1.5v-9M10 20v-5.5h4V20"/></symbol>
+<symbol id="ic-ticket" viewBox="0 0 24 24"><path d="M4 9V7.5A1.5 1.5 0 0 1 5.5 6h13A1.5 1.5 0 0 1 20 7.5V9a2.6 2.6 0 0 0 0 6v1.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 16.5V15a2.6 2.6 0 0 0 0-6Z"/><path d="M13.5 7v2M13.5 11v2M13.5 15v2"/></symbol>
+<symbol id="ic-cart" viewBox="0 0 24 24"><circle cx="9.5" cy="19" r="1.4"/><circle cx="16.5" cy="19" r="1.4"/><path d="M3.5 4.5h2.2L8 14.7a1.5 1.5 0 0 0 1.5 1.2h6.8a1.5 1.5 0 0 0 1.5-1.1l1.7-6.6H6.4"/></symbol>
+<symbol id="ic-pencil" viewBox="0 0 24 24"><path d="m5 19 .9-3.7L16.7 4.5a1.6 1.6 0 0 1 2.3 0l.5.5a1.6 1.6 0 0 1 0 2.3L8.7 18.1 5 19ZM14.8 6.4l2.8 2.8"/></symbol>
+<symbol id="ic-trash" viewBox="0 0 24 24"><path d="M4.5 6.5h15M9.5 6.5V5A1.5 1.5 0 0 1 11 3.5h2A1.5 1.5 0 0 1 14.5 5v1.5M6.5 6.5l.8 12A2 2 0 0 0 9.3 20.5h5.4a2 2 0 0 0 2-1.9l.8-12.1M10 10.5v6M14 10.5v6"/></symbol>
+<symbol id="ic-moon" viewBox="0 0 24 24"><path d="M19.5 14.5A7.8 7.8 0 0 1 9.5 4.5a8 8 0 1 0 10 10Z"/></symbol>
+<symbol id="ic-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3v1.8M12 19.2V21M21 12h-1.8M4.8 12H3M18.4 5.6l-1.3 1.3M6.9 17.1l-1.3 1.3M18.4 18.4l-1.3-1.3M6.9 6.9 5.6 5.6"/></symbol>
+<symbol id="ic-key" viewBox="0 0 24 24"><circle cx="8" cy="15.5" r="4"/><path d="m11 12.5 8.5-8.5M16.5 7l2.5 2.5M13.8 9.7l2 2"/></symbol>
+<symbol id="ic-user" viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.7"/><path d="M5 20a7.3 7.3 0 0 1 14 0"/></symbol>
+<symbol id="ic-flask" viewBox="0 0 24 24"><path d="M10 3.5h4M10.8 3.5v5.2L5.9 17a2.2 2.2 0 0 0 2 3.5h8.2a2.2 2.2 0 0 0 2-3.5l-4.9-8.3V3.5M8.2 14.5h7.6"/></symbol>
+<symbol id="ic-link" viewBox="0 0 24 24"><path d="M10 14 14 10M8.5 12 6.8 13.7a3.4 3.4 0 0 0 4.8 4.8l1.7-1.7M15.5 12l1.7-1.7a3.4 3.4 0 0 0-4.8-4.8L10.7 7.2"/></symbol>
+<symbol id="ic-note" viewBox="0 0 24 24"><path d="M6.5 3.5h11A1.5 1.5 0 0 1 19 5v14a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19V5a1.5 1.5 0 0 1 1.5-1.5ZM9 8.5h6M9 12h6M9 15.5h3.5"/></symbol>
+<symbol id="ic-mega" viewBox="0 0 24 24"><path d="M4 10.5v3a1 1 0 0 0 1 1h2.5L18 19V5L7.5 9.5H5a1 1 0 0 0-1 1ZM8 15v3.3a1.2 1.2 0 0 0 1.2 1.2h1"/></symbol>
+<symbol id="ic-lock" viewBox="0 0 24 24"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5M12 14.5v2"/></symbol>
+<symbol id="ic-warn" viewBox="0 0 24 24"><path d="M12 4 3.5 19h17L12 4ZM12 10v4M12 16.8v.2"/></symbol>
+<symbol id="ic-wrench" viewBox="0 0 24 24"><path d="M14.5 6.5a4 4 0 0 1 5.4-4.1L17 5.3l1.7 1.7 2.9-2.9a4 4 0 0 1-5.1 5.4l-8 8a2 2 0 0 1-2.9-2.9l8-8.1Z"/></symbol>
+<symbol id="ic-pin" viewBox="0 0 24 24"><path d="M9 3.5h6l-.7 6.2 2.7 3.3H7l2.7-3.3L9 3.5ZM12 13v7.5"/></symbol>
+<symbol id="ic-swap" viewBox="0 0 24 24"><path d="M4.5 9.5a8 8 0 0 1 13.6-2.7M18.5 3.5v3.7h-3.7M19.5 14.5a8 8 0 0 1-13.6 2.7M5.5 20.5v-3.7h3.7"/></symbol>
+<symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="ic-card" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3 10h18M6.5 14.5h4"/></symbol>
+<symbol id="ic-chevron" viewBox="0 0 24 24"><path d="m6.5 9.5 5.5 5.5 5.5-5.5"/></symbol>
+<symbol id="ic-bottle" viewBox="0 0 24 24"><path d="M10.2 3.5h3.6M10.6 3.5v3.2L8.3 10a3 3 0 0 0-.3 1.3v7.2A2 2 0 0 0 10 20.5h4a2 2 0 0 0 2-2v-7.2a3 3 0 0 0-.3-1.3l-2.3-3.3V3.5M8.2 13.5h7.6"/></symbol>
+</defs></svg>
 <header>
   <img src="./ikona-192.png" alt="Rinkon">
   <div class="naglowek-tekst">
     <h1 id="tytul">Rozliczenie Floty Rinkon</h1>
     <div class="kto" id="kto"></div>
   </div>
-  <button type="button" id="motywBtn" aria-label="Zmień motyw">🌙</button>
+  <button type="button" id="motywBtn" aria-label="Zmień motyw"></button>
   <button type="button" id="paletaBtn" aria-label="Zmień paletę kolorów">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path class="ikona-paletki" d="M12 2C6.48 2 2 6.15 2 11.2c0 3.1 2.6 4.4 4.4 4.4h1.7c.7 0 1.3.6 1.3 1.3 0 .4-.2.8-.5 1.1-.6.5-.9 1.2-.9 1.9 0 1.2 1.1 2.1 2.5 2.1 5.5 0 9.5-4.4 9.5-9.9C20 6.36 16.6 2 12 2Z"/>
@@ -407,7 +456,7 @@
   <!-- Brak kodu -->
   <div id="widokBrakKodu" class="karta ukryte">
     <div class="srodek">
-      <p style="font-size:40px; margin:0;">🔑</p>
+      <p style="font-size:40px; margin:0;"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-key"></use></svg></p>
       <p><b>Otwórz aplikację ze swojego osobistego linku.</b></p>
       <p style="font-size:15px;" id="brakKoduPodpowiedz">Link dostałeś od Marka. Jeśli go nie masz — zadzwoń do Marka.</p>
       <div style="margin-top:16px; text-align:left;">
@@ -426,35 +475,35 @@
         <div class="avatar-krag" id="dAwatar">👤</div>
         <div>
           <div class="p1"><span id="dPowitanie">Cześć!</span><span id="dBeta"
-            class="plakietka plakietka-beta ukryte">🧪 Beta-tester</span></div>
+            class="plakietka plakietka-beta ukryte"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-flask"></use></svg> Beta-tester</span></div>
           <div class="p2" id="dMiesiac"></div>
         </div>
       </div>
       <div class="metryki">
         <div class="metryka">
-          <div class="m-et"><span class="m-ikona">📋</span>Wpisy</div>
+          <div class="m-et"><span class="m-ikona"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-clip"></use></svg></span>Wpisy</div>
           <div class="m-w" id="dLiczba">—</div>
         </div>
         <div class="metryka">
-          <div class="m-et"><span class="m-ikona">💰</span>Suma</div>
+          <div class="m-et"><span class="m-ikona"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-money"></use></svg></span>Suma</div>
           <div class="m-w" id="dSuma">—</div>
         </div>
         <div class="metryka">
-          <div class="m-et"><span class="m-ikona">⛽</span>Benzyna</div>
+          <div class="m-et"><span class="m-ikona"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-fuel"></use></svg></span>Benzyna</div>
           <div class="m-w" id="dBenzyna">—</div>
         </div>
         <div class="metryka">
-          <div class="m-et"><span class="m-ikona">⛽</span>Diesel</div>
+          <div class="m-et"><span class="m-ikona"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-fuel"></use></svg></span>Diesel</div>
           <div class="m-w" id="dDiesel">—</div>
         </div>
       </div>
       <!-- Z-81: opakowanie .przycisk-glow = obracająca się obwódka; przycisk
            w środku bez zmian (id, typ, handler). -->
       <div class="przycisk-glow" style="margin-top:4px;">
-        <button type="button" class="przycisk" id="dNowy">＋ Nowy wpis</button>
+        <button type="button" class="przycisk" id="dNowy"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-plus"></use></svg> Nowy wpis</button>
       </div>
-      <button type="button" class="przycisk-drugi" id="dPodsumowanie">📊 Podsumowanie miesiąca</button>
-      <button type="button" class="przycisk-drugi" id="dMiesiacBtn">✅ Zamykam miesiąc</button>
+      <button type="button" class="przycisk-drugi" id="dPodsumowanie"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-chart"></use></svg> Podsumowanie miesiąca</button>
+      <button type="button" class="przycisk-drugi" id="dMiesiacBtn"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-check"></use></svg> Zamykam miesiąc</button>
     </div>
     <div class="karta">
       <h2>Ostatnie wpisy</h2>
@@ -465,14 +514,14 @@
   <!-- EKRAN SUKCESU -->
   <div id="widokSukces" class="ukryte">
     <div class="karta">
-      <div class="sukces-ikona" id="sIkona">✅</div>
+      <div class="sukces-ikona" id="sIkona"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-check"></use></svg></div>
       <div class="sukces-tekst" id="sTekst">Wpis dodany</div>
       <div class="sukces-id" id="sId"></div>
       <div class="komunikat uwaga ukryte" id="sOstrzezenia"></div>
-      <button type="button" class="przycisk" id="sKolejny">＋ Dodaj kolejny wpis</button>
+      <button type="button" class="przycisk" id="sKolejny"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-plus"></use></svg> Dodaj kolejny wpis</button>
       <div class="dwa">
-        <button type="button" class="przycisk-drugi" id="sWpisy">📋 Moje wpisy</button>
-        <button type="button" class="przycisk-drugi" id="sStart">🏠 Ekran główny</button>
+        <button type="button" class="przycisk-drugi" id="sWpisy"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-clip"></use></svg> Moje wpisy</button>
+        <button type="button" class="przycisk-drugi" id="sStart"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-home"></use></svg> Ekran główny</button>
       </div>
     </div>
   </div>
@@ -488,7 +537,7 @@
            przez skasowanie tego bloku + #kartaSmsOrlen niżej + JS między
            znacznikami F-56 START/KONIEC. -->
       <div class="karta" id="kartaSmsOrlen" style="margin-bottom:14px; padding:12px 14px;">
-        <button type="button" class="przycisk-maly" id="smsOrlenPrzelacznik" style="width:100%; text-align:left;">📋 Wklej SMS z Orlenu (opcjonalnie)</button>
+        <button type="button" class="przycisk-maly" id="smsOrlenPrzelacznik" style="width:100%; text-align:left;"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-clip"></use></svg> Wklej SMS z Orlenu (opcjonalnie)</button>
         <div id="smsOrlenPanel" class="ukryte" style="margin-top:10px;">
           <textarea id="smsOrlenTekst" placeholder="Wklej tu treść SMS-a od Orlenu (mFlota)"></textarea>
           <div class="komunikat" id="smsOrlenWynik" style="margin:8px 0 0;"></div>
@@ -496,18 +545,18 @@
       </div>
       <form id="formularz" novalidate>
         <div class="pole" id="p-data">
-          <label><span class="lbl-ikona">📅</span>Data zakupu <span class="wym">*</span></label>
+          <label><span class="lbl-ikona"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-cal"></use></svg></span>Data zakupu <span class="wym">*</span></label>
           <input type="date" id="f-data">
           <div class="blad-pola" id="b-data"></div>
         </div>
         <div class="pole" id="p-przeznaczenie">
-          <label><span class="lbl-ikona">🚜</span>Do czego (pojazd / sprzęt) <span class="wym">*</span></label>
+          <label><span class="lbl-ikona"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-digger"></use></svg></span>Do czego (pojazd / sprzęt) <span class="wym">*</span></label>
           <select id="f-przeznaczenie"></select>
           <span class="etykieta-typ ukryte" id="typSprzetu"></span>
           <div class="blad-pola" id="b-przeznaczenie"></div>
         </div>
         <div class="pole" id="p-opis">
-          <label><span class="lbl-ikona">⛽</span>Co kupiono <span class="wym">*</span></label>
+          <label><span class="lbl-ikona"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-fuel"></use></svg></span>Co kupiono <span class="wym">*</span></label>
           <select id="f-opis"></select>
           <div class="blad-pola" id="b-opis"></div>
         </div>
@@ -516,17 +565,17 @@
              migotanie (pokazywał się po wyborze auta, znikał po wyborze
              Autostrady). Przestawione pod „Co kupiono" 20.07.2026 (prośba Marka). -->
         <div class="pole" id="p-licznik">
-          <label><span class="lbl-ikona">🔢</span>Stan licznika / motogodziny <span class="wym ukryte" id="licznikWym">*</span></label>
+          <label><span class="lbl-ikona"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-gauge"></use></svg></span>Stan licznika / motogodziny <span class="wym ukryte" id="licznikWym">*</span></label>
           <input type="text" inputmode="numeric" id="f-licznik" placeholder="np. 184632">
           <div class="blad-pola" id="b-licznik"></div>
         </div>
         <div class="pole" id="p-ilosc">
-          <label id="labelIlosc"><span class="lbl-ikona">🧮</span>Ilość (litry lub sztuki) <span class="wym">*</span></label>
+          <label id="labelIlosc"><span class="lbl-ikona"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-drop"></use></svg></span>Ilość (litry lub sztuki) <span class="wym">*</span></label>
           <input type="text" inputmode="decimal" id="f-ilosc" placeholder="np. 45,5">
           <div class="blad-pola" id="b-ilosc"></div>
         </div>
         <div class="pole ukryte" id="p-pary">
-          <label><span class="lbl-ikona">🔗</span>Tankowanie łączone — sprzęt i litry <span class="wym">*</span></label>
+          <label><span class="lbl-ikona"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-link"></use></svg></span>Tankowanie łączone — sprzęt i litry <span class="wym">*</span></label>
           <div id="paryLista"></div>
           <button type="button" class="przycisk-maly" id="paryDodaj">+ Dodaj kolejny sprzęt</button>
           <div id="paryPodglad" style="font-size:14px; color:var(--szary); margin-top:8px;"></div>
@@ -534,17 +583,17 @@
           <input type="hidden" id="f-licznikPary">
         </div>
         <div class="pole" id="p-wartosc">
-          <label><span class="lbl-ikona">💰</span>Wartość (zł) <span class="wym">*</span></label>
+          <label><span class="lbl-ikona"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-money"></use></svg></span>Wartość (zł) <span class="wym">*</span></label>
           <input type="text" inputmode="decimal" id="f-wartosc" placeholder="np. 289,99">
           <div class="blad-pola" id="b-wartosc"></div>
         </div>
         <div class="pole" id="p-budowa">
-          <label><span class="lbl-ikona">🏗️</span>Budowa <span class="wym">*</span></label>
+          <label><span class="lbl-ikona"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-site"></use></svg></span>Budowa <span class="wym">*</span></label>
           <select id="f-budowa"></select>
           <div class="blad-pola" id="b-budowa"></div>
         </div>
         <div class="pole" id="p-info">
-          <label><span class="lbl-ikona">📝</span>Dodatkowe informacje <span class="wym ukryte" id="infoWym">*</span></label>
+          <label><span class="lbl-ikona"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-note"></use></svg></span>Dodatkowe informacje <span class="wym ukryte" id="infoWym">*</span></label>
           <textarea id="f-info" placeholder="np. uwagi do tankowania (można pominąć)"></textarea>
           <div class="blad-pola" id="b-info"></div>
         </div>
@@ -587,9 +636,9 @@
 </main>
 
 <nav id="nawigacja" class="ukryte">
-  <button id="nawStart" class="aktywna"><span class="i">🏠</span>Start</button>
-  <button id="nawNowy"><span class="i">⛽</span>Nowy wpis</button>
-  <button id="nawWpisy"><span class="i">📋</span>Moje wpisy</button>
+  <button id="nawStart" class="aktywna"><span class="i"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-home"></use></svg></span>Start</button>
+  <button id="nawNowy"><span class="i"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-fuel"></use></svg></span>Nowy wpis</button>
+  <button id="nawWpisy"><span class="i"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-clip"></use></svg></span>Moje wpisy</button>
 </nav>
 
 <div class="overlay-zapis ukryte" id="overlayZapis">
@@ -711,7 +760,7 @@ function bezpiecznyTekst_(t) {
 function wczytajMotyw() {
   var m = localStorage.getItem('flota_motyw') || 'jasny';
   document.documentElement.setAttribute('data-motyw', m);
-  el('motywBtn').textContent = m === 'ciemny' ? '🌙' : '☀️';
+  el('motywBtn').innerHTML = ikonaHTML_(m === 'ciemny' ? 'ic-moon' : 'ic-sun'); // Z-82: innerHTML — wstawiamy element
 }
 el('motywBtn').addEventListener('click', function () {
   var obecny = document.documentElement.getAttribute('data-motyw') === 'ciemny' ? 'ciemny' : 'jasny';
@@ -1164,7 +1213,7 @@ function przelaczPola() {
   else schowaj('licznikWym');
 
   var jednostkaTekst = o ? (o.czyPaliwo ? 'litry' : 'sztuki') : 'litry lub sztuki';
-  el('labelIlosc').innerHTML = '<span class="lbl-ikona">🧮</span>Ilość (' + jednostkaTekst + ') <span class="wym">*</span>';
+  el('labelIlosc').innerHTML = '<span class="lbl-ikona">' + ikonaHTML_('ic-drop') + '</span>Ilość (' + jednostkaTekst + ') <span class="wym">*</span>';
 }
 
 // ---------- tankowanie łączone (pary sprzęt + litry) ----------
@@ -1364,11 +1413,16 @@ function formatLicznik_(v) {
 }
 
 // ---------- wygląd wpisów (ikony, nazwa, awatar) ----------
+// Z-82: markup ikony konturowej ze sprite'u (patrz początek <body>).
+// Rozmiar dziedziczy z font-size rodzica — świadomie bez width/height.
+function ikonaHTML_(id) {
+  return '<svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#' + id + '"></use></svg>';
+}
 function ikonaWpisu_(w) {
-  if (czyMix(w.przeznaczenie)) return '🔗';
-  if (w.opis === 'Autostrada') return '🎫';
+  if (czyMix(w.przeznaczenie)) return ikonaHTML_('ic-link');
+  if (w.opis === 'Autostrada') return ikonaHTML_('ic-ticket');
   var o = opisInfo(w.opis);
-  return (o && !o.czyPaliwo) ? '🛒' : '⛽';
+  return ikonaHTML_((o && !o.czyPaliwo) ? 'ic-cart' : 'ic-fuel');
 }
 function nazwaSprzetuWpisu_(w) {
   var s = sprzetInfo(w.przeznaczenie);
@@ -1576,8 +1630,8 @@ function pokazSukces(tekst, podtekst, ostrzezenia, poEdycji) {
       ostrzezenia.map(function (o) { return '<li>' + bezKodu_(o) + '</li>'; }).join('') + '</ul>';
   } else { so.classList.add('ukryte'); so.innerHTML = ''; }
   sukcesPoEdycji = !!poEdycji;
-  el('sKolejny').textContent = sukcesPoEdycji ? '📋 Moje wpisy' : '＋ Dodaj kolejny wpis';
-  el('sWpisy').textContent = sukcesPoEdycji ? '＋ Dodaj kolejny wpis' : '📋 Moje wpisy';
+  el('sKolejny').innerHTML = sukcesPoEdycji ? ikonaHTML_('ic-clip') + ' Moje wpisy' : ikonaHTML_('ic-plus') + ' Dodaj kolejny wpis'; // Z-82: innerHTML — wstawiamy element
+  el('sWpisy').innerHTML = sukcesPoEdycji ? ikonaHTML_('ic-plus') + ' Dodaj kolejny wpis' : ikonaHTML_('ic-clip') + ' Moje wpisy';
   przelaczWidok('sukces');
 }
 // Górny (główny) przycisk: po edycji → Moje wpisy, po nowym → nowy wpis.
@@ -1750,7 +1804,7 @@ function pobierzStatus() {
     // ten sam styl kółka co strzałka rozwijania wpisu).
     if (d.komunikaty && d.komunikaty.length) {
       el('komunikatMarka').innerHTML =
-        '<div class="km-tytul"><span>📢</span><span>Wiadomość od Marka</span></div>' +
+        '<div class="km-tytul"><span>' + ikonaHTML_('ic-mega') + '</span><span>Wiadomość od Marka</span></div>' +
         d.komunikaty.map(function (t) {
           return '<div class="km-wiersz"><span class="km-znaczek">›</span><span>' +
             bezpiecznyTekst_(t) + '</span></div>';
@@ -1862,9 +1916,9 @@ function odcienKategorii_(nazwa) {
   return h;
 }
 function ikonaKategorii_(nazwa) {
-  if (nazwa === 'Autostrada') return '🎫';
+  if (nazwa === 'Autostrada') return ikonaHTML_('ic-ticket');
   var o = opisInfo(nazwa);
-  return (o && o.czyPaliwo) ? '⛽' : '🛒';
+  return ikonaHTML_((o && o.czyPaliwo) ? 'ic-fuel' : 'ic-cart');
 }
 function kafelPodsumowania_(ikona, etykieta, wartosc, sub, odcien) {
   var div = document.createElement('div');
@@ -1895,8 +1949,8 @@ function rysujPodsumowanie(miesiac) {
   schowaj('podsumowaniePusto');
 
   var sumaZl = wpisy.reduce(function (s, w) { return s + (Number(w.wartosc) || 0); }, 0);
-  glowne.appendChild(kafelPodsumowania_('📋', 'Wpisy', String(wpisy.length), '', null));
-  glowne.appendChild(kafelPodsumowania_('💰', 'Suma', formatKwote_(sumaZl) + ' zł', '', null));
+  glowne.appendChild(kafelPodsumowania_(ikonaHTML_('ic-clip'), 'Wpisy', String(wpisy.length), '', null));
+  glowne.appendChild(kafelPodsumowania_(ikonaHTML_('ic-money'), 'Suma', formatKwote_(sumaZl) + ' zł', '', null));
 
   // Agregacja per kategoria (Co kupiono): kwota + ilość w jednym kafelku
   var kat = {};
@@ -2212,9 +2266,9 @@ function renderujWpis_(kontenerMiesiaca, w) {
     var akcja = '';
     if (!anulowany) {
       akcja = w.edytowalny
-        ? '<div class="akcja"><button class="przycisk-maly btn-popraw">✏️ Popraw</button>' +
-          '<button class="przycisk-czerwony btn-anuluj">🗑 Anuluj wpis</button></div>'
-        : '<div class="akcja klodka">🔒 Edycja niemożliwa — skontaktuj się z Markiem</div>';
+        ? '<div class="akcja"><button class="przycisk-maly btn-popraw">' + ikonaHTML_('ic-pencil') + ' Popraw</button>' +
+          '<button class="przycisk-czerwony btn-anuluj">' + ikonaHTML_('ic-trash') + ' Anuluj wpis</button></div>'
+        : '<div class="akcja klodka">' + ikonaHTML_('ic-lock') + ' Edycja niemożliwa — skontaktuj się z Markiem</div>';
     }
     div.innerHTML =
       '<div class="ikona-krag">' + ikonaWpisu_(w) + '</div>' +
@@ -2225,12 +2279,12 @@ function renderujWpis_(kontenerMiesiaca, w) {
       '<div class="linia2">' + w.opis + ' · ' + formatIlosc_(w.ilosc, w.opis) +
       (jednostkaOpisu(w.opis) ? ' ' + jednostkaOpisu(w.opis) : '') +
       ' · ' + w.budowa + (w.dodatkoweInfo ? ' · ' + bezpiecznyTekst_(w.dodatkoweInfo) : '') + '</div>' +
-      (w.licznik !== '' ? '<div class="linia2">🔢 ' + formatLicznik_(w.licznik) +
+      (w.licznik !== '' ? '<div class="linia2">' + ikonaHTML_('ic-gauge') + ' ' + formatLicznik_(w.licznik) +
         (jednostkaLicznika_(w.typSprzetu) ? ' ' + jednostkaLicznika_(w.typSprzetu) : '') +
         '</div>' : '') +
       // F-53 (02.08.2026, wzorem E-24 z ewidencji): plakietka poza
       // .wpis-szczegoly, widoczna bez rozwijania wpisu.
-      (w.cofniety ? '<div class="wpis-uwaga">⚠ ' + bezpiecznyTekst_(w.cofniety) + '</div>' : '') +
+      (w.cofniety ? '<div class="wpis-uwaga">' + ikonaHTML_('ic-warn') + ' ' + bezpiecznyTekst_(w.cofniety) + '</div>' : '') +
       '<div class="linia-data"><span>' + w.dataZakupu + '</span>' +
       '<span class="plakietka-id">' + w.id + '</span>' +
       '<span class="wpis-strzalka">▾</span></div>' +
