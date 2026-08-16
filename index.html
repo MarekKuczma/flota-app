@@ -68,27 +68,47 @@
      (nagłówek, przyciski, avatar), pomarańcz zostaje jako akcent drugorzędny
      — dokładnie te same odcienie pomarańczu co w oryginalnej palecie
      (--bg-akcentjasny/--tekst-akcentjasny), żeby nie wymyślać nowego koloru. */
+  /* Z-89 (16.08.2026): niebieska paleta „Błękit dzienny". Nagłówek rozjaśniony
+     w stronę lazuru, akcent POCIEMNIONY do #1d4ed8 — przy jaśniejszym pasku
+     #2563eb tracił kontrast na białych kartach.
+     Drugi akcent (--turkus) ZOSTAJE pomarańczowy: decyzja Marka — kafelki
+     wpisów mają zachować ciepłe akcenty dokładnie tam, gdzie były. Jedyny
+     wyjątek to „Popraw" (reguła niżej), bo stał w jednym rzędzie z czerwonym
+     „Usuń" i oba kolory biły się o uwagę. */
   [data-paleta="niebieska"]{
-    --gradient:linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #60a5fa 100%);
-    --ikona-grad:linear-gradient(135deg, #1e3a8a, #60a5fa);
-    --akcent:#2563eb;
-    --przycisk-cien:rgba(37,99,235,.35);
+    --gradient:linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #38bdf8 100%);
+    --ikona-grad:linear-gradient(135deg, #1e3a8a, #38bdf8);
+    --akcent:#1d4ed8;
+    --przycisk-cien:rgba(56,189,248,.32);
     --bg-akcentjasny:#eff6ff; --tekst-akcentjasny:#1d4ed8;
-    --metryka-grad:linear-gradient(135deg, #eff6ff 0%, #e0edff 100%);
+    --metryka-grad:linear-gradient(135deg, #f0f7ff 0%, #dbeafe 100%);
     --turkus:#f97316; --bg-turkus:#fff1e6; --tekst-turkus:#c2410c;
-    --paleta-ikona:#2563eb;
-    --stozek:#60a5fa,#2563eb,#1e3a8a,#2563eb,#60a5fa;   /* Z-81 */
+    --paleta-ikona:#38bdf8;
+    --stozek:#bae6fd,#38bdf8,#2563eb,#38bdf8,#bae6fd;   /* Z-81 */
     --beta-poswiata:rgba(249,115,22,.55);                /* Z-81 */
-    --luk:#dbeafe 0deg, #93c5fd 40deg, #3b82f6 86deg;    /* Z-87 */
-    --luk-glow:#3b82f6;                                   /* Z-87 */
+    --luk:#e0f2fe 0deg, #7dd3fc 40deg, #2563eb 86deg;    /* Z-87 */
+    --luk-glow:#38bdf8;                                   /* Z-87 */
   }
+  /* Z-89: wyjątek od --turkus. Zmiennej nie da się tu użyć — reszta
+     pomarańczowych miejsc (obwódka karty, kółko ikony, plakietka numeru,
+     „Łączone", strzałka) ma zostać bez zmian. */
+  [data-paleta="niebieska"] .przycisk-maly{color:#1d4ed8; border-color:#1d4ed8;}
   [data-motyw="ciemny"][data-paleta="niebieska"]{
+    /* Z-89: ten sam gradient co w jasnym, ale prawy koniec przycięty o jeden
+       ton (#38bdf8 → #0ea5e9). Powód: na ciemnym tle lazurowy pasek stawał się
+       najjaśniejszym punktem ekranu i przyciągał wzrok mocniej niż treść —
+       ten sam zarzut, który przy ewidencji zapisaliśmy jako E3. Jasny motyw
+       zostaje bez zmian. */
+    --gradient:linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #0ea5e9 100%);
     --bg-akcentjasny:#132447; --tekst-akcentjasny:#93c5fd;
-    --metryka-grad:linear-gradient(135deg, #16233d 0%, #1b2a44 100%);
+    --metryka-grad:linear-gradient(135deg, #16233d 0%, #1b2f4d 100%);
     --turkus:#fb923c; --bg-turkus:#432614; --tekst-turkus:#fb923c;
-    --stozek:#93c5fd,#60a5fa,#2563eb,#60a5fa,#93c5fd;   /* Z-81 */
+    --stozek:#bae6fd,#60a5fa,#2563eb,#60a5fa,#bae6fd;   /* Z-81 */
     --beta-poswiata:rgba(251,146,60,.55);                /* Z-81 */
   }
+  /* Z-89: jw. — #1d4ed8 jest na ciemnym tle nieczytelny, stąd jasny błękit. */
+  [data-motyw="ciemny"][data-paleta="niebieska"] .przycisk-maly{
+    color:#93c5fd; border-color:#93c5fd;}
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0; background:var(--tlo); color:var(--tekst);
     font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:17px;}
@@ -258,6 +278,11 @@
   .wpis.anulowany{border-left-color:var(--linia); background:var(--tlo);}
   .wpis.anulowany .linia1,.wpis.anulowany .linia2{text-decoration:line-through; color:#9ca3af;}
   .wpis .akcja{margin-top:10px; display:flex; gap:8px;}
+  /* Z-89: oba przyciski tej samej szerokości, ikona z napisem wyśrodkowane.
+     Dotąd każdy był szeroki na tyle, ile miał tekstu, więc „Popraw" i „Usuń"
+     nigdy nie wychodziły równo. Niezależne od palety. */
+  .wpis .akcja > button{flex:1 1 0; min-width:0; padding-left:10px; padding-right:10px;
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;}
   .klodka{color:var(--szary); font-size:14px; margin-top:8px;}
   /* jw. — przezroczyste kółko, ikona w kolorze tekstu (Z-82 poprawka 2) */
   .ikona-krag{width:38px; height:38px; border-radius:50%; background:transparent;
@@ -312,6 +337,11 @@
   nav button{flex:1; background:none; border:none; padding:12px 0 10px;
     font-size:13px; font-weight:600; color:var(--szary); min-height:56px;}
   nav button.aktywna{color:var(--akcent);}
+  /* Z-89 (zgłoszenie Marka): w trybie ciemnym dolne menu zlewało się z tłem —
+     miało kolor karty (#1c1f26) na tle #0f1115, czyli różnicę ledwo widoczną.
+     Teraz o dwa tony jaśniejsze, z wyraźniejszą kreską u góry. Motyw jasny
+     bez zmian — dlatego osobna reguła, a nie zmiana w `nav{}`. */
+  [data-motyw="ciemny"] nav{background:#252a33; border-top-color:#3a4150;}
   /* ================= Z-86 (16.08.2026): przejścia ekranów =================
      Wariant N1 + E1 wybrany przez Marka z mockupu. Wskaźnik jest JEDNYM
      elementem, który jeździ pod zakładkami (a nie kreską rysowaną osobno pod
@@ -1030,8 +1060,8 @@ var PALETY = [
   { id:'domyslna',  nazwa:'Pomarańczowa', opis:'domyślna',      pasek:'#f97316',
     probka:'linear-gradient(135deg,#fbbf24,#f97316 55%,#dc2626)' },
   { id:'niebieska', nazwa:'Niebieska',    opis:'spokojniejsza', pasek:'#2563eb',
-    probka:'linear-gradient(135deg,#1e3a8a,#2563eb 55%,#60a5fa)' },
-  { id:'rgb',       nazwa:'RGB',          opis:'dla wybranych osób', pasek:'#a855f7',
+    probka:'linear-gradient(135deg,#2563eb,#3b82f6 50%,#38bdf8)' },
+  { id:'rgb',       nazwa:'RGB',          opis:'gaming vibe', pasek:'#a855f7',
     probka:'linear-gradient(90deg,#ff2d95,#a855f7,#22d3ee,#22c55e,#facc15)', specjalna:true }
 ];
 function paletaDozwolona_(id) {
