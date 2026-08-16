@@ -280,6 +280,26 @@
   nav button{flex:1; background:none; border:none; padding:12px 0 10px;
     font-size:13px; font-weight:600; color:var(--szary); min-height:56px;}
   nav button.aktywna{color:var(--akcent);}
+  /* ================= Z-86 (16.08.2026): przejścia ekranów =================
+     Wariant N1 + E1 wybrany przez Marka z mockupu. Wskaźnik jest JEDNYM
+     elementem, który jeździ pod zakładkami (a nie kreską rysowaną osobno pod
+     każdą) — dzięki temu widać kierunek ruchu, a kod nie musi wiedzieć,
+     która zakładka jest która.
+
+     Szerokość wskaźnika = dokładnie 1/3 nawigacji, a widoczna kreska to
+     element w środku (44% szerokości). Dzięki temu przesunięcie to czyste
+     `translateX(n * 100%)` — bez magicznych liczb do poprawiania, gdyby
+     kiedyś zmieniła się grubość kreski. Przy zmianie liczby zakładek
+     wystarczy poprawić `calc(100% / 3)` w jednym miejscu. */
+  nav .wskaznik{position:absolute; bottom:3px; left:0; width:calc(100% / 3); height:3px;
+    display:flex; justify-content:center; pointer-events:none;
+    transition:transform .34s cubic-bezier(.4,1.3,.5,1), opacity .18s linear;}
+  nav .wskaznik i{width:44%; height:100%; border-radius:2px; background:var(--gradient);}
+  /* Ekran sukcesu nie należy do żadnej zakładki — wtedy kreska znika,
+     zamiast stać pod przypadkową pozycją. */
+  nav .wskaznik.bez-zakladki{opacity:0;}
+  @keyframes wejscieEkranu{ from{opacity:0;} to{opacity:1;} }
+  .wchodzi{animation:wejscieEkranu .22s ease-out;}
   nav button .i{display:block; font-size:22px; line-height:1.1;}
   .ukryte{display:none !important;}
   .srodek{text-align:center; padding:40px 20px; color:var(--szary);}
@@ -453,12 +473,12 @@
     background:linear-gradient(var(--karta), var(--karta)) padding-box,
                conic-gradient(from var(--kat), var(--stozek)) border-box;
     animation:obrot 6s linear infinite;}
-  /* --- 6. nawigacja: neon pod aktywną zakładką --- */
-  [data-paleta="rgb"] nav button.aktywna{position:relative;}
-  [data-paleta="rgb"] nav button.aktywna::after{content:''; position:absolute; left:24%; right:24%;
-    bottom:3px; height:2.5px; border-radius:2px; background:var(--gradient);
-    background-size:300% 100%; animation:plyn 6s linear infinite;
-    box-shadow:0 0 9px var(--akcent);}
+  /* --- 6. nawigacja: neon pod aktywną zakładką ---
+     Z-86: kreska nie jest już rysowana osobno pod aktywną zakładką (byłyby
+     DWIE naraz — ta i nowy, ślizgający się wskaźnik). Paleta RGB tylko
+     dokłada świecenie do wspólnego wskaźnika. */
+  [data-paleta="rgb"] nav .wskaznik i{background-size:300% 100%;
+    animation:plyn 6s linear infinite; box-shadow:0 0 9px var(--akcent);}
   [data-paleta="rgb"] nav button.aktywna .i svg{filter:drop-shadow(0 0 6px currentColor);}
   /* --- 7. liczby na kafelkach: poświata --- */
   [data-paleta="rgb"] .metryka .m-w{filter:drop-shadow(0 0 8px rgba(168,85,247,.6));}
@@ -500,7 +520,7 @@
     [data-paleta="rgb"] header, [data-paleta="rgb"] .przycisk, [data-paleta="rgb"] .metryka .m-w,
     [data-paleta="rgb"] .avatar-krag, [data-paleta="rgb"] .avatar-pierscien,
     [data-paleta="rgb"] header::after,     [data-paleta="rgb"] .ikona-krag, [data-paleta="rgb"] .metryka .m-et .m-ikona,
-    [data-paleta="rgb"] nav button.aktywna::after, [data-paleta="rgb"] .sukces-ikona::before,
+    [data-paleta="rgb"] nav .wskaznik i, [data-paleta="rgb"] .sukces-ikona::before,
     [data-paleta="rgb"] .sukces-ikona::after, [data-paleta="rgb"] .plakietka-beta{ animation:none; }
   }
 </style>
@@ -766,6 +786,7 @@
 </main>
 
 <nav id="nawigacja" class="ukryte">
+  <div class="wskaznik" id="wskaznikNawigacji"><i></i></div>
   <button id="nawStart" class="aktywna"><span class="i"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-home"></use></svg></span>Start</button>
   <button id="nawNowy"><span class="i"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-fuel"></use></svg></span>Nowy wpis</button>
   <button id="nawWpisy"><span class="i"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-clip"></use></svg></span>Moje wpisy</button>
@@ -2233,6 +2254,31 @@ el('dialogTak').addEventListener('click', function () {
 el('nawStart').addEventListener('click', function () { przelaczWidok('start'); });
 el('nawNowy').addEventListener('click', function () { zakonczEdycje(); przelaczWidok('nowy'); });
 el('nawWpisy').addEventListener('click', function () { przelaczWidok('wpisy'); });
+/* Z-86: ustawia wskaźnik pod aktywną zakładką. Czyta klasę `aktywna`
+   zamiast dostawać indeks — dzięki temu jest JEDNO źródło prawdy o tym,
+   która zakładka jest wybrana (podświetlenie już tam było). */
+function ustawWskaznikNawigacji_() {
+  var w = el('wskaznikNawigacji');
+  if (!w) return;
+  var zakladki = ['nawStart', 'nawNowy', 'nawWpisy'];
+  var i = -1;
+  zakladki.forEach(function (id, n) { if (el(id).classList.contains('aktywna')) i = n; });
+  w.classList.toggle('bez-zakladki', i === -1);
+  if (i >= 0) w.style.transform = 'translateX(' + (i * 100) + '%)';
+}
+/* Z-86: przenikanie treści (E1). `void offsetWidth` wymusza przeliczenie
+   układu — bez tego przeglądarka nie odtworzy animacji drugi raz z rzędu
+   (np. Start → Nowy wpis → Start). */
+function animujWejscie_(idWidoku) {
+  var e = el(idWidoku);
+  if (!e) return;
+  e.classList.remove('wchodzi');
+  void e.offsetWidth;
+  e.classList.add('wchodzi');
+}
+var WIDOK_PO_NAZWIE = { start:'widokStart', nowy:'widokFormularz', sukces:'widokSukces',
+  podsumowanie:'widokPodsumowanie', wpisy:'widokWpisy' };
+
 function przelaczWidok(ktory) {
   ['widokStart', 'widokFormularz', 'widokWpisy', 'widokSukces', 'widokPodsumowanie'].forEach(schowaj);
   // Podsumowanie to "dziecko" Startu (wejście z dashboardu) — podświetlamy Start.
@@ -2248,6 +2294,8 @@ function przelaczWidok(ktory) {
     if (navigator.onLine) odswiezWpisyCache(); // świeże dane, gdy jest sieć
   }
   else { pokaz('widokWpisy'); wczytajWpisy(); }
+  ustawWskaznikNawigacji_();                                  // Z-86
+  animujWejscie_(WIDOK_PO_NAZWIE[ktory] || 'widokWpisy');     // Z-86
   window.scrollTo({ top: 0 });
 }
 
