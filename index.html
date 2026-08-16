@@ -251,6 +251,9 @@
     padding:10px 14px; margin-bottom:12px; font-size:15px; display:none;}
   .odrzucony{background:var(--bg-blad); border-radius:10px; padding:10px; margin-top:8px; font-size:14px;}
   .odrzucony .p{display:flex; gap:8px; margin-top:8px;}
+  /* Z-75: spokojniejszy wariant karty — komunikat, nie awaria (jak
+     `.odrzucony.zapisany` w ewidencji od E-32). */
+  .odrzucony.zapisany{background:var(--bg-uwaga); color:var(--tekst-uwaga);}
   .wpis-strzalka{width:24px; height:24px; border-radius:50%; background:var(--bg-turkus);
     color:var(--tekst-turkus); font-size:13px; font-weight:700; flex:none;
     display:inline-flex; align-items:center; justify-content:center;
@@ -1951,6 +1954,28 @@ function odswiezKolejkeInfo() {
   if (oczekuje) html += '⏳ Wpisy czekające na wysłanie: <b>' + oczekuje + '</b>';
   odrzucone.forEach(function (w) {
     var e008 = (w.blad || '').indexOf('E008') !== -1;
+    // Z-75 (16.08.2026, zredukowane): E012 z KOLEJKI = wpis powstał, gdy
+    // miesiąc był otwarty, ale dotarł po jego rozliczeniu. To NIE jest błąd
+    // kierowcy i nie ma czego „próbować ponownie" — dopóki miesiąc jest
+    // zamknięty, każda próba skończy się tak samo (jak przy E008/E-32).
+    // Mówimy więc wprost: ten wpis nie pójdzie dalej, daj znać Markowi,
+    // a jak nie ma sprawy — usuń komunikat.
+    // ⚠ ZAKRES: dotyczy WYŁĄCZNIE kolejki offline. Świadome wpisanie daty
+    // z rozliczonego miesiąca jest blokowane od razu przy ZAPISZ (E012 na
+    // serwerze) i nic tam nie ginie. Decyzja Marka: pełna wersja Z-75
+    // (zakładka „Odrzucone" + mail) to przerost formy — brakujące tankowanie
+    // widać w pliku Orlenu, a brakujący dzień w Panelu.
+    if ((w.blad || '').indexOf('E012') !== -1) {
+      html += '<div class="odrzucony zapisany"><b>Miesiąc jest już rozliczony</b> (' +
+        bezpiecznyTekst_(w.dane.dataZakupu) + ', ' + bezpiecznyTekst_(w.dane.ilosc) + ' / ' +
+        bezpiecznyTekst_(w.dane.wartosc) + ' zł)<br>Ten wpis nie zostanie zapisany ' +
+        'w rozliczeniu. Jeśli to ważne tankowanie — daj znać Markowi. Jeśli nie, ' +
+        'możesz usunąć ten komunikat.' +
+        '<div class="p">' +
+        '<button class="przycisk-czerwony" onclick="usunWpis(' + w.tmp + ')">Usuń</button>' +
+        '</div></div>';
+      return;
+    }
     html += '<div class="odrzucony"><b>Wpis odrzucony</b> (' + bezpiecznyTekst_(w.dane.dataZakupu) + ', ' +
       bezpiecznyTekst_(w.dane.ilosc) + ' / ' + bezpiecznyTekst_(w.dane.wartosc) + ' zł): ' + bezpiecznyTekst_(w.blad) +
       '<div class="p">' +
