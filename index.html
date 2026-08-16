@@ -746,6 +746,11 @@
       <div class="metryki" id="podsumowanieGlowne"></div>
       <div class="metryki" id="podsumowanieKafelki" style="margin-bottom:0;"></div>
       <div class="srodek ukryte" id="podsumowaniePusto" style="padding:16px;">Brak wpisów w tym miesiącu.</div>
+      <!-- Z-85 (zgłoszenie Marka 16.08.2026): ewidencja miała przycisk powrotu
+           na tym ekranie, flota nie — a to ten sam ekran w obu appkach.
+           Wraca na EKRAN GŁÓWNY, bo tu podsumowanie otwiera się z pulpitu
+           (w ewidencji z „Moich wpisów" i tam przycisk wraca do wpisów). -->
+      <button type="button" class="przycisk-drugi" id="podsumowanieWstecz" style="margin-top:14px;">← Wróć na ekran główny</button>
     </div>
   </div>
 
@@ -2089,6 +2094,7 @@ function rysujDashboard() {
 }
 el('dNowy').addEventListener('click', function () { zakonczEdycje(); przelaczWidok('nowy'); });
 el('dPodsumowanie').addEventListener('click', function () { przelaczWidok('podsumowanie'); });
+el('podsumowanieWstecz').addEventListener('click', function () { przelaczWidok('start'); });   // Z-85
 el('dMiesiacBtn').addEventListener('click', otworzDialogMiesiaca);
 
 // ---------- Podsumowanie miesiąca (pkt 19) ----------
