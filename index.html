@@ -1631,8 +1631,13 @@ function ikonaWpisu_(w) {
   return ikonaHTML_((o && !o.czyPaliwo) ? 'ic-cart' : 'ic-fuel');
 }
 function nazwaSprzetuWpisu_(w) {
+  // Z-78: wynik trafia prosto do `innerHTML` (lista wpisów i podsumowanie),
+  // a składa się z wartości z arkusza — nazwy sprzętu i modelu. Escapujemy,
+  // żeby nawias ostry w nazwie renderował się dosłownie, a nie jako HTML.
+  // Ta sama zasada co `bezpiecznyDlaArkusza_` po stronie serwera (F-59).
   var s = sprzetInfo(w.przeznaczenie);
-  return (s && s.model) ? (w.przeznaczenie + ' — ' + s.model) : w.przeznaczenie;
+  var nazwa = (s && s.model) ? (w.przeznaczenie + ' — ' + s.model) : w.przeznaczenie;
+  return bezpiecznyTekst_(nazwa);
 }
 function inicjaly_(imie) {
   if (!imie) return '👤';
@@ -1819,7 +1824,9 @@ function polaczZAkcja(d, akcja) {
 // kierowca widzi sam czytelny tekst; kod zostaje po stronie serwera (logika/
 // logi). Jedno miejsce dla wszystkich błędów i ostrzeżeń (decyzja Marka
 // 20.07.2026).
-function bezKodu_(s) { return String(s).replace(/^[EW]\d{3}:\s*/, ''); }
+// Z-78: wynik idzie do `innerHTML` w `pokazBladBackendu`, więc obcięciu
+// kodu towarzyszy escapowanie — treść błędu pochodzi z serwera.
+function bezKodu_(s) { return bezpiecznyTekst_(String(s).replace(/^[EW]\d{3}:\s*/, '')); }
 
 // Tryb ekranu sukcesu: po NOWYM wpisie głównym przyciskiem jest „Dodaj kolejny
 // wpis"; po EDYCJI — „Moje wpisy" (tam użytkownik był, prośba Marka 23.07.2026).
@@ -2418,7 +2425,9 @@ function wczytajWpisy() {
       // Mamy cache — nie kasujemy go komunikatem błędu; kierowca woli
       // widzieć swoje wpisy niż czerwony napis.
       if (!maCache) {
-        lista.innerHTML = '<div class="srodek">' + (d.bledy || ['Błąd']).join('; ') + '</div>';
+        // Z-78: treść błędu z serwera do innerHTML — escapujemy.
+        lista.innerHTML = '<div class="srodek">' +
+          bezpiecznyTekst_((d.bledy || ['Błąd']).join('; ')) + '</div>';
       }
       return;
     }
