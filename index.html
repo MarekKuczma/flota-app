@@ -1791,9 +1791,29 @@ el('formularz').addEventListener('submit', function (ev) {
   if (edytowanyWpis) { wyslijEdycje(d); return; }
   wyslijNowy(d, false);
 });
-function wyslijNowy(d, potwierdzenie) {
-  if (!navigator.onLine) { dodajDoKolejki(d); return; }
-  var pakiet = polaczZAkcja(d, 'nowy');
+// Z-77 (16.08.2026): losowy klucz idempotencji. Kluczowe jest KIEDY powstaje
+// — przy pierwszej próbie zapisu, NIE przy wrzucaniu do kolejki. Ścieżka,
+// o którą chodzi, wygląda tak: wysyłka online → serwer zapisuje → odpowiedź
+// ginie → `.catch` wrzuca wpis do kolejki → kolejka wysyła go jeszcze raz.
+// Gdyby klucz powstawał dopiero w kolejce, ta druga wysyłka miałaby ŚWIEŻY
+// klucz i serwer nie miałby jak rozpoznać, że to ten sam wpis.
+// (Dlatego nie da się tu użyć `tmp` — on też powstaje dopiero w kolejce.)
+//
+// `crypto.randomUUID` jest w każdej przeglądarce, która obsługuje service
+// workera, ale wersja zapasowa kosztuje jedną linijkę, a brak klucza cicho
+// wyłączyłby całe zabezpieczenie.
+function kluczKlienta_() {
+  try {
+    if (window.crypto && window.crypto.randomUUID) {
+      return window.crypto.randomUUID().replace(/-/g, '');
+    }
+  } catch (e) {}
+  return 'k' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
+}
+function wyslijNowy(d, potwierdzenie, klucz) {
+  klucz = klucz || kluczKlienta_();
+  if (!navigator.onLine) { dodajDoKolejki(d, klucz); return; }
+  var pakiet = polaczZAkcja(d, 'nowy', klucz);
   if (potwierdzenie) pakiet.potwierdzDuplikat = true;
   apiPost(pakiet).then(function (odp) {
     koniecZapisu_();
@@ -1805,18 +1825,26 @@ function wyslijNowy(d, potwierdzenie) {
         'Jeśli to NAPRAWDĘ kolejna, osobna transakcja (np. druga bramka autostrady) — ' +
         'kliknij OK, żeby dodać mimo to.')) {
         poczatekZapisu_();
-        wyslijNowy(d, true);
+        // TEN SAM klucz: poprzednia próba skończyła się błędem E008, więc
+        // niczego nie zapisała — nie ma czego zduplikować. Nowy klucz byłby
+        // tu tylko zmarnowaną pozycją w pamięci serwera.
+        wyslijNowy(d, true, klucz);
       }
     } else pokazBladBackendu(odp.bledy);
   }).catch(function () {
-    dodajDoKolejki(d);
+    // Najważniejsze miejsce w całym Z-77: TU nie wiemy, czy serwer zapisał.
+    // Wpis idzie do kolejki z tym samym kluczem, więc powtórka jest
+    // rozpoznawalna nawet za kilka godzin.
+    dodajDoKolejki(d, klucz);
   });
 }
-function polaczZAkcja(d, akcja) {
-  return { action: akcja, dataZakupu: d.dataZakupu, opis: d.opis, ilosc: d.ilosc,
+function polaczZAkcja(d, akcja, klucz) {
+  var p = { action: akcja, dataZakupu: d.dataZakupu, opis: d.opis, ilosc: d.ilosc,
     wartosc: d.wartosc, przeznaczenie: d.przeznaczenie, typSprzetu: d.typSprzetu,
     licznik: d.licznik, budowa: d.budowa, dodatkoweInfo: d.dodatkoweInfo,
     licznikPary: d.licznikPary };
+  if (klucz) p.idKlienta = klucz;
+  return p;
 }
 
 // ---------- ekran sukcesu ----------
@@ -1874,9 +1902,14 @@ function kolejka() {
   catch (e) { return []; }
 }
 function zapiszKolejke(k) { localStorage.setItem('flota_kolejka', JSON.stringify(k)); }
-function dodajDoKolejki(d) {
+function dodajDoKolejki(d, klucz) {
   var k = kolejka();
-  k.push({ tmp: Date.now(), dane: d, status: 'oczekuje', blad: '' });
+  // Z-77: `idKlienta` przychodzi z `wyslijNowy` (powstał przy pierwszej
+  // próbie). Gdy wpis trafia tu od razu, bo telefon jest offline i próby
+  // nie było — nadajemy klucz teraz. `tmp` zostaje bez zmian: to numer
+  // porządkowy kolejki na potrzeby przycisków „Ponów"/„Usuń", nie klucz.
+  k.push({ tmp: Date.now(), idKlienta: klucz || kluczKlienta_(),
+           dane: d, status: 'oczekuje', blad: '' });
   zapiszKolejke(k);
   koniecZapisu_();
   pokazSukces('Zapisano w telefonie', 'Brak internetu — wpis wyśle się automatycznie po złapaniu sieci.', []);
@@ -1901,6 +1934,17 @@ function ustawStatusWKolejce_(tmp, zmiany) {
 }
 function wyslijKolejke() {
   if (wysylanie) return;
+  // Z-77: wpisy zakolejkowane przed tą wersją nie mają `idKlienta`.
+  // Dopisujemy im klucz raz i zapisujemy, żeby przy ewentualnym kolejnym
+  // podejściu poszedł ten sam. Nie chroni ich wstecz (pierwsza wysyłka
+  // odbyła się bez klucza), ale wyrównuje zachowanie od teraz.
+  var doUzupelnienia = kolejka();
+  var brakowalo = false;
+  doUzupelnienia.forEach(function (w) {
+    if (!w.idKlienta) { w.idKlienta = kluczKlienta_(); brakowalo = true; }
+  });
+  if (brakowalo) zapiszKolejke(doUzupelnienia);
+
   var k = kolejka();
   var oczekujace = k.filter(function (w) { return w.status === 'oczekuje'; });
   if (!oczekujace.length) { odswiezKolejkeInfo(); return; }
@@ -1914,7 +1958,7 @@ function wyslijKolejke() {
       return;
     }
     if (k[i].status !== 'oczekuje') { nastepny(i + 1); return; }
-    var pakiet = polaczZAkcja(k[i].dane, 'nowy');
+    var pakiet = polaczZAkcja(k[i].dane, 'nowy', k[i].idKlienta);
     if (k[i].potwierdzDuplikat) pakiet.potwierdzDuplikat = true;
     apiPost(pakiet).then(function (odp) {
       if (odp.ok) {
