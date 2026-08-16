@@ -96,7 +96,9 @@
     padding-top:calc(14px + env(safe-area-inset-top)); position:sticky; top:0; z-index:5;
     display:flex; align-items:center; gap:12px;}
   header img{width:40px; height:40px; border-radius:10px; flex:none;}
-  header h1{margin:0; font-size:19px; font-weight:600;}
+  /* W2: tytuł skaluje się z szerokością ekranu — na wąskim telefonie schodzi
+     do 15 px (jedna linia), na dużym rośnie do 21 px. */
+  header h1{margin:0; font-size:clamp(15px, 3.9vw, 21px); font-weight:600; line-height:1.25;}
   header .kto{font-size:14px; opacity:.9; margin-top:2px;}
   header .naglowek-tekst{flex:1; min-width:0;}
   #motywBtn,#paletaBtn{background:rgba(255,255,255,.2); border:none; border-radius:10px;
@@ -138,9 +140,13 @@
     border:1.5px solid var(--turkus); box-sizing:border-box; display:inline-flex;
     align-items:center; justify-content:center; font-size:11px; flex:none;
     color:var(--tekst);}
-  .metryka .m-w{font-size:clamp(17px, 6vw, 24px); font-weight:600; margin-top:2px;
+  /* F3: liczba nie może się rozrywać z jednostką („1 795,38” / „zł” w dwóch
+     liniach rozjeżdżało siatkę kafelków). Jednostka mniejsza od liczby. */
+  .metryka .m-w{font-size:clamp(16px, 5.2vw, 22px); font-weight:600; margin-top:2px;
+    white-space:nowrap;
     background:var(--gradient); -webkit-background-clip:text;
     background-clip:text; -webkit-text-fill-color:transparent; color:var(--akcent);}
+  .metryka .m-jedn{font-size:.72em; font-weight:600; margin-left:.22em;}
   .metryka .m-sub{font-size:12px; color:var(--szary); margin-top:2px;}
   .powitanie{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
   .avatar-krag{width:42px; height:42px; border-radius:50%; background:var(--ikona-grad);
@@ -153,7 +159,7 @@
   .pole{margin-top:0;}
   .pole + .pole{margin-top:22px;}
   label .wym{color:var(--blad);}
-  input,select,textarea{width:100%; max-width:100%; min-width:0; font-size:18px; padding:12px;
+  input,select,textarea{width:100%; max-width:100%; min-width:0; font-family:inherit; font-size:18px; padding:12px;
     border:1.5px solid var(--input-brzeg); border-radius:10px; background:var(--input-tlo);
     color:var(--tekst); min-height:48px;}
   /* iOS Safari: natywny kalendarz w input[type=date] potrafi zignorować
@@ -235,7 +241,12 @@
   .wpis .wpis-tresc{flex:1; min-width:0; cursor:pointer;}
   .wpis .linia1{display:flex; justify-content:space-between; align-items:baseline; gap:8px;
     font-weight:600; font-size:15px;}
-  .wpis .linia1 span:last-child{flex:none;}
+  /* F4: nazwa nie może się łamać w poprzek kwoty — kwota trzyma się w jednej
+     linii, model schodzi pod rejestrację mniejszą, jasną czcionką. */
+  .wpis .linia1 > span:first-child{min-width:0;}
+  .wpis .linia1 span:last-child{flex:none; white-space:nowrap;}
+  .wpis .w-model{display:block; font-weight:400; font-size:13px; color:var(--szary);
+    margin-top:1px;}
   .wpis .linia2{color:var(--szary); font-size:13px; margin-top:2px;}
   .wpis-uwaga{background:var(--bg-uwaga); border:1px solid var(--brzeg-uwaga); color:var(--tekst-uwaga);
     font-size:12px; padding:4px 8px; border-radius:6px; margin-top:6px;}
@@ -1697,11 +1708,46 @@ function formatLicznik_(v) {
 function ikonaHTML_(id) {
   return '<svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#' + id + '"></use></svg>';
 }
+// F4: rejestracja w pierwszej linii, model pod spodem — inaczej długa nazwa
+// zawijała się w poprzek kwoty po prawej. Nazwa i model są z arkusza, więc
+// escapujemy tak samo jak w nazwaSprzetuWpisu_ (Z-78).
+function nazwaZModelemHtml_(w) {
+  var s = sprzetInfo(w.przeznaczenie);
+  var html = bezpiecznyTekst_(w.przeznaczenie);
+  if (s && s.model) html += '<span class="w-model">' + bezpiecznyTekst_(s.model) + '</span>';
+  return html;
+}
 function ikonaWpisu_(w) {
   if (czyMix(w.przeznaczenie)) return ikonaHTML_('ic-link');
   if (w.opis === 'Autostrada') return ikonaHTML_('ic-ticket');
   var o = opisInfo(w.opis);
   return ikonaHTML_((o && !o.czyPaliwo) ? 'ic-cart' : 'ic-fuel');
+}
+// W3: jeden format daty w całej aplikacji — dd.mm.rrrr. Wejście z serwera
+// jest zawsze ISO (rrrr-mm-dd); cokolwiek innego przepuszczamy bez zmian.
+// F2: 1 wpis · 2–4 wpisy · 5+ wpisów (i 12–14 wpisów — wyjątek nastolatków).
+// F3: jednostka („zł”, „l”) mniejszą czcionką i sklejona z liczbą.
+// F7 (16.08.2026, prośba Marka): kwoty z odstępem tysięcy — „1 795,38 zł",
+// spójnie z licznikiem („184 320 km"). WYŁĄCZNIE do wyświetlania, nigdy do
+// wypełniania pól formularza — patrz komentarz przy formatKwote_.
+function kwotaPL_(v) {
+  var s = formatKwote_(v);
+  var czesci = s.split(',');
+  czesci[0] = czesci[0].replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0');
+  return czesci.join(',');
+}
+function zJedn_(liczba, jednostka) {
+  return liczba + '<span class="m-jedn">' + jednostka + '</span>';
+}
+function odmianaWpisow_(n) {
+  n = Math.abs(Number(n) || 0);
+  if (n === 1) return 'wpis';
+  var d = n % 10, s = n % 100;
+  return (d >= 2 && d <= 4 && (s < 12 || s > 14)) ? 'wpisy' : 'wpisów';
+}
+function dataPL_(iso) {
+  var s = String(iso || '');
+  return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s.split('-').reverse().join('.') : s;
 }
 function nazwaSprzetuWpisu_(w) {
   // Z-78: wynik trafia prosto do `innerHTML` (lista wpisów i podsumowanie),
@@ -1809,8 +1855,8 @@ function pokazKomunikatZapis(bledy) {
   });
   var k = el('komunikatZapis');
   k.className = 'komunikat blad';
-  k.innerHTML = '<b>Nie zapisano — sprawdź zaznaczone na czerwono pole' +
-    (nazwy.length > 1 ? 'a' : '') + ':</b> ' + nazwy.join(', ') + '.';
+  k.innerHTML = '<b>Nie zapisano — sprawdź zaznaczone na czerwono ' +
+    (nazwy.length > 1 ? 'pola' : 'pole') + ':</b> ' + nazwy.join(', ') + '.';
   // Przewijamy do samego komunikatu (przy ZAPISZ), a NIE do pierwszego pola —
   // skok do pola wyżej chował komunikat pod krawędzią ekranu (zgłoszone przez
   // Marka 20.07.2026). Kierowca i tak patrzy na przycisk po kliknięciu.
@@ -2091,7 +2137,7 @@ function odswiezKolejkeInfo() {
     // widać w pliku Orlenu, a brakujący dzień w Panelu.
     if ((w.blad || '').indexOf('E012') !== -1) {
       html += '<div class="odrzucony zapisany"><b>Miesiąc jest już rozliczony</b> (' +
-        bezpiecznyTekst_(w.dane.dataZakupu) + ', ' + bezpiecznyTekst_(w.dane.ilosc) + ' / ' +
+        bezpiecznyTekst_(dataPL_(w.dane.dataZakupu)) + ', ' + bezpiecznyTekst_(w.dane.ilosc) + ' / ' +
         bezpiecznyTekst_(w.dane.wartosc) + ' zł)<br>Ten wpis nie zostanie zapisany ' +
         'w rozliczeniu. Jeśli to ważne tankowanie — daj znać Markowi. Jeśli nie, ' +
         'możesz usunąć ten komunikat.' +
@@ -2100,7 +2146,7 @@ function odswiezKolejkeInfo() {
         '</div></div>';
       return;
     }
-    html += '<div class="odrzucony"><b>Wpis odrzucony</b> (' + bezpiecznyTekst_(w.dane.dataZakupu) + ', ' +
+    html += '<div class="odrzucony"><b>Wpis odrzucony</b> (' + bezpiecznyTekst_(dataPL_(w.dane.dataZakupu)) + ', ' +
       bezpiecznyTekst_(w.dane.ilosc) + ' / ' + bezpiecznyTekst_(w.dane.wartosc) + ' zł): ' + bezpiecznyTekst_(w.blad) +
       '<div class="p">' +
       '<button class="przycisk-maly" onclick="ponowWpis(' + w.tmp + ',' + (e008 ? 'true' : 'false') + ')">' +
@@ -2232,7 +2278,7 @@ function rysujDashboard() {
   var wMiesiacu = wpisy.filter(function (w) { return w.miesiac === m; });
   el('dLiczba').textContent = String(wMiesiacu.length);
   var sumaMiesiac = wMiesiacu.reduce(function (s, w) { return s + (Number(w.wartosc) || 0); }, 0);
-  el('dSuma').textContent = wMiesiacu.length ? (formatKwote_(sumaMiesiac) + ' zł') : '—';
+  el('dSuma').innerHTML = wMiesiacu.length ? zJedn_(kwotaPL_(sumaMiesiac), 'zł') : '—';
 
   // Sumy litrów benzyny/diesla w miesiącu (FEEDBACK-BETA-TESTY.md pkt 2,
   // uzgodnione 16.07.2026: tylko te dwa paliwa na razie, LPG/AdBlue pomijamy).
@@ -2240,8 +2286,8 @@ function rysujDashboard() {
     return wMiesiacu.filter(function (w) { return w.opis === nazwaOpisu; })
       .reduce(function (s, w) { return s + (Number(w.ilosc) || 0); }, 0);
   };
-  el('dBenzyna').textContent = wMiesiacu.length ? (formatKwote_(sumaLitrow_('Benzyna')) + ' l') : '—';
-  el('dDiesel').textContent = wMiesiacu.length ? (formatKwote_(sumaLitrow_('Diesel')) + ' l') : '—';
+  el('dBenzyna').innerHTML = wMiesiacu.length ? zJedn_(kwotaPL_(sumaLitrow_('Benzyna')), 'l') : '—';
+  el('dDiesel').innerHTML = wMiesiacu.length ? zJedn_(kwotaPL_(sumaLitrow_('Diesel')), 'l') : '—';
 
   var lista = el('dLista');
   if (!wpisy.length) {
@@ -2257,8 +2303,8 @@ function rysujDashboard() {
       '<div class="m-tresc"><div class="m-linia1">' + nazwaSprzetuWpisu_(w) + '</div>' +
       '<div class="m-linia2">' + w.dataZakupu.substring(5).split('-').reverse().join('.') +
       ' · ' + w.opis + ' ' + formatIlosc_(w.ilosc, w.opis) +
-      (jednostkaOpisu(w.opis) ? jednostkaOpisu(w.opis) : '') + '</div></div>' +
-      '<div class="m-wartosc">' + formatKwote_(w.wartosc) + ' zł</div>';
+      (jednostkaOpisu(w.opis) ? ' ' + jednostkaOpisu(w.opis) : '') + '</div></div>' +
+      '<div class="m-wartosc">' + kwotaPL_(w.wartosc) + ' zł</div>';
     lista.appendChild(div);
   });
 }
@@ -2317,7 +2363,7 @@ function rysujPodsumowanie(miesiac) {
 
   var sumaZl = wpisy.reduce(function (s, w) { return s + (Number(w.wartosc) || 0); }, 0);
   glowne.appendChild(kafelPodsumowania_(ikonaHTML_('ic-clip'), 'Wpisy', String(wpisy.length), '', null));
-  glowne.appendChild(kafelPodsumowania_(ikonaHTML_('ic-money'), 'Suma', formatKwote_(sumaZl) + ' zł', '', null));
+  glowne.appendChild(kafelPodsumowania_(ikonaHTML_('ic-money'), 'Suma', zJedn_(kwotaPL_(sumaZl), 'zł'), '', null));
 
   // Agregacja per kategoria (Co kupiono): kwota + ilość w jednym kafelku
   var kat = {};
@@ -2332,10 +2378,10 @@ function rysujPodsumowanie(miesiac) {
       var k = kat[nazwa];
       var o = opisInfo(nazwa);
       var sub = (o && o.czyPaliwo)
-        ? formatKwote_(k.ilosc) + ' l · ' + k.wpisy + (k.wpisy === 1 ? ' wpis' : ' wpisy(-ów)')
-        : Math.round(k.ilosc) + ' szt. · ' + k.wpisy + (k.wpisy === 1 ? ' wpis' : ' wpisy(-ów)');
+        ? kwotaPL_(k.ilosc) + ' l · ' + k.wpisy + ' ' + odmianaWpisow_(k.wpisy)
+        : Math.round(k.ilosc) + ' szt. · ' + k.wpisy + ' ' + odmianaWpisow_(k.wpisy);
       kafelki.appendChild(kafelPodsumowania_(ikonaKategorii_(nazwa), nazwa,
-        formatKwote_(k.kwota) + ' zł', sub, odcienKategorii_(nazwa)));
+        zJedn_(kwotaPL_(k.kwota), 'zł'), sub, odcienKategorii_(nazwa)));
     });
 }
 
@@ -2586,11 +2632,11 @@ function wierszSzczegol_(etykieta, wartosc) {
 }
 function szczegolyWpisuHtml_(w, mix) {
   var wiersze =
-    wierszSzczegol_('Data zakupu', w.dataZakupu.split('-').reverse().join('.')) +
+    wierszSzczegol_('Data zakupu', dataPL_(w.dataZakupu)) +
     wierszSzczegol_('Co kupiono', w.opis) +
     wierszSzczegol_('Ilość', formatIlosc_(w.ilosc, w.opis) +
       (jednostkaOpisu(w.opis) ? ' ' + jednostkaOpisu(w.opis) : '')) +
-    wierszSzczegol_('Wartość', formatKwote_(w.wartosc) + ' zł') +
+    wierszSzczegol_('Wartość', kwotaPL_(w.wartosc) + ' zł') +
     wierszSzczegol_('Budowa', w.budowa) +
     wierszSzczegol_('Nr wpisu', w.id);
   if (w.licznik !== '' && !mix) {
@@ -2682,14 +2728,14 @@ function renderujWpis_(kontenerMiesiaca, w) {
     if (!anulowany) {
       akcja = w.edytowalny
         ? '<div class="akcja"><button class="przycisk-maly btn-popraw">' + ikonaHTML_('ic-pencil') + ' Popraw</button>' +
-          '<button class="przycisk-czerwony btn-anuluj">' + ikonaHTML_('ic-trash') + ' Anuluj wpis</button></div>'
+          '<button class="przycisk-czerwony btn-anuluj">' + ikonaHTML_('ic-trash') + ' Usuń</button></div>'
         : '<div class="akcja klodka">' + ikonaHTML_('ic-lock') + ' Edycja niemożliwa — skontaktuj się z Markiem</div>';
     }
     div.innerHTML =
       '<div class="ikona-krag">' + ikonaWpisu_(w) + '</div>' +
       '<div class="wpis-tresc">' +
-      '<div class="linia1"><span>' + nazwaSprzetuWpisu_(w) + '</span>' +
-      '<span>' + formatKwote_(w.wartosc) + ' zł</span></div>' +
+      '<div class="linia1"><span>' + nazwaZModelemHtml_(w) + '</span>' +
+      '<span>' + kwotaPL_(w.wartosc) + ' zł</span></div>' +
       (plakietki ? '<div>' + plakietki + '</div>' : '') +
       '<div class="linia2">' + w.opis + ' · ' + formatIlosc_(w.ilosc, w.opis) +
       (jednostkaOpisu(w.opis) ? ' ' + jednostkaOpisu(w.opis) : '') +
@@ -2700,7 +2746,7 @@ function renderujWpis_(kontenerMiesiaca, w) {
       // F-53 (02.08.2026, wzorem E-24 z ewidencji): plakietka poza
       // .wpis-szczegoly, widoczna bez rozwijania wpisu.
       (w.cofniety ? '<div class="wpis-uwaga">' + ikonaHTML_('ic-warn') + ' ' + bezpiecznyTekst_(w.cofniety) + '</div>' : '') +
-      '<div class="linia-data"><span>' + w.dataZakupu + '</span>' +
+      '<div class="linia-data"><span>' + dataPL_(w.dataZakupu) + '</span>' +
       '<span class="plakietka-id">' + w.id + '</span>' +
       '<span class="wpis-strzalka">▾</span></div>' +
       // Animowane rozwijanie (pkt 20): wrapper .wsz-zawartosc + klasa
@@ -2722,8 +2768,8 @@ el('pokazAnulowane').addEventListener('change', renderujListeWpisow);
 
 // ---------- anulowanie wpisu ----------
 function anulujWpis(w) {
-  if (!confirm('Anulować wpis z ' + w.dataZakupu + ' (' +
-    formatKwote_(w.wartosc) + ' zł, ' + w.przeznaczenie + ')?\n\n' +
+  if (!confirm('Usunąć wpis z ' + dataPL_(w.dataZakupu) + ' (' +
+    kwotaPL_(w.wartosc) + ' zł, ' + w.przeznaczenie + ')?\n\n' +
     'Wpis zostanie oznaczony jako anulowany i nie wejdzie do rozliczenia.')) return;
   poczatekZapisu_(); // overlay „Zapisywanie…" — jak przy zapisie/edycji
   apiPost({ action: 'anuluj', id: w.id }).then(function (odp) {
