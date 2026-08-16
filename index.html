@@ -10,7 +10,10 @@
 <meta name="theme-color" content="#f97316">
 <style>
   :root{
-    --akcent:#f97316; --akcent-c:#c2410c; --fiolet:#dc2626;
+    /* Z-91: usunięte --akcent-c i --fiolet — zero wystąpień var(--akcent-c)
+       i var(--fiolet) w całym pliku (sprawdzone). Zostawały po wcześniejszych
+       wersjach i myliły przy przeglądaniu palet. */
+    --akcent:#f97316;
     --gradient:linear-gradient(135deg, #fbbf24 0%, #f97316 55%, #dc2626 100%);
     --przycisk-cien:rgba(234,88,12,.35);
     --tlo:#f4f6f8; --karta:#ffffff; --input-tlo:#ffffff; --input-brzeg:#d1d5db;
@@ -46,6 +49,12 @@
     --paleta-ikona:#fdba74;
   }
   [data-motyw="ciemny"]{
+  /* Z-91: „Usuń" w motywie ciemnym. `--blad` (#d93025) nie było nigdzie
+     nadpisywane dla ciemnego, więc na karcie #1c1f26 miało kontrast 3,46:1
+     przy progu 4,5:1 — najważniejszy do rozpoznania przycisk był najsłabiej
+     widoczny (dla porównania „Popraw" miał 9,13:1). Teraz 5,96:1.
+     Motyw jasny bez zmian: tam #d93025 ma 4,77:1 i jest w porządku. */
+    --blad:#f87171;
     --tlo:#0f1115; --karta:#1c1f26; --input-tlo:#262b34; --input-brzeg:#3a3f4a;
     --tekst:#f0f1f3; --szary:#9aa1ad; --linia:#333844;
     --bg-uwaga:#453615; --brzeg-uwaga:#8a5a12; --tekst-uwaga:#fcd34d;
@@ -100,6 +109,14 @@
        ten sam zarzut, który przy ewidencji zapisaliśmy jako E3. Jasny motyw
        zostaje bez zmian. */
     --gradient:linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #0ea5e9 100%);
+    /* Z-91: regresja z Z-89, wyłapana przez Marka („w niebieskim chciałbym coś
+       lekko jaśniejszego"). W Z-89 pociemniłem --akcent do #1d4ed8 dla kontrastu
+       na BIAŁYCH kartach — ale flota nie nadpisuje --akcent w motywie ciemnym,
+       więc ta sama ciemna wartość obowiązywała też tam: aktywna zakładka
+       rgb(29,78,216) na pasku rgb(37,42,51), czyli granat na ciemnym.
+       ⚠ Zasada: zmienna ustawiona w bloku palety działa w OBU motywach,
+       dopóki blok ciemny jej nie nadpisze. Sprawdzać oba. */
+    --akcent:#7dd3fc;
     --bg-akcentjasny:#132447; --tekst-akcentjasny:#93c5fd;
     --metryka-grad:linear-gradient(135deg, #16233d 0%, #1b2f4d 100%);
     --turkus:#fb923c; --bg-turkus:#432614; --tekst-turkus:#fb923c;
@@ -221,6 +238,29 @@
     border-radius:10px; font-size:15px; font-weight:600; padding:8px 14px; min-height:40px;}
   .przycisk-czerwony{background:var(--karta); color:var(--blad); border:1.5px solid var(--blad);
     border-radius:10px; font-size:15px; font-weight:600; padding:8px 14px; min-height:40px;}
+
+  /* ================= Z-91 (16.08.2026): kolor akcji na liście wpisów =========
+     Pomysł Marka: „popraw w zielonej barwie... bo może to jest myśl aby było
+     zielone?". Trafiony, i to z powodu, który widać dopiero po zestawieniu obu
+     appek: zieleń wychodzi poza rodzinę kolorów WSZYSTKICH palet naraz —
+     działa i przy turkusowych obwódkach (flota, paleta pomarańczowa), i przy
+     pomarańczowych (flota, niebieska), i przy kolorach maszyn (ewidencja).
+     Dzięki temu „Popraw" ma jeden kolor w obu aplikacjach i we wszystkich
+     paletach, a para zielony/czerwony czyta się bez tłumaczenia.
+
+     ⚠ ZAKRES: celowo tylko `.wpis .akcja`, czyli rząd przycisków pod wpisem.
+     Klasa `.przycisk-maly` wisi też na „Wklej SMS z Orlenu", „+ Dodaj kolejny
+     sprzęt", „Nie" w oknie potwierdzenia i „Spróbuj ponownie" w kolejce —
+     te NIE mają być zielone i Marek ich w mockupie nie oglądał.
+
+     ⚠ WYBÓR MARKA: G3. Zmierzony kontrast na białej karcie to 3,30:1 przy
+     progu 4,5:1 — pokazałem mu tę liczbę, wybrał świadomie („a jak coś
+     będziemy zmieniać"). Gdyby kiedyś wracać: najbliższa zieleń, która
+     przechodzi próg przy zachowaniu charakteru, to #15803d (5,02:1).
+     W motywie ciemnym G3 ma 11,75:1, tam problemu nie ma. */
+  .wpis .akcja .przycisk-maly{color:#16a34a; border-color:#16a34a;}
+  [data-motyw="ciemny"] .wpis .akcja .przycisk-maly{color:#86efac; border-color:#86efac;}
+
   .dwa{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;}
   .dwa .przycisk-drugi{margin-top:0;}
   .para-item{margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--linia);}
@@ -337,6 +377,13 @@
   nav button{flex:1; background:none; border:none; padding:12px 0 10px;
     font-size:13px; font-weight:600; color:var(--szary); min-height:56px;}
   nav button.aktywna{color:var(--akcent);}
+  /* Z-91 (to samo, co w ewidencji w Z-90): ikonki i podpisy nieaktywnych
+     zakładek w motywie ciemnym były za ciemne (--szary #9aa1ad).
+     ⚠ `:not(.aktywna)` jest konieczne — bez tego reguła ma tę samą wagę co
+     `nav button.aktywna` i stojąc niżej zabija kolor aktywnej zakładki.
+     Wyjątku dla żadnej palety tu nie trzeba: akcenty floty w motywie ciemnym
+     to #f97316 / #7dd3fc / #a855f7 — wszystkie wyraźnie inne niż #c3cad6. */
+  [data-motyw="ciemny"] nav button:not(.aktywna){color:#c3cad6;}
   /* Z-89 (zgłoszenie Marka): w trybie ciemnym dolne menu zlewało się z tłem —
      miało kolor karty (#1c1f26) na tle #0f1115, czyli różnicę ledwo widoczną.
      Teraz o dwa tony jaśniejsze, z wyraźniejszą kreską u góry. Motyw jasny
@@ -534,7 +581,7 @@
      zmienić. Dołożenie kolejnej palety specjalnej = jeszcze jeden taki
      blok + jedna pozycja w PALETY w JS. */
   [data-paleta="rgb"]{
-    --akcent:#22d3ee; --akcent-c:#a855f7;
+    --akcent:#22d3ee;   /* Z-91: --akcent-c usunięte, patrz :root */
     --gradient:linear-gradient(90deg,#ff2d95,#a855f7,#22d3ee,#22c55e,#facc15,#ff2d95);
     --ikona-grad:linear-gradient(90deg,#ff2d95,#a855f7,#22d3ee,#22c55e,#facc15,#ff2d95);
     --przycisk-cien:rgba(168,85,247,.45);
