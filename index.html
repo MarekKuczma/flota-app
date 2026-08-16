@@ -30,6 +30,17 @@
        (w niebieskiej robi się pomarańczowy, jak cała plakietka). */
     --stozek:#fbbf24,#f97316,#dc2626,#f97316,#fbbf24;
     --glow-krycie:.40;
+    /* Z-87 (16.08.2026): szkielety ładowania — kolor wypełnienia i jasność
+       przebiegającego połysku. Bliźniacze do ewidencji, zmieniasz tu —
+       zmień i tam. */
+    --sz-baza:#e8ebef; --sz-polysk:rgba(255,255,255,.85);
+    /* Z-87: barwy łuku spinnera na zasłonie.
+       ⚠ Zasłona jest ZAWSZE ciemna, niezależnie od motywu — dlatego --luk
+       NIE zależy od jasny/ciemny, tylko od palety, i musi być jasny.
+       Nie sięgamy po --akcent, bo w palecie niebieskiej to #2563eb, który
+       na ciemnym tle robi się ciężki i mało czytelny. */
+    --luk:#fde68a 0deg, #fbbf24 34deg, #f97316 62deg, #ef4444 86deg;
+    --luk-glow:#f97316;
     --beta-poswiata:rgba(6,182,212,.55);
     --ikona-grad:linear-gradient(135deg, #0f2a43, #06b6d4);
     --paleta-ikona:#fdba74;
@@ -45,6 +56,11 @@
     --turkus:#22d3ee; --bg-turkus:#0e3a44; --tekst-turkus:#67e8f9;
     --glow-krycie:.70;                       /* Z-81 */
     --beta-poswiata:rgba(34,211,238,.55);    /* Z-81 */
+    /* Z-87: szkielet na ciemnym tle — jaśniejszy niż karta, ale nie biały,
+       i dużo słabszy połysk (białe pasmo na ciemnym wygląda jak błysk lampy).
+       --luk celowo NIE jest tu nadpisywany: zasłona jest ciemna w obu
+       motywach, więc łuk zależy od palety, nie od jasny/ciemny. */
+    --sz-baza:#2a2f38; --sz-polysk:rgba(255,255,255,.10);
   }
   /* Opcjonalna paleta niebiesko-pomarańczowa (FEEDBACK-BETA-TESTY.md pkt 3,
      18.07.2026) — drugi, niezależny przełącznik obok jasny/ciemny (patrz
@@ -63,6 +79,8 @@
     --paleta-ikona:#2563eb;
     --stozek:#60a5fa,#2563eb,#1e3a8a,#2563eb,#60a5fa;   /* Z-81 */
     --beta-poswiata:rgba(249,115,22,.55);                /* Z-81 */
+    --luk:#dbeafe 0deg, #93c5fd 40deg, #3b82f6 86deg;    /* Z-87 */
+    --luk-glow:#3b82f6;                                   /* Z-87 */
   }
   [data-motyw="ciemny"][data-paleta="niebieska"]{
     --bg-akcentjasny:#132447; --tekst-akcentjasny:#93c5fd;
@@ -319,10 +337,55 @@
   .overlay-zapis{position:fixed; inset:0; background:rgba(15,17,21,.55);
     display:flex; align-items:center; justify-content:center; flex-direction:column;
     gap:14px; z-index:50;}
-  .overlay-zapis .spinner{width:42px; height:42px; border:4px solid rgba(255,255,255,.3);
-    border-top-color:#fff; border-radius:50%; animation:kreciSie .8s linear infinite;}
+  /* Z-87 (16.08.2026): ten sam spinner co dotąd — rozmiar 42 px, grubość
+     4 px, łuk 90°, obrót w 0,8 s — tylko łuk ma barwy palety zamiast bieli.
+     Zasłona była JEDYNYM miejscem w appce, które o palecie nie wiedziało.
+     ⚠ Dlaczego NIE tak jak obwódki z Z-81: tam animowany jest kąt gradientu
+     (`@property --kat`), co na iOS < 16.4 nie działa i obwódka stoi. Tutaj
+     łuk jest w gradiencie NIERUCHOMY, a kręci się cały element przez
+     `transform:rotate` — czyli tak, jak działał stary spinner. Chodzi więc
+     na każdym telefonie, a obrót liczy kompozytor. `mask` wycina środek,
+     żeby z koła zrobił się pierścień — bez wklejania kółka w kolorze tła,
+     które i tak nie zgadzałoby się z półprzezroczystą zasłoną.
+     Bliźniacze do ewidencji — zmieniasz tu, zmień i tam. */
+  .overlay-zapis .spinner{width:42px; height:42px; border-radius:50%;
+    position:relative; animation:kreciSie .8s linear infinite;}
+  .overlay-zapis .spinner::before{content:''; position:absolute; inset:0;
+    border-radius:50%; border:4px solid rgba(255,255,255,.28);}
+  .overlay-zapis .spinner::after{content:''; position:absolute; inset:0;
+    border-radius:50%; background:conic-gradient(from 0deg, var(--luk), transparent 92deg);
+    -webkit-mask:radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+    mask:radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+    filter:drop-shadow(0 0 5px var(--luk-glow));}
   .overlay-zapis .tekst{color:#fff; font-size:16px; font-weight:600;}
   @keyframes kreciSie{to{transform:rotate(360deg);}}
+
+  /* ===== Z-87: szkielety zamiast napisu „Ładowanie…" =====
+     Pusty ekran z napisem nie mówi, CO się ładuje — szkielet pokazuje kształt
+     tego, co przyjdzie, więc ekran czyta się jak prawie gotowy, a nie zepsuty.
+     Kształt dziedziczy po prawdziwej klasie `.wpis`, więc przyszła zmiana
+     wyglądu kart automatycznie zmienia też szkielet.
+     ⚠ RÓŻNICA WOBEC EWIDENCJI, wynikająca z układu kart, nie z widzimisię:
+     tutaj `.wpis` ma kółko z ikoną (`.ikona-krag`), więc szkielet też je ma.
+     W ewidencji `.wpis` jest bez kółka (jest za to przy liście pojazdów).
+     ⚠ ZAKRES: szkielet WYŁĄCZNIE, gdy naprawdę nie mamy danych. Kto ma cache
+     (Z-80), dalej widzi prawdziwe wpisy od pierwszej klatki — o ładowaniu
+     mówi tam pasek „Odświeżam listę…", nie szkielet.
+     Połysk jedzie przez `transform`, nie `background-position`: przesunięcie
+     obsługuje kompozytor, więc nie ma przemalowania w każdej klatce. */
+  .szkielet{pointer-events:none;}
+  .szkielet .sz-kolo{width:38px; height:38px; border-radius:50%; flex:none;}
+  .szkielet .sz-tresc{flex:1; min-width:0;}
+  .sz-kolo,.sz-l{background:var(--sz-baza); position:relative; overflow:hidden;}
+  .sz-l{height:11px; border-radius:6px;}
+  .sz-l + .sz-l{margin-top:8px;}
+  .sz-kolo::after,.sz-l::after{content:''; position:absolute; inset:0;
+    transform:translateX(-100%);
+    background:linear-gradient(90deg, transparent, var(--sz-polysk), transparent);
+    animation:polysk 1.5s linear infinite;}
+  .sz-l:nth-child(2)::after{animation-delay:.12s;}
+  .sz-l:nth-child(3)::after{animation-delay:.24s;}
+  @keyframes polysk{to{transform:translateX(100%);}}
 
   /* Z-80: pasek nad listą „Moje wpisy". Lista rysuje się od razu z pamięci
      telefonu, a w tle leci pobranie świeżych danych — ten pasek mówi wprost,
@@ -410,6 +473,11 @@
     .plakietka-beta, .pole-blad-puls input, .pole-blad-puls select,
     .pole-blad-puls textarea, input:focus, select:focus, textarea:focus{
       animation:none; }
+    /* Z-87: bez ruchu szkielet nadal spełnia swoją rolę (pokazuje kształt
+       tego, co się ładuje), więc zostaje — gaśnie tylko przebiegający
+       połysk. Spinner zasłony celowo kręci się DALEJ: to jedyny znak, że
+       appka nie zawiesiła się w trakcie zapisu. */
+    .sz-kolo::after, .sz-l::after{ animation:none; }
   }
   /* Z-82: ikony konturowe — kolor z `color` rodzica (currentColor), rozmiar
      z font-size kontenera (1em). Patrz sprite na początku <body>. */
@@ -430,6 +498,9 @@
     --ikona-grad:linear-gradient(90deg,#ff2d95,#a855f7,#22d3ee,#22c55e,#facc15,#ff2d95);
     --przycisk-cien:rgba(168,85,247,.45);
     --stozek:#ff2d95,#a855f7,#22d3ee,#22c55e,#facc15,#ff2d95;
+    /* Z-87: łuk spinnera przebiega przez cały zestaw barw RGB */
+    --luk:#22d3ee 0deg, #a855f7 34deg, #ff2d95 62deg, #facc15 86deg;
+    --luk-glow:#a855f7;
     --glow-krycie:.55;
     --turkus:#a855f7; --bg-turkus:#f3e8ff; --tekst-turkus:#7e22ce;
     --bg-akcentjasny:#f3e8ff; --tekst-akcentjasny:#7e22ce;
@@ -783,7 +854,9 @@
       <h2>Moje wpisy</h2>
       <label class="zgoda"><input type="checkbox" id="pokazAnulowane"> Pokaż anulowane</label>
       <div id="pasekWpisow" class="pasek-odswiezania ukryte"></div>
-      <div id="listaWpisow"><div class="srodek">Ładowanie…</div></div>
+      <!-- Z-87: szkielet zamiast napisu „Ładowanie…" (skrypt podmienia go
+           na prawdziwe wpisy albo na własny szkielet — patrz szkieletWpisow_). -->
+      <div id="listaWpisow"><div class="wpis szkielet" aria-hidden="true"><div class="sz-kolo"></div><div class="sz-tresc"><div class="sz-l" style="width:66%"></div><div class="sz-l" style="width:44%"></div><div class="sz-l" style="width:30%"></div></div></div></div>
     </div>
   </div>
 </main>
@@ -2391,6 +2464,25 @@ var ostatnieWpisy = [];
 // generuje dokładnie ten duplikat, z którym walczymy (E008, Z-77). Dlatego
 // każdy zapis przechodzi przez `odswiezWpisyCache()`, a pasek wyżej mówi
 // wprost, kiedy dane mogą być jeszcze nieaktualne.
+/* Z-87 (16.08.2026): zamiast napisu „Ładowanie…" zarys kart, które za chwilę
+   przyjdą. Kształt bierze się z klasy `.wpis`, więc zmiana wyglądu karty
+   zmienia też szkielet — nie da się ich rozjechać osobno.
+   `aria-hidden`, bo to dekoracja: o stanie ładowania mówi pasek wyżej.
+   Trzy karty, nie pięć — tyle mieści się na ekranie telefonu, a szkielet
+   dłuższy niż prawdziwa lista obiecuje dane, których może nie być.
+   Bliźniacze do ewidencji; różnica to kółko ikony, którego tamtejszy `.wpis`
+   nie ma. */
+function szkieletWpisow_() {
+  var k = '<div class="wpis szkielet" aria-hidden="true">' +
+    '<div class="sz-kolo"></div>' +
+    '<div class="sz-tresc">' +
+      '<div class="sz-l" style="width:66%"></div>' +
+      '<div class="sz-l" style="width:44%"></div>' +
+      '<div class="sz-l" style="width:30%"></div>' +
+    '</div></div>';
+  return k + k + k;
+}
+
 function pokazPasekWpisow_(tryb, czasCache) {
   var p = el('pasekWpisow');
   if (!p) return;
@@ -2460,7 +2552,7 @@ function wczytajWpisy() {
   }
 
   // 3. Z siecią — dociągamy świeże w tle.
-  if (!maCache) lista.innerHTML = '<div class="srodek">Ładowanie…</div>';
+  if (!maCache) lista.innerHTML = szkieletWpisow_();   // Z-87
   pokazPasekWpisow_('ladowanie');
 
   apiGet('mojeWpisy').then(function (d) {
