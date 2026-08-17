@@ -32,6 +32,7 @@
        --beta-poswiata: kolor pulsu plakietki beta = --turkus danej palety
        (w niebieskiej robi się pomarańczowy, jak cała plakietka). */
     --stozek:#fbbf24,#f97316,#dc2626,#f97316,#fbbf24;
+    --wskaznik-grad:linear-gradient(90deg,#fbbf24,#f97316,#dc2626,#f97316,#fbbf24);  /* Z-95 */
     --glow-krycie:.40;
     /* Z-87 (16.08.2026): szkielety ładowania — kolor wypełnienia i jasność
        przebiegającego połysku. Bliźniacze do ewidencji, zmieniasz tu —
@@ -94,6 +95,7 @@
     --turkus:#f97316; --bg-turkus:#fff1e6; --tekst-turkus:#c2410c;
     --paleta-ikona:#38bdf8;
     --stozek:#bae6fd,#38bdf8,#2563eb,#38bdf8,#bae6fd;   /* Z-81 */
+    --wskaznik-grad:linear-gradient(90deg,#2563eb,#3b82f6,#38bdf8,#3b82f6,#2563eb);  /* Z-95 */
     --beta-poswiata:rgba(249,115,22,.55);                /* Z-81 */
     --luk:#e0f2fe 0deg, #7dd3fc 40deg, #2563eb 86deg;    /* Z-87 */
     --luk-glow:#38bdf8;                                   /* Z-87 */
@@ -121,6 +123,7 @@
     --metryka-grad:linear-gradient(135deg, #16233d 0%, #1b2f4d 100%);
     --turkus:#fb923c; --bg-turkus:#432614; --tekst-turkus:#fb923c;
     --stozek:#bae6fd,#60a5fa,#2563eb,#60a5fa,#bae6fd;   /* Z-81 */
+    --wskaznik-grad:linear-gradient(90deg,#2563eb,#3b82f6,#0ea5e9,#3b82f6,#2563eb);  /* Z-95 */
     --beta-poswiata:rgba(251,146,60,.55);                /* Z-81 */
   }
   /* Z-89: jw. — #1d4ed8 jest na ciemnym tle nieczytelny, stąd jasny błękit. */
@@ -403,7 +406,24 @@
   nav .wskaznik{position:absolute; bottom:3px; left:0; width:calc(100% / 3); height:3px;
     display:flex; justify-content:center; pointer-events:none;
     transition:transform .34s cubic-bezier(.4,1.3,.5,1), opacity .18s linear;}
-  nav .wskaznik i{width:44%; height:100%; border-radius:2px; background:var(--gradient);}
+  /* Z-95 (17.08.2026, zgłoszenie Marka: „w Aurorze ta kreska płynie i mi się to
+     podoba, chciałbym to dodać do pozostałych"). Kreska od zawsze ma kolor
+     gradientu palety — teraz ten gradient jeszcze przesuwa się w kółko.
+     Zero nowych kolorów.
+     ⚠ Dlaczego OSOBNA zmienna, a nie po prostu --gradient: animacja `plyn`
+     przesuwa tło o dwie pełne szerokości obrazu, więc pętla nie ma szwu tylko
+     wtedy, gdy gradient KOŃCZY SIĘ kolorem, od którego się zaczyna. Full RGB
+     i Aurora tak mają (#ff2d95 … #ff2d95) i dlatego u nich to działało od
+     początku. Pomarańczowa i niebieska kończą się innym kolorem niż
+     zaczynają — przy zapętleniu widać przeskok. Stąd --wskaznik-grad: te same
+     barwy palety, tylko ułożone w lustro (jasny → środek → ciemny → środek →
+     jasny). Pasek nagłówka i przyciski zostają bez zmian.
+     ⚠ Każda paleta MUSI ustawić --wskaznik-grad u siebie. Wartości z :root
+     dziedziczą się wszędzie, więc `var(--wskaznik-grad, var(--gradient))`
+     dałoby paletom specjalnym pomarańcz z :root, a nie ich własny gradient. */
+  nav .wskaznik i{width:44%; height:100%; border-radius:2px;
+    background:var(--wskaznik-grad); background-size:300% 100%;
+    animation:plyn 6s linear infinite;}
   /* Ekran sukcesu nie należy do żadnej zakładki — wtedy kreska znika,
      zamiast stać pod przypadkową pozycją. */
   nav .wskaznik.bez-zakladki{opacity:0;}
@@ -586,6 +606,7 @@
     --ikona-grad:linear-gradient(90deg,#ff2d95,#a855f7,#22d3ee,#22c55e,#facc15,#ff2d95);
     --przycisk-cien:rgba(168,85,247,.45);
     --stozek:#ff2d95,#a855f7,#22d3ee,#22c55e,#facc15,#ff2d95;
+    --wskaznik-grad:var(--gradient);   /* Z-95: ten gradient już wraca do początku */
     /* Z-87: łuk spinnera przebiega przez cały zestaw barw RGB */
     --luk:#22d3ee 0deg, #a855f7 34deg, #ff2d95 62deg, #facc15 86deg;
     --luk-glow:#a855f7;
@@ -604,18 +625,22 @@
     --metryka-grad:linear-gradient(135deg,#191f30 0%,#1d1830 100%);
   }
   /* --- 2. tęcza płynie tam, gdzie appka używa --gradient --- */
+  /* ⚠ Z-95: `plyn` nie należy już wyłącznie do palet specjalnych — używa go
+     też reguła bazowa `nav .wskaznik i` (kreska w KAŻDEJ palecie). Klatki
+     kluczowe są globalne niezależnie od miejsca w pliku, ale przenosić tego
+     stąd nie ma po co: to nadal to samo przesunięcie tła. */
   @keyframes plyn { to { background-position:300% 0; } }
   [data-paleta="rgb"] header,
   [data-paleta="rgb"] .przycisk,
   [data-paleta="rgb"] .metryka .m-w,
   [data-paleta="rgb"] .avatar-krag{ background-size:300% 100%; animation:plyn 9s linear infinite; }
   /* --- 1. avatar: wirujący pierścień + poświata --- */
-  [data-paleta="rgb"],
+  [data-paleta="rgb"] .avatar-pierscien,
   [data-paleta="aurora"] .avatar-pierscien{padding:2.5px; border-radius:50%; position:relative;
     isolation:isolate; flex:none;
     background:conic-gradient(from var(--kat), var(--stozek));
     animation:obrot 3.5s linear infinite;}
-  [data-paleta="rgb"],
+  [data-paleta="rgb"] .avatar-pierscien::after,
   [data-paleta="aurora"] .avatar-pierscien::after{content:''; position:absolute; inset:0;
     border-radius:50%; background:conic-gradient(from var(--kat), var(--stozek));
     filter:blur(9px); opacity:.75; z-index:-1;}
@@ -629,12 +654,12 @@
      (inset:-10%) wystawała poza ekran i robiła boczne przewijanie
      („psuje skalę aplikacji" — Marek). Reszta efektów zostaje. */
   /* --- 5. kółka: wirujący tęczowy pierścień --- */
-  [data-paleta="rgb"],
+  [data-paleta="rgb"] .ikona-krag,
   [data-paleta="aurora"] .ikona-krag{border-color:transparent;
     background:linear-gradient(var(--karta), var(--karta)) padding-box,
                conic-gradient(from var(--kat), var(--stozek)) border-box;
     animation:obrot 5s linear infinite;}
-  [data-paleta="rgb"],
+  [data-paleta="rgb"] .metryka .m-et .m-ikona,
   [data-paleta="aurora"] .metryka .m-et .m-ikona{border-color:transparent;
     background:linear-gradient(var(--karta), var(--karta)) padding-box,
                conic-gradient(from var(--kat), var(--stozek)) border-box;
@@ -643,10 +668,12 @@
      Z-86: kreska nie jest już rysowana osobno pod aktywną zakładką (byłyby
      DWIE naraz — ta i nowy, ślizgający się wskaźnik). Paleta RGB tylko
      dokłada świecenie do wspólnego wskaźnika. */
-  [data-paleta="rgb"],
-  [data-paleta="aurora"] nav .wskaznik i{background-size:300% 100%;
-    animation:plyn 6s linear infinite; box-shadow:0 0 9px var(--akcent);}
-  [data-paleta="rgb"],
+  /* Z-95: sam ruch przeniesiony do reguły bazowej `nav .wskaznik i` — obowiązuje
+     teraz we wszystkich paletach. Tutaj zostaje wyłącznie POŚWIATA, bo to
+     element charakteru palet specjalnych, a nie samego ruchu. */
+  [data-paleta="rgb"] nav .wskaznik i,
+  [data-paleta="aurora"] nav .wskaznik i{box-shadow:0 0 9px var(--akcent);}
+  [data-paleta="rgb"] nav button.aktywna .i svg,
   [data-paleta="aurora"] nav button.aktywna .i svg{filter:drop-shadow(0 0 6px currentColor);}
   /* --- 7. liczby na kafelkach: poświata --- */
   [data-paleta="rgb"] .metryka .m-w{filter:drop-shadow(0 0 8px rgba(168,85,247,.6));}
@@ -664,7 +691,7 @@
   [data-paleta="rgb"] .sukces-ikona::after,
   [data-paleta="aurora"] .sukces-ikona::after{animation-delay:1.2s;}
   /* --- 9. plakietka beta: tętniąca poświata (mocniej niż w zwykłych paletach) --- */
-  [data-paleta="rgb"],
+  [data-paleta="rgb"] .plakietka-beta,
   [data-paleta="aurora"] .plakietka-beta{animation:oddechBeta 2.2s ease-in-out infinite;}
 
   /* ============ Z-94 (17.08.2026): paleta „Aurora Nebula" (ukryta) ============
@@ -695,6 +722,7 @@
     --turkus:#7c3aed; --bg-turkus:#f3e8ff; --tekst-turkus:#6b21a8;
     --paleta-ikona:#4D96FF;
     --stozek:#79DFFF,#4D96FF,#8A2BE2,#4D96FF,#79DFFF;
+    --wskaznik-grad:var(--gradient);   /* Z-95: ten gradient już wraca do początku */
     --beta-poswiata:rgba(138,43,226,.55);
     --luk:#79DFFF 0deg, #4D96FF 42deg, #8A2BE2 86deg;   /* Z-87 */
     --luk-glow:#8A2BE2;                                  /* Z-87 */
@@ -733,7 +761,16 @@
     background-image:linear-gradient(120deg,#79DFFF 0%, #9dc4ff 52%, #c4a2ff 100%);
     filter:drop-shadow(0 0 7px rgba(138,43,226,.5));}
   /* Ruch: te same efekty co w Full RGB, tylko spokojniejsze (14 s zamiast 9 s).
-     Reguły wspólne z Full RGB dopisane są przy tamtych selektorach wyżej. */
+     Reguły wspólne z Full RGB dopisane są przy tamtych selektorach wyżej.
+     ⚠ POPRAWKA 17.08 (zgłoszenie Marka: „Full RGB dostał mleczny biały
+     overlay"): dopisując Aurorę do tamtych reguł podmieniłem samo
+     `[data-paleta="rgb"]` na listę, przez co PIERWSZY selektor każdej reguły
+     robił się GOŁY i trafiał w element <html>. Najgorsza była poświata
+     avatara: <html> dostawał `position:absolute; inset:0; blur(9px);
+     opacity:.75` — mleczna zasłona na całą appkę. Przy rozszerzaniu selektora
+     o kolejną paletę POWTARZAMY CAŁY selektor złożony
+     (`[data-paleta="rgb"] .x, [data-paleta="aurora"] .x`), nigdy nie
+     podmieniamy samego fragmentu z atrybutem. */
   [data-paleta="aurora"] header,
   [data-paleta="aurora"] .przycisk,
   [data-paleta="aurora"] .metryka .m-w,
@@ -774,7 +811,8 @@
     [data-paleta="aurora"] .metryka .m-et .m-ikona,
     [data-paleta="aurora"] .sukces-ikona::before,
     [data-paleta="aurora"] .sukces-ikona::after,
-    [data-paleta="aurora"] .plakietka-beta{ animation:none; }
+    [data-paleta="aurora"] .plakietka-beta,
+    nav .wskaznik i{ animation:none; }   /* Z-95 */
   }
 </style>
 </head>
