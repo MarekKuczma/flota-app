@@ -610,11 +610,13 @@
   [data-paleta="rgb"] .metryka .m-w,
   [data-paleta="rgb"] .avatar-krag{ background-size:300% 100%; animation:plyn 9s linear infinite; }
   /* --- 1. avatar: wirujący pierścień + poświata --- */
-  [data-paleta="rgb"] .avatar-pierscien{padding:2.5px; border-radius:50%; position:relative;
+  [data-paleta="rgb"],
+  [data-paleta="aurora"] .avatar-pierscien{padding:2.5px; border-radius:50%; position:relative;
     isolation:isolate; flex:none;
     background:conic-gradient(from var(--kat), var(--stozek));
     animation:obrot 3.5s linear infinite;}
-  [data-paleta="rgb"] .avatar-pierscien::after{content:''; position:absolute; inset:0;
+  [data-paleta="rgb"],
+  [data-paleta="aurora"] .avatar-pierscien::after{content:''; position:absolute; inset:0;
     border-radius:50%; background:conic-gradient(from var(--kat), var(--stozek));
     filter:blur(9px); opacity:.75; z-index:-1;}
   /* --- 3. połysk przebiegający po nagłówku --- */
@@ -627,11 +629,13 @@
      (inset:-10%) wystawała poza ekran i robiła boczne przewijanie
      („psuje skalę aplikacji" — Marek). Reszta efektów zostaje. */
   /* --- 5. kółka: wirujący tęczowy pierścień --- */
-  [data-paleta="rgb"] .ikona-krag{border-color:transparent;
+  [data-paleta="rgb"],
+  [data-paleta="aurora"] .ikona-krag{border-color:transparent;
     background:linear-gradient(var(--karta), var(--karta)) padding-box,
                conic-gradient(from var(--kat), var(--stozek)) border-box;
     animation:obrot 5s linear infinite;}
-  [data-paleta="rgb"] .metryka .m-et .m-ikona{border-color:transparent;
+  [data-paleta="rgb"],
+  [data-paleta="aurora"] .metryka .m-et .m-ikona{border-color:transparent;
     background:linear-gradient(var(--karta), var(--karta)) padding-box,
                conic-gradient(from var(--kat), var(--stozek)) border-box;
     animation:obrot 6s linear infinite;}
@@ -639,22 +643,102 @@
      Z-86: kreska nie jest już rysowana osobno pod aktywną zakładką (byłyby
      DWIE naraz — ta i nowy, ślizgający się wskaźnik). Paleta RGB tylko
      dokłada świecenie do wspólnego wskaźnika. */
-  [data-paleta="rgb"] nav .wskaznik i{background-size:300% 100%;
+  [data-paleta="rgb"],
+  [data-paleta="aurora"] nav .wskaznik i{background-size:300% 100%;
     animation:plyn 6s linear infinite; box-shadow:0 0 9px var(--akcent);}
-  [data-paleta="rgb"] nav button.aktywna .i svg{filter:drop-shadow(0 0 6px currentColor);}
+  [data-paleta="rgb"],
+  [data-paleta="aurora"] nav button.aktywna .i svg{filter:drop-shadow(0 0 6px currentColor);}
   /* --- 7. liczby na kafelkach: poświata --- */
   [data-paleta="rgb"] .metryka .m-w{filter:drop-shadow(0 0 8px rgba(168,85,247,.6));}
   /* --- 8. ekran sukcesu: rozchodzące się fale --- */
   @keyframes fala { from{transform:scale(.55); opacity:.85;} to{transform:scale(1.75); opacity:0;} }
-  [data-paleta="rgb"] .sukces-ikona{position:relative; display:flex; align-items:center;
+  [data-paleta="rgb"] .sukces-ikona,
+  [data-paleta="aurora"] .sukces-ikona{position:relative; display:flex; align-items:center;
     justify-content:center;}
   [data-paleta="rgb"] .sukces-ikona::before,
-  [data-paleta="rgb"] .sukces-ikona::after{content:''; position:absolute; width:76px; height:76px;
+  [data-paleta="rgb"] .sukces-ikona::after,
+  [data-paleta="aurora"] .sukces-ikona::before,
+  [data-paleta="aurora"] .sukces-ikona::after{content:''; position:absolute; width:76px; height:76px;
     border-radius:50%; border:2px solid var(--akcent); animation:fala 2.4s ease-out infinite;
     pointer-events:none;}
-  [data-paleta="rgb"] .sukces-ikona::after{animation-delay:1.2s;}
+  [data-paleta="rgb"] .sukces-ikona::after,
+  [data-paleta="aurora"] .sukces-ikona::after{animation-delay:1.2s;}
   /* --- 9. plakietka beta: tętniąca poświata (mocniej niż w zwykłych paletach) --- */
-  [data-paleta="rgb"] .plakietka-beta{animation:oddechBeta 2.2s ease-in-out infinite;}
+  [data-paleta="rgb"],
+  [data-paleta="aurora"] .plakietka-beta{animation:oddechBeta 2.2s ease-in-out infinite;}
+
+  /* ============ Z-94 (17.08.2026): paleta „Aurora Nebula" (ukryta) ============
+     Zgłoszenie Marka: „gaming vibe, ale w niebieskim". Punkt wyjścia to gotowa
+     paleta Aurora Nebula, którą przysłał; wybrane z niej barwy:
+       #1A1F36 Midnight Abyss · #24314A Deep Space · #4D96FF Azure Burst
+       #79DFFF Cyan Glow · #8A2BE2 Electric Violet
+     #C71585 (Neon Purple) świadomie NIE jest używany — to on ciągnął całość
+     w róż, a prośba brzmiała „mniej fioletowo, fiolet bardziej jako akcent".
+
+     ⚠ Zasada podziału ról, warta zapamiętania przy kolejnych paletach:
+     NIEBIESKI niesie powierzchnie (pasek, przyciski, tła, karty), FIOLET
+     pojawia się wyłącznie na drobiazgach — pierścień avatara, cień pod
+     przyciskiem, poświata liczb, puls plakietki beta, łuk spinnera —
+     plus obwódki kafelków wpisów (--turkus, wybór Marka: wariant A2).
+
+     Wybrane przez Marka z mockupu: pasek PŁYNĄCY (N3) + akcent FIOLETOWY (A2).
+     Odrzucone: pasek statyczny bez fioletu (N1) i z fioletowym ogonem (N2). */
+  [data-paleta="aurora"]{
+    --akcent:#1d63d8;
+    /* Pasek płynie w kółko (animacja `plyn` niżej), więc gradient musi wracać
+       do koloru początkowego — inaczej na zapętleniu widać szew. */
+    --gradient:linear-gradient(90deg,#24314A,#4D96FF,#79DFFF,#8A2BE2,#4D96FF,#24314A);
+    --ikona-grad:linear-gradient(135deg, #1A1F36, #4D96FF);
+    --przycisk-cien:rgba(138,43,226,.38);
+    --bg-akcentjasny:#eef4ff; --tekst-akcentjasny:#1d63d8;
+    --metryka-grad:linear-gradient(135deg, #f2f7ff 0%, #f0eeff 100%);
+    --turkus:#7c3aed; --bg-turkus:#f3e8ff; --tekst-turkus:#6b21a8;
+    --paleta-ikona:#4D96FF;
+    --stozek:#79DFFF,#4D96FF,#8A2BE2,#4D96FF,#79DFFF;
+    --beta-poswiata:rgba(138,43,226,.55);
+    --luk:#79DFFF 0deg, #4D96FF 42deg, #8A2BE2 86deg;   /* Z-87 */
+    --luk-glow:#8A2BE2;                                  /* Z-87 */
+    --glow-krycie:.42;
+  }
+  /* Z-89: ten sam wyjątek co w niebieskiej — „Popraw"/„Wklej SMS" mają wziąć
+     kolor akcentu, a nie --turkus, bo reszta fioletowych miejsc zostaje. */
+  [data-paleta="aurora"] .przycisk-maly{color:#1d63d8; border-color:#1d63d8;}
+  [data-motyw="ciemny"][data-paleta="aurora"]{
+    /* Tło i karty to dosłownie dwa pierwsze kolory palety Marka. */
+    --tlo:#12172b; --karta:#1A1F36; --input-tlo:#24314A; --input-brzeg:#33415f;
+    --linia:#28324d;
+    --gradient:linear-gradient(90deg,#1A1F36,#4D96FF,#79DFFF,#8A2BE2,#4D96FF,#1A1F36);
+    --akcent:#79DFFF;
+    --turkus:#c4a2ff; --bg-turkus:#2a1f4a; --tekst-turkus:#d8c2ff;
+    --bg-akcentjasny:#152246; --tekst-akcentjasny:#9dc4ff;
+    --metryka-grad:linear-gradient(135deg, #1b2440 0%, #221f43 100%);
+    --glow-krycie:.85;
+  }
+  [data-motyw="ciemny"][data-paleta="aurora"] .przycisk-maly{
+    color:#9dc4ff; border-color:#9dc4ff;}
+  /* ⚠ Dolne menu w motywie ciemnym ma na sztywno ciepły grafit #252a33 (Z-89).
+     Na granatowym tle Aurory wyglądało jak wklejone z innej appki. */
+  [data-motyw="ciemny"][data-paleta="aurora"] nav{
+    background:#212a45; border-top-color:#39456b;}
+  /* ⚠ Liczby na kafelkach to TEKST WYCIĘTY Z --gradient (patrz .metryka .m-w).
+     Gradient Aurory zaczyna się granatem, więc pierwsza cyfra w „1 795,38"
+     wychodziła prawie niewidoczna na ciemnym tle, a w jasnym motywie ogon
+     liczby gasł w bladym cyanie na bladym kafelku. Stąd własny gradient dla
+     liczb — i to właśnie on niesie fiolet. `background-image`, a NIE skrót
+     `background`: skrót skasowałby `background-clip:text` z reguły bazowej
+     i zamiast cyfr zostałby kolorowy prostokąt (sprawdzone). */
+  [data-paleta="aurora"] .metryka .m-w{
+    background-image:linear-gradient(120deg,#1e3a8a 0%, #1d63d8 52%, #7c3aed 100%);}
+  [data-motyw="ciemny"][data-paleta="aurora"] .metryka .m-w{
+    background-image:linear-gradient(120deg,#79DFFF 0%, #9dc4ff 52%, #c4a2ff 100%);
+    filter:drop-shadow(0 0 7px rgba(138,43,226,.5));}
+  /* Ruch: te same efekty co w Full RGB, tylko spokojniejsze (14 s zamiast 9 s).
+     Reguły wspólne z Full RGB dopisane są przy tamtych selektorach wyżej. */
+  [data-paleta="aurora"] header,
+  [data-paleta="aurora"] .przycisk,
+  [data-paleta="aurora"] .metryka .m-w,
+  [data-paleta="aurora"] .avatar-krag{ background-size:300% 100%;
+    animation:plyn 14s linear infinite; }
 
   /* ---------- wybierak palet (arkusz wysuwany od dołu) ----------
      Przy trzech paletach klikanie „w ciemno" przestaje działać — trzeba
@@ -683,7 +767,14 @@
     [data-paleta="rgb"] .avatar-krag, [data-paleta="rgb"] .avatar-pierscien,
     [data-paleta="rgb"] header::after,     [data-paleta="rgb"] .ikona-krag, [data-paleta="rgb"] .metryka .m-et .m-ikona,
     [data-paleta="rgb"] nav .wskaznik i, [data-paleta="rgb"] .sukces-ikona::before,
-    [data-paleta="rgb"] .sukces-ikona::after, [data-paleta="rgb"] .plakietka-beta{ animation:none; }
+    [data-paleta="rgb"] .sukces-ikona::after, [data-paleta="rgb"] .plakietka-beta,
+    [data-paleta="aurora"] header, [data-paleta="aurora"] .przycisk,
+    [data-paleta="aurora"] .metryka .m-w, [data-paleta="aurora"] .avatar-krag,
+    [data-paleta="aurora"] .avatar-pierscien, [data-paleta="aurora"] .ikona-krag,
+    [data-paleta="aurora"] .metryka .m-et .m-ikona,
+    [data-paleta="aurora"] .sukces-ikona::before,
+    [data-paleta="aurora"] .sukces-ikona::after,
+    [data-paleta="aurora"] .plakietka-beta{ animation:none; }
   }
 </style>
 </head>
@@ -1108,7 +1199,12 @@ var PALETY = [
     probka:'linear-gradient(135deg,#fbbf24,#f97316 55%,#dc2626)' },
   { id:'niebieska', nazwa:'Niebieska',    opis:'spokojniejsza', pasek:'#2563eb',
     probka:'linear-gradient(135deg,#2563eb,#3b82f6 50%,#38bdf8)' },
-  { id:'rgb',       nazwa:'RGB',          opis:'gaming vibe', pasek:'#a855f7',
+  // Z-94: „Aurora Nebula" przed „Full RGB" — spokojniejsza z dwóch specjalnych.
+  { id:'aurora',    nazwa:'Aurora Nebula', opis:'gaming vibe', pasek:'#4D96FF',
+    probka:'linear-gradient(135deg,#24314A,#4D96FF 45%,#79DFFF 72%,#8A2BE2)', specjalna:true },
+  // Z-94: „RGB" -> „Full RGB" (zmiana nazwy Marka) — samo `id` ZOSTAJE 'rgb',
+  // bo siedzi w localStorage telefonów i w selektorach CSS.
+  { id:'rgb',       nazwa:'Full RGB',     opis:'gaming vibe', pasek:'#a855f7',
     probka:'linear-gradient(90deg,#ff2d95,#a855f7,#22d3ee,#22c55e,#facc15)', specjalna:true }
 ];
 function paletaDozwolona_(id) {
