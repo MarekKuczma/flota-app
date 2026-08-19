@@ -153,17 +153,9 @@
   .baner{background:var(--bg-uwaga); border:1px solid var(--brzeg-uwaga); color:var(--tekst-uwaga);
     border-radius:12px; padding:12px 14px; margin-bottom:12px; font-size:15px;}
   .baner b{display:block; margin-bottom:2px;}
-  /* W-05 (01.08.2026): komunikat Marka — osobny styl od baneru ostrzeżeń,
-     żeby mocniej rzucał się w oczy (akcent appki zamiast bursztynu). Kolor
-     przez --akcent/--bg-akcentjasny/--tekst-akcentjasny — auto-dopasowuje
-     się do palety i motywu, bez osobnego kodu na ciemny motyw. */
-  .komunikat-marka{background:var(--bg-akcentjasny); border-left:4px solid var(--akcent);
-    border-radius:0 12px 12px 0; padding:12px 14px 14px; margin-bottom:12px; color:var(--tekst-akcentjasny);}
-  .km-tytul{display:flex; align-items:center; gap:8px; font-weight:700; font-size:14px; margin-bottom:8px;}
-  .km-wiersz{display:flex; align-items:center; gap:8px; font-size:15px; line-height:1.4; margin-bottom:6px;}
-  .km-wiersz:last-child{margin-bottom:0;}
-  .km-znaczek{width:20px; height:20px; border-radius:50%; background:var(--akcent); color:#fff;
-    font-size:11px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; flex:none;}
+  /* W-05 → F-71/E-37 (19.08.2026): pasek komunikatu Marka i jego style
+     (.komunikat-marka, .km-*) USUNIĘTE — komunikat przychodzi wysuwanym
+     arkuszem, wariant „marek" przy .arkusz-kom niżej. */
   .karta{background:var(--karta); border-radius:14px; padding:16px;
     box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:14px;}
   .metryki{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;}
@@ -349,13 +341,13 @@
     overflow:hidden; text-overflow:ellipsis;}
   .mini-wpis .m-linia2{font-size:12px; color:var(--szary); margin-top:1px;}
   .mini-wpis .m-wartosc{font-size:14px; font-weight:600; color:var(--tekst); flex:none;}
-  .kolejka-info{background:var(--bg-akcentjasny); color:var(--tekst-akcentjasny); border-radius:12px;
-    padding:10px 14px; margin-bottom:12px; font-size:15px; display:none;}
-  .odrzucony{background:var(--bg-blad); border-radius:10px; padding:10px; margin-top:8px; font-size:14px;}
-  .odrzucony .p{display:flex; gap:8px; margin-top:8px;}
-  /* Z-75: spokojniejszy wariant karty — komunikat, nie awaria (jak
-     `.odrzucony.zapisany` w ewidencji od E-32). */
-  .odrzucony.zapisany{background:var(--bg-uwaga); color:var(--tekst-uwaga);}
+  /* F-71/E-40: kontener stracił własne tło — karty (.k-karta wyżej) mają
+     swoje. Karty ZOSTAJĄ inline: nie znikają, aż kierowca sprawę załatwi
+     (arkusz znikałby po kliknięciu — decyzja Marka). */
+  .kolejka-info{display:none;}
+  /* F-71/E-40: dawne .odrzucony/.odrzucony.zapisany (Z-75) zastąpione
+     kartami .k-karta wyżej — kolory zachowane: pomarańcz dla „to nie
+     awaria, tylko komunikat", czerwień dla realnego odrzucenia. */
   .wpis-strzalka{width:24px; height:24px; border-radius:50%; background:var(--bg-turkus);
     color:var(--tekst-turkus); font-size:13px; font-weight:700; flex:none;
     display:inline-flex; align-items:center; justify-content:center;
@@ -793,6 +785,106 @@
      Przy trzech paletach klikanie „w ciemno" przestaje działać — trzeba
      przeklikać całą pętlę, żeby wrócić. Lista z nazwami i próbkami rozwiązuje
      to bez budowania osobnego ekranu ustawień. */
+  /* ===================== F-71 (19.08.2026): seria komunikatów z ewidencji =====================
+     Transfer E-37/E-38/E-39/E-40 (ewidencja v79–v82). Zasady wspólne dla
+     obu appek — pełny opis w 00-PLAN-PRAC-ARCHIWUM.md, „Podsumowanie serii
+     komunikatów". BEZ E-35/E-36: flota nie ma terminów ani koparek.
+     ⚠ RÓŻNICA WOBEC EWIDENCJI, wymuszona: flota używa klasy `widoczny`
+     (nie `widoczna`) i `bezpiecznyTekst_` (z podkreślnikiem). */
+  .arkusz-kom{position:fixed; left:0; right:0; bottom:0; z-index:63; background:var(--karta);
+    color:var(--tekst); border-radius:18px 18px 0 0;
+    padding:16px 16px calc(18px + env(safe-area-inset-bottom));
+    transform:translateY(102%); visibility:hidden;
+    /* Fix z E-39 (zgłoszenie Marka): translateY(102%) chowa ELEMENT, ale
+       box-shadow (poświata górnej ramki) sięga wyżej niż on sam — łuna
+       zostawała na dole ekranu po zamknięciu, aż coś przerysowało widok.
+       visibility:hidden gasi też cień; opóźnienie .28s = dokładnie koniec
+       animacji zjazdu, więc zjeżdżanie wygląda jak dotąd. */
+    transition:transform .28s cubic-bezier(.22,1,.36,1), visibility 0s .28s;
+    max-width:520px; margin:0 auto;}
+  .arkusz-kom.widoczny{transform:translateY(0); visibility:visible;
+    transition:transform .28s cubic-bezier(.22,1,.36,1);}
+  .zaslona.zaslona-kom{z-index:62;}
+  .ak-uchwyt{width:38px; height:4px; border-radius:2px; background:var(--linia); margin:0 auto 12px;}
+  .ak-glowka{display:flex; align-items:center; gap:10px; margin-bottom:9px;}
+  .ak-kolko{width:36px; height:36px; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; font-size:19px; flex:none;}
+  .arkusz-kom h3{margin:0; font-size:17px;}
+  .ak-wstep{font-size:13px; color:var(--szary); margin:0 0 12px; line-height:1.45;}
+  .ak-wiersz{display:flex; gap:9px; font-size:14.5px; line-height:1.45; margin-bottom:8px;}
+  .ak-num{width:20px; height:20px; border-radius:50%; background:var(--akcent); color:var(--karta);
+    font-size:11px; font-weight:700; display:inline-flex; align-items:center;
+    justify-content:center; flex:none; margin-top:1px;}
+  .ak-wiersze{margin:0 0 14px;}
+  .arkusz-kom .przycisk-glow{margin-top:2px;}
+  .ak-dwa{display:grid; grid-template-columns:1fr 1fr; gap:9px;}
+  /* Oba przyciski MUSZĄ wypełniać swoje obramowanie co do piksela. Bez
+     `flex:1` niższy przycisk zostawiał pod sobą odsłonięty gradient —
+     wyglądało to jak „gruba ramka na dole" tylko przy „Zostaw" (zgłoszenie
+     Marka 19.08; zmierzone: 14 px szczeliny zamiast 2 px). Siatka rozciąga
+     oba opakowania do równej wysokości, więc przycisk w środku też musi. */
+  .ak-dwa .przycisk-glow{margin-top:2px; display:flex;}
+  .ak-dwa .przycisk-glow > button{flex:1;}
+  /* „Zostaw" nosi też klasę .przycisk — bierze z niej WSZYSTKIE metryki
+     (rozmiar pisma, padding, min-height, promień), więc para przycisków
+     jest identyczna i pozostanie taka, gdyby .przycisk kiedyś się zmienił.
+     Tutaj nadpisujemy wyłącznie barwy: neutralne tło zamiast gradientu
+     palety i brak kolorowego cienia (świeci już zielona obwódka). */
+  .ak-zostaw{background:var(--karta); color:var(--tekst); box-shadow:none;}
+
+  /* Warianty: „marek" i „info" biorą PALETĘ (elementy informacyjne —
+     zasada z 19.08; decyzja 4a: komunikatowi Marka priorytet nadaje forma,
+     nie kolor). „pytanie" = akcje nieodwracalne, stąd czerwień. */
+  .arkusz-kom.marek, .arkusz-kom.info{border-top:3px solid var(--akcent);
+    box-shadow:0 -10px 30px rgba(0,0,0,.4), 0 -3px 16px var(--akcent);}
+  .arkusz-kom.marek .ak-kolko, .arkusz-kom.info .ak-kolko{
+    background:var(--bg-akcentjasny); color:var(--tekst-akcentjasny);}
+  .arkusz-kom.pytanie{border-top:3px solid var(--blad);
+    box-shadow:0 -10px 30px rgba(0,0,0,.4), 0 -3px 18px rgba(239,68,68,.45);}
+  .arkusz-kom.pytanie .ak-kolko{background:var(--bg-blad); color:var(--blad);}
+  .arkusz-kom.pytanie .przycisk{background:#dc2626;}
+  [data-motyw="ciemny"] .arkusz-kom.pytanie .przycisk{background:#ef4444;}
+
+  /* Stożek ramki przycisku dopasowany do kontekstu — nadpisuje tylko
+     --stozek palety, mechanizm .przycisk-glow (Z-81) bez zmian. */
+  .przycisk-glow.stozek-czerwony{--stozek:#fca5a5,#ef4444,#991b1b,#ef4444,#fca5a5;}
+  [data-motyw="ciemny"] .przycisk-glow.stozek-czerwony{--stozek:#f87171,#ef4444,#fecaca,#ef4444,#f87171;}
+  .przycisk-glow.stozek-zielony{--stozek:#86efac,#16a34a,#14532d,#16a34a,#86efac;}
+  [data-motyw="ciemny"] .przycisk-glow.stozek-zielony{--stozek:#4ade80,#16a34a,#bbf7d0,#16a34a,#4ade80;}
+
+  /* Karty kolejki offline (E-40). Kolory wg zasady: „czeka" informacyjne
+     (paleta), „miesiąc rozliczony" = uwaga (to nie błąd), „odrzucony" =
+     błąd. ⚠ RÓŻNICA WOBEC EWIDENCJI: flota NIE ma wariantu „ten wpis już
+     jest zapisany" — jej E008 znaczy co innego (patrz F-66: dopasowanie
+     wymaga kierowca+data+ilość+wartość+przeznaczenie, więc duplikat bywa
+     prawdziwą drugą transakcją) i obsługuje go przycisk „To nie duplikat
+     — wyślij". */
+  .k-karta{border-radius:12px; padding:11px 12px; margin-bottom:10px;
+    font-size:14px; line-height:1.45;}
+  .k-glowka{display:flex; align-items:center; gap:9px; margin-bottom:4px;}
+  .k-kolko{width:30px; height:30px; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; font-size:15px; flex:none;}
+  .k-glowka b{font-size:14px;}
+  .k-przyciski{display:flex; gap:8px; margin-top:9px;}
+  .k-btn{flex:1; border-radius:9px; padding:9px 10px; font-size:13.5px; font-weight:700;
+    font-family:inherit; border:1.5px solid;}
+  /* „Spróbuj ponownie" = akcja naprawcza, bezpieczna → zielona (spójnie
+     z „Zostaw"). „To nie duplikat — wyślij" → POMARAŃCZOWA: kierowca
+     świadomie przepycha wpis mimo ostrzeżenia, a błąd tworzy podwójną
+     pozycję w rozliczeniu (pieniądze księgowej) — kolor ma to sygnalizować,
+     ale nie blokować. „Usuń" → czerwona. */
+  .k-btn.ponow{border-color:var(--ok); color:var(--tekst-ok); background:var(--bg-ok);}
+  .k-btn.ponow-uwaga{border-color:var(--brzeg-uwaga); color:var(--tekst-uwaga); background:var(--bg-uwaga);}
+  .k-btn.usun{border-color:var(--blad); color:var(--tekst-blad); background:transparent;}
+  .k-karta.info{background:var(--bg-akcentjasny); color:var(--tekst-akcentjasny);}
+  .k-karta.info .k-kolko{background:var(--karta); color:var(--tekst-akcentjasny);}
+  .k-karta.zapisany{background:var(--bg-uwaga); color:var(--tekst-uwaga);}
+  .k-karta.zapisany .k-kolko{background:rgba(255,255,255,.55); color:var(--tekst-uwaga);}
+  [data-motyw="ciemny"] .k-karta.zapisany .k-kolko{background:rgba(0,0,0,.25);}
+  .k-karta.blad{background:var(--bg-blad); color:var(--tekst-blad);}
+  .k-karta.blad .k-kolko{background:rgba(255,255,255,.55); color:var(--tekst-blad);}
+  [data-motyw="ciemny"] .k-karta.blad .k-kolko{background:rgba(0,0,0,.25);}
+
   .zaslona{position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:60;
     opacity:0; pointer-events:none; transition:opacity .2s;}
   .zaslona.widoczny{opacity:1; pointer-events:auto;}
@@ -863,6 +955,7 @@
 <symbol id="ic-link" viewBox="0 0 24 24"><path d="M10 14 14 10M8.5 12 6.8 13.7a3.4 3.4 0 0 0 4.8 4.8l1.7-1.7M15.5 12l1.7-1.7a3.4 3.4 0 0 0-4.8-4.8L10.7 7.2"/></symbol>
 <symbol id="ic-note" viewBox="0 0 24 24"><path d="M6.5 3.5h11A1.5 1.5 0 0 1 19 5v14a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19V5a1.5 1.5 0 0 1 1.5-1.5ZM9 8.5h6M9 12h6M9 15.5h3.5"/></symbol>
 <symbol id="ic-mega" viewBox="0 0 24 24"><path d="M4 10.5v3a1 1 0 0 0 1 1h2.5L18 19V5L7.5 9.5H5a1 1 0 0 0-1 1ZM8 15v3.3a1.2 1.2 0 0 0 1.2 1.2h1"/></symbol>
+<symbol id="ic-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
 <symbol id="ic-lock" viewBox="0 0 24 24"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5M12 14.5v2"/></symbol>
 <symbol id="ic-warn" viewBox="0 0 24 24"><path d="M12 4 3.5 19h17L12 4ZM12 10v4M12 16.8v.2"/></symbol>
 <symbol id="ic-wrench" viewBox="0 0 24 24"><path d="M14.5 6.5a4 4 0 0 1 5.4-4.1L17 5.3l1.7 1.7 2.9-2.9a4 4 0 0 1-5.1 5.4l-8 8a2 2 0 0 1-2.9-2.9l8-8.1Z"/></symbol>
@@ -898,7 +991,8 @@
 <main>
   <div class="baner ukryte" id="baner"></div>
   <!-- W-05 (01.08.2026): komunikat Marka — ukryty gdy brak treści. -->
-  <div class="komunikat-marka ukryte" id="komunikatMarka"></div>
+  <!-- F-71/E-37: pasek „komunikat Marka" usunięty — komunikat przychodzi
+       teraz wysuwanym arkuszem, patrz sprawdzKomunikatMarka_. -->
   <div class="kolejka-info" id="kolejkaInfo"></div>
 
   <!-- Brak kodu -->
@@ -1121,6 +1215,12 @@
 <script src="./config.js"></script>
 <!-- Z-83: wybierak palet. Lista budowana z JS (PALETY), bo pozycja RGB
      pojawia się tylko przy fladze z serwera. -->
+<!-- F-71 (19.08.2026): wysuwany arkusz komunikatu — komunikat Marka,
+     zamienniki alert()/confirm(). Świadomie BEZ zamykania kliknięciem
+     w tło: kierowca ma kliknąć przycisk. Wypełniany przez pokazArkuszKom_. -->
+<div class="zaslona zaslona-kom" id="zaslonaKom"></div>
+<div class="arkusz-kom" id="arkuszKom" role="alertdialog" aria-modal="true"></div>
+
 <div class="zaslona" id="zaslonaPalet"></div>
 <div class="arkusz-palet" id="arkuszPalet" role="dialog" aria-label="Kolory aplikacji">
   <h3>Kolory aplikacji</h3>
@@ -1211,6 +1311,82 @@ function odrzucKodFloty_(wiadomosc) {
   pokaz('widokBrakKodu');
 }
 function el(id){ return document.getElementById(id); }
+
+/* ===================== F-71 (19.08.2026): wysuwany arkusz komunikatu =====================
+   Transfer z ewidencji (E-35→E-40). Jeden komponent obsługuje: komunikat
+   Marka (wariant „marek"), zamienniki alert() („info") i confirm()
+   („pytanie"). Mechanizm wysuwania 1:1 jak wybierak palet (Z-83).
+   Zamykany WYŁĄCZNIE przyciskiem — kliknięcie w tło celowo nic nie robi,
+   inaczej niż przy paletach.
+   ⚠ Bliźniaczy blok w ewidencji — zmieniasz tu, zmień i tam. */
+function pokazArkuszKom_(o){
+  var a = el('arkuszKom');
+  a.className = 'arkusz-kom ' + (o.typ || 'info');
+  a.innerHTML =
+    '<div class="ak-uchwyt"></div>' +
+    '<div class="ak-glowka"><div class="ak-kolko">' + ikonaHTML_(o.ikona) + '</div>' +
+    '<h3>' + o.tytul + '</h3></div>' +
+    (o.wstep ? '<p class="ak-wstep">' + o.wstep + '</p>' : '') +
+    ((o.wiersze && o.wiersze.length)
+      ? '<div class="ak-wiersze">' + o.wiersze.map(function(t, i){
+          return '<div class="ak-wiersz"><span class="ak-num">' + (i + 1) +
+            '</span><span>' + t + '</span></div>';
+        }).join('') + '</div>'
+      : '') +
+    (o.dwa
+      ? '<div class="ak-dwa">' +
+        '<div class="przycisk-glow stozek-zielony"><button type="button" class="przycisk ak-zostaw" id="arkuszKomZostaw">' +
+        (o.dwa.zostaw || 'Zostaw') + '</button></div>' +
+        '<div class="przycisk-glow stozek-czerwony"><button type="button" class="przycisk" id="arkuszKomOk">' +
+        o.dwa.akcja + '</button></div></div>'
+      : '<div class="przycisk-glow ' + (o.stozek || '') + '">' +
+        '<button type="button" class="przycisk" id="arkuszKomOk">' + o.przycisk + '</button></div>');
+  el('arkuszKomOk').onclick = function(){
+    zamknijArkuszKom_();
+    if (o.dwa) { if (o.dwa.poAkcji) o.dwa.poAkcji(); }
+    else if (o.po) o.po();
+  };
+  if (o.dwa) el('arkuszKomZostaw').onclick = function(){ zamknijArkuszKom_(); };
+  el('zaslonaKom').classList.add('widoczny');
+  a.classList.add('widoczny');
+}
+function zamknijArkuszKom_(){
+  el('zaslonaKom').classList.remove('widoczny');
+  el('arkuszKom').classList.remove('widoczny');
+}
+function arkuszKomOtwarty_(){
+  return el('arkuszKom').classList.contains('widoczny');
+}
+
+/* Zamiennik natywnego alert() — arkusz-info w kolorach palety, z ikoną SVG.
+   Natywnego alertu nie da się ostylować (rysuje go system telefonu), stąd
+   zamiana; alert() nic nie zwracał, więc podmiana jest mechaniczna.
+   ⚠ `tresc` idzie do innerHTML — dane z serwera escapować `bezpiecznyTekst_`
+   PRZED wywołaniem. */
+function pokazInfo_(tytul, tresc, ikona, po){
+  pokazArkuszKom_({ typ: 'info', ikona: ikona || 'ic-warn', tytul: tytul,
+    wstep: tresc || '', przycisk: 'OK', po: po });
+}
+
+/* Zamiennik confirm() — arkusz-pytanie z dwoma przyciskami. Bezpieczny
+   domyślnie „Zostaw" (zielona ramka), niebezpieczny nazywa akcję po imieniu
+   (czerwona) — nigdy Tak/Nie/OK/Anuluj. ⚠ confirm() BLOKOWAŁ wykonanie
+   i zwracał true/false — tu dalszy ciąg MUSI iść w `poAkcji`; „Zostaw"
+   tylko zamyka. Etykietę bezpiecznego przycisku da się nadpisać (`zostaw`)
+   — potrzebne tam, gdzie „Zostaw" nie ma sensu (np. duplikat: „Nie dodawaj”). */
+function pokazPytanie_(o){
+  pokazArkuszKom_({ typ: 'pytanie', ikona: o.ikona || 'ic-trash',
+    tytul: o.tytul, wstep: o.tresc || '',
+    dwa: { zostaw: o.zostaw, akcja: o.akcja, poAkcji: o.poAkcji } });
+}
+
+/* Data lokalna — nie toISOString(), bo UTC przestawiałoby „raz dziennie"
+   o dwie godziny względem polskiej doby. */
+function dzisLokalnie_(){
+  var d = new Date();
+  return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) +
+    '-' + ('0' + d.getDate()).slice(-2);
+}
 function pokaz(id){ el(id).classList.remove('ukryte'); }
 function schowaj(id){ el(id).classList.add('ukryte'); }
 // Tekst wpisany przez kierowcę (Dodatkowe informacje itp.) wstawiany do
@@ -2163,15 +2339,27 @@ function wyslijNowy(d, potwierdzenie, klucz) {
       pokazSukces('Wpis dodany', 'Numer wpisu: ' + odp.id, odp.ostrzezenia);
       odswiezWpisyCache();
     } else if (!potwierdzenie && (odp.bledy || []).join(' ').indexOf('E008') !== -1) {
-      if (confirm('Ten wpis wygląda jak duplikat (taki sam jak chwilę temu).\n\n' +
-        'Jeśli to NAPRAWDĘ kolejna, osobna transakcja (np. druga bramka autostrady) — ' +
-        'kliknij OK, żeby dodać mimo to.')) {
-        poczatekZapisu_();
-        // TEN SAM klucz: poprzednia próba skończyła się błędem E008, więc
-        // niczego nie zapisała — nie ma czego zduplikować. Nowy klucz byłby
-        // tu tylko zmarnowaną pozycją w pamięci serwera.
-        wyslijNowy(d, true, klucz);
-      }
+      /* F-71/E-39: dawny confirm() → arkusz-pytanie. ⚠ TO JEDYNE pytanie
+         w obu appkach o ODWROTNEJ polaryzacji: bezpieczne jest NIE dodawać
+         (duplikat to zwykle pomyłka), a akcją jest dopisanie wpisu — więc
+         etykieta bezpiecznego przycisku brzmi „Nie dodawaj", nie „Zostaw".
+         Czerwień na akcji jest uzasadniona mimo że to nie usuwanie: błąd
+         tworzy podwójną pozycję w rozliczeniu, czyli w pieniądzach
+         księgowej. Mechanika (ten sam klucz) bez zmian — patrz Z-77/F-66. */
+      pokazPytanie_({
+        tytul: 'To wygląda na duplikat', ikona: 'ic-warn',
+        tresc: 'Ten wpis jest taki sam jak dodany chwilę temu. Jeśli to ' +
+          'NAPRAWDĘ kolejna, osobna transakcja (np. druga bramka autostrady) — ' +
+          'dodaj go mimo to.',
+        zostaw: 'Nie dodawaj', akcja: 'Dodaj mimo to',
+        poAkcji: function () {
+          poczatekZapisu_();
+          // TEN SAM klucz: poprzednia próba skończyła się błędem E008, więc
+          // niczego nie zapisała — nie ma czego zduplikować. Nowy klucz byłby
+          // tu tylko zmarnowaną pozycją w pamięci serwera.
+          wyslijNowy(d, true, klucz);
+        }
+      });
     } else pokazBladBackendu(odp.bledy);
   }).catch(function () {
     // Najważniejsze miejsce w całym Z-77: TU nie wiemy, czy serwer zapisał.
@@ -2343,8 +2531,18 @@ function odswiezKolejkeInfo() {
   var i = el('kolejkaInfo');
   if (!oczekuje && !odrzucone.length) { i.style.display = 'none'; return; }
   i.style.display = 'block';
+  // F-71/E-40 (19.08.2026): karty z ikonami SVG zamiast gołego tekstu
+  // i czerwonych pudełek — TREŚCI bez zmian (W-03/Z-75/Z-77), nowa jest
+  // tylko forma. ⚠ Przyciski zostają na inline `onclick` (wzorzec floty),
+  // bo `usunWpis`/`ponowWpis` są funkcjami globalnymi.
   var html = '';
-  if (oczekuje) html += '⏳ Wpisy czekające na wysłanie: <b>' + oczekuje + '</b>';
+  if (oczekuje) {
+    html += '<div class="k-karta info"><div class="k-glowka">' +
+      '<span class="k-kolko">' + ikonaHTML_('ic-clock') + '</span>' +
+      '<b>' + oczekuje + (oczekuje === 1 ? ' wpis czeka' : ' wpisy czekają') +
+      ' na wysłanie</b></div>' +
+      'Wyślą się same, gdy wróci zasięg.</div>';
+  }
   odrzucone.forEach(function (w) {
     var e008 = (w.blad || '').indexOf('E008') !== -1;
     // Z-75 (16.08.2026, zredukowane): E012 z KOLEJKI = wpis powstał, gdy
@@ -2358,23 +2556,32 @@ function odswiezKolejkeInfo() {
     // serwerze) i nic tam nie ginie. Decyzja Marka: pełna wersja Z-75
     // (zakładka „Odrzucone" + mail) to przerost formy — brakujące tankowanie
     // widać w pliku Orlenu, a brakujący dzień w Panelu.
+    var opisK = bezpiecznyTekst_(dataPL_(w.dane.dataZakupu)) + ', ' +
+      bezpiecznyTekst_(w.dane.ilosc) + ' / ' + bezpiecznyTekst_(w.dane.wartosc) + ' zł';
     if ((w.blad || '').indexOf('E012') !== -1) {
-      html += '<div class="odrzucony zapisany"><b>Miesiąc jest już rozliczony</b> (' +
-        bezpiecznyTekst_(dataPL_(w.dane.dataZakupu)) + ', ' + bezpiecznyTekst_(w.dane.ilosc) + ' / ' +
-        bezpiecznyTekst_(w.dane.wartosc) + ' zł)<br>Ten wpis nie zostanie zapisany ' +
+      html += '<div class="k-karta zapisany"><div class="k-glowka">' +
+        '<span class="k-kolko">' + ikonaHTML_('ic-lock') + '</span>' +
+        '<b>Miesiąc jest już rozliczony</b></div>' +
+        '(' + opisK + ')<br>Ten wpis nie zostanie zapisany ' +
         'w rozliczeniu. Jeśli to ważne tankowanie — daj znać Markowi. Jeśli nie, ' +
         'możesz usunąć ten komunikat.' +
-        '<div class="p">' +
-        '<button class="przycisk-czerwony" onclick="usunWpis(' + w.tmp + ')">Usuń</button>' +
+        '<div class="k-przyciski">' +
+        '<button class="k-btn usun" onclick="usunWpis(' + w.tmp + ')">Usuń</button>' +
         '</div></div>';
       return;
     }
-    html += '<div class="odrzucony"><b>Wpis odrzucony</b> (' + bezpiecznyTekst_(dataPL_(w.dane.dataZakupu)) + ', ' +
-      bezpiecznyTekst_(w.dane.ilosc) + ' / ' + bezpiecznyTekst_(w.dane.wartosc) + ' zł): ' + bezpiecznyTekst_(w.blad) +
-      '<div class="p">' +
-      '<button class="przycisk-maly" onclick="ponowWpis(' + w.tmp + ',' + (e008 ? 'true' : 'false') + ')">' +
-      (e008 ? 'To nie duplikat — wyślij' : 'Spróbuj ponownie') + '</button>' +
-      '<button class="przycisk-czerwony" onclick="usunWpis(' + w.tmp + ')">Usuń</button></div></div>';
+    html += '<div class="k-karta blad"><div class="k-glowka">' +
+      '<span class="k-kolko">' + ikonaHTML_(e008 ? 'ic-swap' : 'ic-warn') + '</span>' +
+      '<b>Wpis odrzucony</b></div>' +
+      '(' + opisK + ')<br>' + bezpiecznyTekst_(w.blad) +
+      '<div class="k-przyciski">' +
+      // „Spróbuj ponownie" = akcja naprawcza → zielona. „To nie duplikat —
+      // wyślij" → POMARAŃCZOWA: kierowca świadomie przepycha wpis mimo
+      // ostrzeżenia, a pomyłka tworzy podwójną pozycję w rozliczeniu.
+      '<button class="k-btn ' + (e008 ? 'ponow-uwaga' : 'ponow') + '" onclick="ponowWpis(' +
+      w.tmp + ',' + (e008 ? 'true' : 'false') + ')">' +
+      (e008 ? 'To nie duplikat — wyślij' : ikonaHTML_('ic-swap') + ' Spróbuj ponownie') + '</button>' +
+      '<button class="k-btn usun" onclick="usunWpis(' + w.tmp + ')">Usuń</button></div></div>';
   });
   i.innerHTML = html;
 }
@@ -2394,9 +2601,17 @@ function usunWpis(tmp) {
   // W-03 (01.08.2026, przeniesione z ewidencji): kasowało bezpowrotnie
   // jednym kliknięciem — jedno przypadkowe dotknięcie i wpis znika bez
   // śladu, bez możliwości cofnięcia.
-  if (!confirm('Usunąć ten wpis z kolejki? Nie zostanie zapisany w rozliczeniu.')) return;
-  zapiszKolejke(kolejka().filter(function (w) { return w.tmp !== tmp; }));
-  odswiezKolejkeInfo();
+  // F-71/E-39: pytanie przez arkusz zamiast confirm().
+  pokazPytanie_({
+    tytul: 'Usunąć wpis z kolejki?', ikona: 'ic-trash',
+    tresc: 'Ten wpis <b>nie zostanie zapisany w rozliczeniu</b>. Usuwaj tylko, ' +
+      'jeśli sprawdziłeś w „Moich wpisach", że to tankowanie już tam jest.',
+    akcja: 'Usuń z kolejki',
+    poAkcji: function () {
+      zapiszKolejke(kolejka().filter(function (w) { return w.tmp !== tmp; }));
+      odswiezKolejkeInfo();
+    }
+  });
 }
 
 // ---------- baner + imię ----------
@@ -2428,20 +2643,44 @@ function pobierzStatus() {
         'Masz wpisy za ten miesiąc — jeśli to już wszystkie, kliknij „Zamykam miesiąc".';
       pokaz('baner');
     } else schowaj('baner');
-    // W-05 (01.08.2026): komunikat/y Marka — może być więcej niż jeden
-    // naraz (np. ogólny + osobisty), pokazujemy wszystkie pod sobą, każdy
-    // ze znaczkiem „›" (prośba Marka — bardziej graficzny niż goły „>",
-    // ten sam styl kółka co strzałka rozwijania wpisu).
-    if (d.komunikaty && d.komunikaty.length) {
-      el('komunikatMarka').innerHTML =
-        '<div class="km-tytul"><span>' + ikonaHTML_('ic-mega') + '</span><span>Wiadomość od Marka</span></div>' +
-        d.komunikaty.map(function (t) {
-          return '<div class="km-wiersz"><span class="km-znaczek">›</span><span>' +
-            bezpiecznyTekst_(t) + '</span></div>';
-        }).join('');
-      pokaz('komunikatMarka');
-    } else schowaj('komunikatMarka');
+    // W-05 → F-71/E-37 (19.08.2026): komunikat/y Marka nie są już paskiem
+    // na dashboardzie, tylko wysuwanym arkuszem (raz dziennie per treść).
+    // Wołane TYLKO tutaj — na świeżej odpowiedzi serwera, nie z pamięci:
+    // treść w cache może być już wyłączona w arkuszu.
+    KOMUNIKATY_MARKA = d.komunikaty || [];
+    sprawdzKomunikatMarka_();
   }).catch(function () {});
+}
+
+/* F-71/E-37: komunikat Marka wysuwanym arkuszem. Raz dziennie, dopóki
+   Marek nie wyłączy komunikatu w arkuszu — ale klucz niesie też TREŚĆ:
+   nowy/zmieniony komunikat tego samego dnia pokazuje się od razu, bez
+   czekania do jutra. Zaliczenie przy kliknięciu „OK, przeczytałem".
+   Kolory PALETY (decyzja 4a: priorytet nadaje forma — wysunięcie
+   i konieczność kliknięcia — nie kolor). */
+var KOMUNIKATY_MARKA = [];
+var KLUCZ_KOMUNIKAT_MARKA = 'flota_komunikat_marka';
+
+function sprawdzKomunikatMarka_(){
+  if (arkuszKomOtwarty_()) return;
+  var lista = KOMUNIKATY_MARKA || [];
+  if (!lista.length) return;
+  var tresc = lista.join('\n');
+  var zap;
+  try { zap = JSON.parse(localStorage.getItem(KLUCZ_KOMUNIKAT_MARKA) || 'null'); }
+  catch (e) { zap = null; }
+  if (zap && zap.d === dzisLokalnie_() && zap.t === tresc) return;
+  pokazArkuszKom_({
+    typ: 'marek', ikona: 'ic-mega', tytul: 'Wiadomość od Marka',
+    wiersze: lista.map(function (t) { return bezpiecznyTekst_(t); }),
+    przycisk: 'OK, przeczytałem',
+    po: function () {
+      try {
+        localStorage.setItem(KLUCZ_KOMUNIKAT_MARKA,
+          JSON.stringify({ d: dzisLokalnie_(), t: tresc }));
+      } catch (e) {}
+    }
+  });
 }
 
 // ---------- dashboard ----------
@@ -2617,7 +2856,7 @@ function rysujPodsumowanie(miesiac) {
 // puste pozycje myliły (poprawka 20.07.2026). Odświeżamy status na świeżo,
 // bo dialog i tak wymaga internetu.
 function otworzDialogMiesiaca() {
-  if (!navigator.onLine) { alert('„Zamykam miesiąc" wymaga internetu.'); return; }
+  if (!navigator.onLine) { pokazInfo_('Brak internetu', '„Zamykam miesiąc" wymaga internetu — to zgłoszenie nie idzie przez kolejkę offline.', 'ic-link'); return; }
   pokazOverlay('Chwileczkę…');   // przykrywa przycisk = blokuje kolejne kliknięcia
   apiGet('status').then(function (d) {
     var zalegle = (d && d.ok && d.zalegleMiesiace) ? d.zalegleMiesiace.slice() : [];
@@ -2640,7 +2879,7 @@ function otworzDialogMiesiaca() {
     el('dialogMiesiac').showModal();
   }).catch(function () {
     schowajOverlay();
-    alert('Serwer chwilowo niedostępny — spróbuj za chwilę.');
+    pokazInfo_('Serwer chwilowo niedostępny', 'Spróbuj za chwilę.', 'ic-warn');
   });
 }
 el('dialogNie').addEventListener('click', function () { el('dialogMiesiac').close(); });
@@ -2660,11 +2899,11 @@ el('dialogTak').addEventListener('click', function () {
     } else {
       // alert, nie pokazBladBackendu — tamten komunikat żyje w (ukrytym tu)
       // widoku formularza, więc błąd był niewidoczny (poprawka 20.07.2026)
-      alert('Nie udało się zgłosić miesiąca:\n' + (odp.bledy || ['Nieznany błąd']).map(bezKodu_).join('\n'));
+      pokazInfo_('Nie udało się zgłosić miesiąca', (odp.bledy || ['Nieznany błąd']).map(bezKodu_).join('<br>'), 'ic-warn');
     }
   }).catch(function () {
     schowajOverlay();
-    alert('Serwer chwilowo niedostępny — spróbuj za chwilę.');
+    pokazInfo_('Serwer chwilowo niedostępny', 'Spróbuj za chwilę.', 'ic-warn');
   });
 });
 
@@ -2991,19 +3230,27 @@ el('pokazAnulowane').addEventListener('change', renderujListeWpisow);
 
 // ---------- anulowanie wpisu ----------
 function anulujWpis(w) {
-  if (!confirm('Usunąć wpis z ' + dataPL_(w.dataZakupu) + ' (' +
-    kwotaPL_(w.wartosc) + ' zł, ' + w.przeznaczenie + ')?\n\n' +
-    'Wpis zostanie oznaczony jako anulowany i nie wejdzie do rozliczenia.')) return;
-  poczatekZapisu_(); // overlay „Zapisywanie…" — jak przy zapisie/edycji
-  apiPost({ action: 'anuluj', id: w.id }).then(function (odp) {
-    koniecZapisu_();
-    if (odp.ok) {
-      wczytajWpisy();
-      odswiezWpisyCache();
-    } else alert('Nie udało się anulować:\n' + (odp.bledy || []).map(bezKodu_).join('\n'));
-  }).catch(function () {
-    koniecZapisu_();
-    alert('Serwer chwilowo niedostępny — spróbuj za chwilę.');
+  // F-71/E-39: dawny confirm() → arkusz-pytanie. confirm BLOKOWAŁ i zwracał
+  // true/false; tu dalszy ciąg idzie w `poAkcji`, „Zostaw" tylko zamyka.
+  pokazPytanie_({
+    tytul: 'Usunąć wpis?', ikona: 'ic-trash',
+    tresc: 'Wpis z <b>' + dataPL_(w.dataZakupu) + '</b> (' +
+      bezpiecznyTekst_(kwotaPL_(w.wartosc)) + ' zł, ' + bezpiecznyTekst_(w.przeznaczenie) +
+      ') zostanie oznaczony jako anulowany i nie wejdzie do rozliczenia.',
+    akcja: 'Usuń wpis',
+    poAkcji: function () {
+      poczatekZapisu_(); // overlay „Zapisywanie…" — jak przy zapisie/edycji
+      apiPost({ action: 'anuluj', id: w.id }).then(function (odp) {
+        koniecZapisu_();
+        if (odp.ok) {
+          wczytajWpisy();
+          odswiezWpisyCache();
+        } else pokazInfo_('Nie udało się usunąć wpisu', (odp.bledy || []).map(bezKodu_).join('<br>'), 'ic-warn');
+      }).catch(function () {
+        koniecZapisu_();
+        pokazInfo_('Serwer chwilowo niedostępny', 'Spróbuj za chwilę.', 'ic-warn');
+      });
+    }
   });
 }
 
