@@ -308,9 +308,14 @@
      linii, model schodzi pod rejestrację mniejszą, jasną czcionką. */
   .wpis .linia1 > span:first-child{min-width:0;}
   .wpis .linia1 span:last-child{flex:none; white-space:nowrap;}
-  .wpis .w-model{display:block; font-weight:400; font-size:13px; color:var(--szary);
+  .wpis .w-model{display:block; font-weight:400; font-size:13px; color:var(--akcent);
     margin-top:1px;}
-  .wpis .linia2{color:var(--szary); font-size:13px; margin-top:2px;}
+  /* Z-97: w Full RGB --akcent to turkus/cyjan — Marek poprosił o fiolet
+     zamiast niego tylko tu, zamiast zmieniać --akcent globalnie dla palety
+     (to poruszyłoby inne miejsca). --turkus w RGB to już #a855f7 (fiolet),
+     patrz blok [data-paleta="rgb"] wyżej — więc bierzemy tę samą zmienną. */
+  [data-paleta="rgb"] .wpis .w-model{color:var(--turkus);}
+  .wpis .linia2{color:var(--szary); font-size:13px; margin-top:8px;}
   .wpis-uwaga{background:var(--bg-uwaga); border:1px solid var(--brzeg-uwaga); color:var(--tekst-uwaga);
     font-size:12px; padding:4px 8px; border-radius:6px; margin-top:6px;}
   .wpis .linia-data{display:flex; justify-content:space-between; align-items:center;
@@ -371,7 +376,14 @@
   .wsz-wiersz b{color:var(--tekst); font-weight:600; text-align:right;}
   .wsz-naglowek{font-size:13px; color:var(--szary); margin:8px 0 4px;}
   .wsz-pary{display:flex; flex-wrap:wrap; gap:6px;}
-  .sukces-ikona{font-size:56px; text-align:center; margin:10px 0 0;}
+  /* Z-98: dotąd bez własnego koloru — ikona brała currentColor po rodzicu,
+     czyli --tekst (czarny w jasnym, prawie biały w ciemnym). Marek: powinna
+     być zielona, ten sam odcień co „Popraw" w „Moje wpisy"
+     (.wpis .akcja .przycisk-maly, linie 264-265) — jeden wspólny zielony
+     „sukcesu" w całej appce. Wspólne dla dodania i poprawiania wpisu, bo
+     obydwa kończą się tym samym #widokSukces. */
+  .sukces-ikona{font-size:56px; text-align:center; margin:10px 0 0; color:#16a34a;}
+  [data-motyw="ciemny"] .sukces-ikona{color:#86efac;}
   .sukces-tekst{text-align:center; font-size:18px; font-weight:600; margin:6px 0 2px;}
   .sukces-id{text-align:center; color:var(--szary); font-size:15px; margin:0 0 8px;}
   nav{position:fixed; bottom:0; left:0; right:0; background:var(--karta);
