@@ -830,7 +830,7 @@
      jest identyczna i pozostanie taka, gdyby .przycisk kiedyś się zmienił.
      Tutaj nadpisujemy wyłącznie barwy: neutralne tło zamiast gradientu
      palety i brak kolorowego cienia (świeci już zielona obwódka). */
-  .ak-zostaw{background:var(--karta); color:var(--tekst); box-shadow:none;}
+  .arkusz-kom .ak-zostaw{background:var(--karta); color:var(--tekst); box-shadow:none;}
 
   /* Warianty: „marek" i „info" biorą PALETĘ (elementy informacyjne —
      zasada z 19.08; decyzja 4a: komunikatowi Marka priorytet nadaje forma,
@@ -842,8 +842,12 @@
   .arkusz-kom.pytanie{border-top:3px solid var(--blad);
     box-shadow:0 -10px 30px rgba(0,0,0,.4), 0 -3px 18px rgba(239,68,68,.45);}
   .arkusz-kom.pytanie .ak-kolko{background:var(--bg-blad); color:var(--blad);}
-  .arkusz-kom.pytanie .przycisk{background:#dc2626;}
-  [data-motyw="ciemny"] .arkusz-kom.pytanie .przycisk{background:#ef4444;}
+  /* ⚠ `:not(.ak-zostaw)` jest KONIECZNE, nie kosmetyczne: od chwili, gdy
+     „Zostaw" nosi też klasę .przycisk (dla równych metryk), ta reguła
+     łapałaby OBA przyciski, a `.ak-zostaw` przegrywa z nią specyficznością
+     (1 klasa vs 3) — „Zostaw" robił się czerwony (zgłoszenie Marka 19.08). */
+  .arkusz-kom.pytanie .przycisk:not(.ak-zostaw){background:#dc2626;}
+  [data-motyw="ciemny"] .arkusz-kom.pytanie .przycisk:not(.ak-zostaw){background:#ef4444;}
 
   /* Stożek ramki przycisku dopasowany do kontekstu — nadpisuje tylko
      --stozek palety, mechanizm .przycisk-glow (Z-81) bez zmian. */
