@@ -934,10 +934,14 @@
     [data-paleta="aurora"] .plakietka-beta,
     nav .wskaznik i{ animation:none; }   /* Z-95 */
   }
-  /* W-22: stopka z wersjami — ma być czytelna, gdy ktoś jej szuka, i niewidoczna,
-     gdy nie szuka. Stąd rozmiar 11 px i szary z palety, bez ramki i tła. */
-  .stopka-wersji{margin-top:14px; text-align:center; font-size:11px; color:var(--szary);
-    letter-spacing:.3px; font-variant-numeric:tabular-nums; user-select:text;}
+  /* W-22: stopka z wersjami. Marek 20.08 po obejrzeniu makiety czterech
+     stopni dyskrecji: „za bardzo widoczne" → wariant C (10 px, krycie .30),
+     ale z PEŁNĄ nazwą appki i słowem „API" — sama liczba bez podpisu za dużo
+     wymaga od czytającego. ⚠ Świadomie przyjęty bardzo niski kontrast: to
+     napis dla Marka, nie dla kierowcy; jeśli kiedyś trzeba będzie poprosić
+     kierowcę przez telefon o odczytanie wersji, tu jest miejsce do podbicia. */
+  .stopka-wersji{margin-top:10px; text-align:center; font-size:10px; color:var(--szary);
+    opacity:.30; font-variant-numeric:tabular-nums; user-select:text;}
 </style>
 </head>
 <body>
@@ -2707,7 +2711,18 @@ function pokazWersje_(){
   if (!e) return;
   wersjaWorkera_().then(function(sw){
     var api = wersjaApiFloty ? 'API ' + wersjaApiFloty : 'API —';
-    e.textContent = (sw || 'front —') + ' \u00b7 ' + api;
+    /* Marek 20.08: w stopce ma być „flota-v101", nie „flota-shell-v101".
+       „shell" to app shell — historyczna nazwa cache'u floty; ewidencja
+       powstała później i dostała po prostu `ewidencja-vNN`. Niekonsekwencja
+       bez powodu, więc znika z tego, co widać.
+
+       ⚠ ZNIKA TYLKO Z NAPISU. Nazwa cache w `service-worker.js` zostaje
+       `flota-shell-vNN` — świadoma decyzja Marka: „ważny i tak jest tylko
+       numer", a przemianowanie cache'u ciągnęłoby za sobą całą historię
+       floty w notatkach. Kto porówna stopkę z plikiem na GitHubie: NUMER się
+       zgadza, przedrostek nie. To jest zamierzone, nie usterka.
+       Gdyby cache kiedyś naprawdę zmienił nazwę — usunąć ten `.replace`. */
+    e.textContent = String(sw || 'front —').replace('-shell', '') + ' \u00b7 ' + api;
   });
 }
 
