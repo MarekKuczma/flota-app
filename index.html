@@ -17,6 +17,7 @@
     --gradient:linear-gradient(135deg, #fbbf24 0%, #f97316 55%, #dc2626 100%);
     --przycisk-cien:rgba(234,88,12,.35);
     --tlo:#f4f6f8; --karta:#ffffff; --input-tlo:#ffffff; --input-brzeg:#d1d5db;
+    --podpowiedz:#9aa0a6;   /* W-23 — patrz reguła ::placeholder niżej */
     --tekst:#1f2937; --szary:#6b7280; --blad:#d93025; --ok:#188038; --uwaga:#b45309;
     --linia:#e5e7eb;
     --bg-uwaga:#fef3c7; --brzeg-uwaga:#f59e0b; --tekst-uwaga:#92400e;
@@ -57,6 +58,7 @@
      Motyw jasny bez zmian: tam #d93025 ma 4,77:1 i jest w porządku. */
     --blad:#f87171;
     --tlo:#0f1115; --karta:#1c1f26; --input-tlo:#262b34; --input-brzeg:#3a3f4a;
+    --podpowiedz:#666d7c;   /* W-23 — dobrane osobno do ciemnego tła pola */
     --tekst:#f0f1f3; --szary:#9aa1ad; --linia:#333844;
     --bg-uwaga:#453615; --brzeg-uwaga:#8a5a12; --tekst-uwaga:#fcd34d;
     --bg-ok:#123522; --tekst-ok:#86efac;
@@ -198,6 +200,30 @@
      width:100% i renderować się na swojej "naturalnej" szerokości, wychodząc
      poza kartę formularza (FEEDBACK-BETA-TESTY.md pkt 7). */
   input[type="date"]{-webkit-min-logical-width:0; -webkit-appearance:none; appearance:none;}
+
+  /* W-23 (20.08.2026): podpowiedzi w polach były brane za wpisane dane.
+     Zgłoszenie Marka: „kierowca pomylił to i uważał, że już ma coś wpisane".
+
+     PRZYCZYNA: żadna appka nigdy nie ustawiała koloru podpowiedzi, więc
+     rysowała je przeglądarka — zmierzone 4,61:1 do tła pola w motywie jasnym,
+     czyli tyle, ile norma wymaga od ZWYKŁEGO TEKSTU. Podpowiedź miała siłę
+     treści. Dodatkowo ta sama szarość szła na białe i na ciemne tło, bo nikt
+     jej nie dobierał osobno (ciemny motyw wychodził 3,08:1 — z przypadku).
+
+     ⚠ DWA SYGNAŁY, NIE JEDEN. Sam kolor tu nie wystarcza: w słońcu na budowie,
+     na przygaszonym ekranie i przy słabym wzroku różnica jasności znika.
+     Kursywa jest sygnałem w KSZTAŁCIE liter i przeżywa wszystkie te sytuacje.
+
+     ⚠ NIE PRZYGASZAĆ MOCNIEJ. Podpowiedzi w tych appkach niosą treść („opis
+     przeglądu / serwisu…", we flocie „OBOWIĄZKOWO napisz, czego dotyczy") —
+     poniżej ~2,5:1 zamiast złych danych zaczniemy dostawać ich brak.
+     Zmierzone po zmianie: jasny 2,64:1, ciemny 2,74:1 (paleta „rgb" 3,16:1,
+     „aurora" 2,51:1 — sprawdzone, wszystkie w bezpiecznym zakresie).
+
+     `opacity:1` jest konieczne — Firefox domyślnie przygasza podpowiedzi
+     dodatkowo, co zepsułoby zmierzone wartości. */
+  input::placeholder, textarea::placeholder{
+    color:var(--podpowiedz); font-style:italic; opacity:1;}
   input[type="date"]::-webkit-date-and-time-value{text-align:left;}
   /* Z-81 (F3): aktywne pole dostaje obracającą się ramkę w kolorach palety.
      Trik: border robi się przezroczysty, a ramkę rysują dwa tła — wnętrze

@@ -20,7 +20,7 @@
  * Po zmianie plikow aplikacji podbij numer wersji ponizej.
  */
 
-var WERSJA_CACHE = 'flota-shell-v101';   // W-22 (20.08.2026): numer wersji na ekranie głównym — worker odpowiada na pytanie o wersję
+var WERSJA_CACHE = 'flota-shell-v102';   // W-23 (20.08.2026): podpowiedzi w polach kursywą i przygaszone — nie mylą się z wpisanymi danymi
 
 // Przekaźnik kodu kierowcy między kartą Safari a zainstalowaną ikonką
 // (FEEDBACK-BETA-TESTY.md pkt 8, patrz też pwa/index.html — NAZWA_RELAY_KODU).
