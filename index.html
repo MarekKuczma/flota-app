@@ -934,6 +934,10 @@
     [data-paleta="aurora"] .plakietka-beta,
     nav .wskaznik i{ animation:none; }   /* Z-95 */
   }
+  /* W-22: stopka z wersjami — ma być czytelna, gdy ktoś jej szuka, i niewidoczna,
+     gdy nie szuka. Stąd rozmiar 11 px i szary z palety, bez ramki i tła. */
+  .stopka-wersji{margin-top:14px; text-align:center; font-size:11px; color:var(--szary);
+    letter-spacing:.3px; font-variant-numeric:tabular-nums; user-select:text;}
 </style>
 </head>
 <body>
@@ -1067,6 +1071,8 @@
       <h2>Ostatnie wpisy</h2>
       <div id="dLista"><div class="srodek" style="padding:16px;">Brak danych — dodaj pierwszy wpis.</div></div>
     </div>
+    <!-- W-22 (20.08.2026): wersje na dole ekranu głównego — patrz pokazWersje_. -->
+    <div class="stopka-wersji" id="stopkaWersji"></div>
   </div>
 
   <!-- EKRAN SUKCESU -->
@@ -1572,6 +1578,7 @@ function uruchomAplikacje_() {
   el('kto').textContent = localStorage.getItem('flota_kierowca') || '';
   el('f-data').value = dzisiaj();
   odswiezKolejkeInfo();
+  pokazWersje_();   // W-22 — od razu, jeszcze przed odpowiedzią serwera
   przelaczWidok('start');
 
   wczytajSlowniki(false).then(function () { wypelnijFormularz(); });
@@ -1583,9 +1590,13 @@ function uruchomAplikacje_() {
   }
 }
 window.addEventListener('load', function () {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./service-worker.js').catch(function(){});
-  }
+  /* W-22 (20.08.2026): patrz komentarz w ewidencji — `navigator.serviceWorker`
+     bywa obecny, ale pusty (tryb prywatny), a wtedy samo `.register` rzuca. */
+  try {
+    if ('serviceWorker' in navigator && navigator.serviceWorker) {
+      navigator.serviceWorker.register('./service-worker.js').catch(function(){});
+    }
+  } catch (e) {}
   var zUrl = new URLSearchParams(location.search).get('kod');
   if (zUrl) {
     localStorage.setItem('flota_kod', zUrl);
@@ -2644,9 +2655,67 @@ function usunWpis(tmp) {
   });
 }
 
+
+/* ===================== W-22: WERSJE NA EKRANIE STARTOWYM (20.08.2026) =====================
+   Dwie liczby na dole ekranu głównego: co uruchomił TELEFON i co odpowiada
+   SERWER. Powód z 20.08 (ewidencja): zgłoszenie „poprawka nie działa" i brak
+   sposobu, żeby odróżnić wadę kodu od starej wersji w cache — sprawdzenie
+   zajęło cykl, który to spojrzenie by oszczędziło. Marek: „powinno być wspólne
+   dla obu aplikacji".
+
+   ⚠ Wersję frontu pytamy AKTYWNEGO service workera (postMessage), nie
+   odczytujemy stałej z tego pliku: stała mówiłaby o kodzie, który właśnie się
+   wykonuje, a pytanie brzmi „co siedzi w cache telefonu". Gdy worker nie
+   odpowie (brak SW, prywatne okno, stara przeglądarka), pokazujemy nazwę
+   cache z `caches.keys()`, a w ostateczności „—". */
+/* W-22: patrz komentarz w ewidencji — regex, nie prefiks: obok żyje
+   `flota-kod-relay`, który nie jest wersją aplikacji. */
+var WZORZEC_CACHE = /^flota-shell-v\d+$/;
+var wersjaApiFloty = null;   // z odpowiedzi serwera — wraca w każdej (D85)
+
+function wersjaWorkera_(){
+  return new Promise(function(gotowe){
+    var koniec = setTimeout(function(){ gotowe(null); }, 1200);
+    try {
+      if (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller) {
+        clearTimeout(koniec); gotowe(null); return;
+      }
+      var kanal = new MessageChannel();
+      kanal.port1.onmessage = function(e){
+        clearTimeout(koniec);
+        gotowe(e.data && e.data.wersja ? String(e.data.wersja) : null);
+      };
+      navigator.serviceWorker.controller.postMessage({ typ: 'wersja' }, [kanal.port2]);
+    } catch(e){ clearTimeout(koniec); gotowe(null); }
+  }).then(function(w){
+    if (w) return w;
+    if (!('caches' in window)) return null;
+    return caches.keys().then(function(klucze){
+      var nasze = klucze.filter(function(k){ return WZORZEC_CACHE.test(k); });
+      if (!nasze.length) return null;
+      nasze.sort(function(a,b){
+        var la = (a.match(/v(\d+)/) || [0,0])[1], lb = (b.match(/v(\d+)/) || [0,0])[1];
+        return Number(lb) - Number(la);
+      });
+      return nasze[0];
+    }).catch(function(){ return null; });
+  });
+}
+
+function pokazWersje_(){
+  var e = el('stopkaWersji');
+  if (!e) return;
+  wersjaWorkera_().then(function(sw){
+    var api = wersjaApiFloty ? 'API ' + wersjaApiFloty : 'API —';
+    e.textContent = (sw || 'front —') + ' \u00b7 ' + api;
+  });
+}
+
 // ---------- baner + imię ----------
 function pobierzStatus() {
   apiGet('status').then(function (d) {
+    wersjaApiFloty = d.wersjaApi || wersjaApiFloty;   // W-22
+    pokazWersje_();
     if (!d.ok) {
       if (bledyMajaKod_(d.bledy, 'E011')) odrzucKodFloty_('Zły lub nieaktywny kod dostępu.');
       return;

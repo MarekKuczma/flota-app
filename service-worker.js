@@ -20,7 +20,7 @@
  * Po zmianie plikow aplikacji podbij numer wersji ponizej.
  */
 
-var WERSJA_CACHE = 'flota-shell-v100';   // W-20 (20.08.2026): „Zamykam miesiąc" na wysuwanym arkuszu — koniec natywnych okien
+var WERSJA_CACHE = 'flota-shell-v101';   // W-22 (20.08.2026): numer wersji na ekranie głównym — worker odpowiada na pytanie o wersję
 
 // Przekaźnik kodu kierowcy między kartą Safari a zainstalowaną ikonką
 // (FEEDBACK-BETA-TESTY.md pkt 8, patrz też pwa/index.html — NAZWA_RELAY_KODU).
@@ -94,4 +94,19 @@ self.addEventListener('fetch', function (event) {
       return zCache || zSieci;
     })
   );
+});
+
+/* W-22 (20.08.2026): aplikacja pyta workera o jego wersję.
+   POWÓD: 20.08 nie dało się rozstrzygnąć, czy zgłoszony błąd to wada kodu,
+   czy telefon uruchamia starą wersję z cache — appka nigdzie nie pokazywała,
+   co właściwie wykonuje. Wersję MUSI podawać sam worker: stała odczytana we
+   froncie mówiłaby o kodzie, który właśnie działa, a nie o tym, który siedzi
+   w cache — czyli mijałaby się z celem dokładnie w sytuacji, dla której to
+   robimy. `caches.keys()` też nie wystarcza: przy aktualizacji potrafią
+   istnieć obok siebie dwa cache i nie widać, który jest czynny. */
+self.addEventListener('message', function (e) {
+  if (!e.data || e.data.typ !== 'wersja') return;
+  var odp = { typ: 'wersja', wersja: WERSJA_CACHE };
+  if (e.ports && e.ports[0]) e.ports[0].postMessage(odp);
+  else if (e.source) e.source.postMessage(odp);
 });
