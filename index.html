@@ -1022,8 +1022,9 @@
   content:''; position:absolute; left:9px; top:6px; bottom:14px;
   width:2px; background:var(--linia); border-radius:2px;
 }
-/* nagłówek miesiąca stoi POZA osią — inaczej oś biegłaby przez napis */
-.wpisy-naglowek-miesiac { margin-left:-26px; }
+/* nagłówek miesiąca stoi równo z lewą krawędzią listy — oś zaczyna się
+   dopiero pod nim, w grupie (poprawka 25.08.2026, szczegóły niżej) */
+.wpisy-naglowek-miesiac { margin-left:0; }
 
 .wpis {
   position:relative; border-left:none; border-radius:12px;
@@ -1136,7 +1137,6 @@
   #listaWpisow:not(:has(.wpisy-grupa-miesiaca)) { padding-left:20px; }
   .wpisy-grupa-miesiaca::before,
   #listaWpisow:not(:has(.wpisy-grupa-miesiaca))::before { left:6px; }
-  .wpisy-naglowek-miesiac { margin-left:-20px; }
   .wpis::before { left:-19px; }
   .wpis .linia1 { font-size:15px; }
   .wpis .licznik-rog { font-size:11px; }
@@ -1201,7 +1201,10 @@
 #listaWpisow:not(:has(.wpisy-grupa-miesiaca)) { padding-left:44px; }
 .wpisy-grupa-miesiaca::before,
 #listaWpisow:not(:has(.wpisy-grupa-miesiaca))::before { left:16px; }
-.wpisy-naglowek-miesiac { margin-left:-44px; }
+/* ⚠ 25.08.2026 — patrz bliźniacza uwaga w ewidencji. Nagłówek miesiąca jest
+   RODZEŃSTWEM grupy, nie jej dzieckiem, więc ujemny margines nie zdejmował
+   wcięcia, tylko wypychał napis poza listę. Zero = równo z lewą krawędzią. */
+.wpisy-naglowek-miesiac { margin-left:0; }
 .wpis::before { display:none; }              /* kropkę zastępuje ikona */
 .wpis { padding:10px 12px; }
 .wpis .ikona-krag {
@@ -1230,7 +1233,6 @@
   #listaWpisow:not(:has(.wpisy-grupa-miesiaca)) { padding-left:40px; }
   .wpisy-grupa-miesiaca::before,
   #listaWpisow:not(:has(.wpisy-grupa-miesiaca))::before { left:14px; }
-  .wpisy-naglowek-miesiac { margin-left:-40px; }
   .wpis .ikona-krag { left:-40px; width:30px; height:30px; }
   .wpis .ikona-krag svg { width:17px; height:17px; }
 }
@@ -3543,7 +3545,13 @@ function renderujListeWpisow() {
     }
     mapaGrup[w.miesiac].wpisy.push(w);
   });
-  var pokazNaglowki = grupy.length > 1;
+  // F-75 (25.08.2026, decyzja Marka): nagłówek miesiąca jest ZAWSZE, także gdy
+  // lista obejmuje jeden miesiąc. Wcześniej było `grupy.length > 1`, przez co
+  // kierowca bez zaległości nie widział nazwy miesiąca w ogóle — a ewidencja
+  // pokazywała ją zawsze. Aplikacje mają być bliźniacze, więc równamy do niej.
+  // Świadomy koszt: przy jednym miesiącu nagłówek niczego nie rozdziela i
+  // zjada ~30 px u góry listy.
+  var pokazNaglowki = true;
   var biezacy = biezacyMiesiac_();
   grupy.forEach(function (grupa) {
     var kontenerMiesiaca = lista;
@@ -3557,6 +3565,12 @@ function renderujListeWpisow() {
         (grupa.zwiniety ? ' <span class="naglowek-strzalka">▸</span>' : '');
       lista.appendChild(naglowek);
       kontenerMiesiaca = document.createElement('div');
+      // F-73 (25.08.2026): kontener miesiąca dostaje KLASĘ. Do tej pory był
+      // bezimienny, więc CSS osi czasu nie miał się czego złapać i wcięcie
+      // z osią lądowało na całej liście (`#listaWpisow`), razem z nagłówkami
+      // miesięcy w środku — oś przechodziła przez napis. Ta sama klasa co
+      // w ewidencji: obie aplikacje mają teraz identyczny układ listy.
+      kontenerMiesiaca.className = 'wpisy-grupa-miesiaca';
       // F-49 (01.08.2026): zamknięty/zadeklarowany miesiąc — zwinięty
       // domyślnie, tylko podgląd po rozwinięciu nagłówka. Bieżący/otwarty
       // miesiąc zostaje rozwinięty tak jak dotąd.

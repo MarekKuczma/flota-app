@@ -20,7 +20,7 @@
  * Po zmianie plikow aplikacji podbij numer wersji ponizej.
  */
 
-var WERSJA_CACHE = 'flota-shell-v104';   // 24.08.2026: F-73 — nowy wygląd listy „Moje wpisy" (sam CSS, bez zmian w JS)
+var WERSJA_CACHE = 'flota-shell-v105';   // 25.08.2026: F-75 — nagłówek miesiąca ZAWSZE (jak w ewidencji) + klasa na kontenerze grupy + margines. Zmiana w CSS I w JS.
 
 // Przekaźnik kodu kierowcy między kartą Safari a zainstalowaną ikonką
 // (FEEDBACK-BETA-TESTY.md pkt 8, patrz też pwa/index.html — NAZWA_RELAY_KODU).
