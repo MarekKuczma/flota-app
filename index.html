@@ -970,37 +970,26 @@
     opacity:.30; font-variant-numeric:tabular-nums; user-select:text;}
 
 /* ═══════════════════════════════════════════════════════════════════════
-   F-73 (24.08.2026) — WYGLĄD LISTY „MOJE WPISY"
+   F-73 (24–25.08.2026) — WYGLĄD LISTY „MOJE WPISY"
 
    Zmiana WYŁĄCZNIE wizualna: ani jednej linii JS, ani jednego pola danych.
-   Lista rysuje się tym samym kodem co dotąd — inne są tylko reguły poniżej.
    Cofnięcie = podmiana tego jednego bloku na końcu arkusza stylów.
 
    ⚠ UWAGA DLA PRZYSZŁEGO SIEBIE: w komentarzu CSS NIE WOLNO napisać
-   dosłownie zamykającego znacznika stylu. Przeglądarka kończy arkusz na
-   tym ciągu znaków nawet w środku komentarza — reszta reguł przepada,
-   a strona wygląda jakby CSS w ogóle nie wszedł. Wpadka z 24.08.2026,
-   złapana testem (26 z 56 na czerwono).
-
-   Ustalone z Markiem przez makiety renderowane PRAWDZIWYM kodem aplikacji
-   (podstawione dane z arkusza + wywołana własna funkcja rysująca), nie
-   rysunkiem — dzięki temu wyszły rzeczy, których żaden szkic by nie pokazał.
+   dosłownie zamykającego znacznika stylu. Przeglądarka kończy arkusz na tym
+   ciągu znaków nawet w środku komentarza — reszta reguł przepada.
 
    Co się zmienia:
      1. wpisy jako punkty na OSI miesiąca, nie osobne kafelki obok siebie,
-     2. „Popraw" i „Usuń" WIDOCZNE (nie chowamy ich za rozwinięciem — nie
-        każdy kierowca wpadnie na to, że trzeba kliknąć), ale o połowę
-        niższe: 40 px → 26 px, nadal para o równej szerokości,
+     2. „Popraw" i „Usuń" WIDOCZNE, ale o połowę niższe (40 → 26 px),
+        nadal para o równej szerokości,
      3. rozwijanie PODPISANE słowem („szczegóły ▾" / „zwiń ▴"),
      4. pastylka ZAWSZE w prawym dolnym rogu — kotwiczona, nie układana,
-     5. węzeł osi w kolorze/ikonie z arkusza (szczegóły w blokach niżej).
+     5. ikona wydarzenia jako WĘZEŁ osi — wychodzi z karty, więc treść
+        wpisu dostaje całą szerokość.
 
-   ⚠ Progi dla wąskich telefonów NIE są ozdobą. Powstały po pomiarze na
-   320/360/390/430 px — każdy z tych błędów był niewidoczny w podglądzie:
-     · przy 360 px data nachodziła na licznik (nachodził SAM TEKST, pola
-       formalnie się nie przecinały),
-     · we flocie data sklejała się z numerem wpisu,
-     · numer seryjny maszyny w kolumnie „model" nie miał gdzie się złamać.
+   ⚠ Progi dla wąskich telefonów powstały po pomiarze na 320/360/390/430 px,
+   nie na oko — każdy z tych błędów był niewidoczny w zwykłym podglądzie.
    ═════════════════════════════════════════════════════════════════════ */
 /* ══ WARIANT C2 — „Oś czasu", akcje zawsze widoczne ═════════════════════
    Poprawki po uwagach Marka (24.08.2026):
@@ -1011,8 +1000,25 @@
      3. Tytuł łamie się ŚWIADOMIE na dwie linie, a nie przypadkiem.        */
 
 /* ── oś miesiąca ───────────────────────────────────────────────────── */
-.wpisy-grupa-miesiaca, #listaWpisow { position:relative; padding-left:26px; }
-.wpisy-grupa-miesiaca::before, #listaWpisow::before {
+/* ⚠ POPRAWKA 25.08.2026 (zgłoszenie Marka: „ewidencja ma jakby 2 kreski,
+   jedna bez kropek, druga z"). Oś była rysowana DWA RAZY.
+
+   Powód: lista ma dwa możliwe kształty.
+     · konto normalne — wpisy pogrupowane w `.wpisy-grupa-miesiaca`,
+     · gość po zeskanowaniu QR (a we flocie także kierowca bez zaległości)
+       — płaska lista wprost w `#listaWpisow`.
+   Żeby oś działała w obu, celowałem w oba kontenery. Ale gdy grupy ISTNIEJĄ,
+   `#listaWpisow` jest ich RODZICEM — więc obie reguły trafiały naraz:
+   podwójne wcięcie i druga, pusta kreska bez kropek.
+
+   `:not(:has(...))` włącza oś na `#listaWpisow` tylko wtedy, gdy grup w środku
+   nie ma. Na starszych przeglądarkach bez `:has()` cały ten selektor jest
+   ignorowany — widok normalny działa bez zmian, a płaska lista traci samą
+   kreskę. Degradacja, nie awaria. */
+.wpisy-grupa-miesiaca,
+#listaWpisow:not(:has(.wpisy-grupa-miesiaca)) { position:relative; padding-left:26px; }
+.wpisy-grupa-miesiaca::before,
+#listaWpisow:not(:has(.wpisy-grupa-miesiaca))::before {
   content:''; position:absolute; left:9px; top:6px; bottom:14px;
   width:2px; background:var(--linia); border-radius:2px;
 }
@@ -1126,8 +1132,10 @@
    Zbite pudełko nie było widoczne w zwykłym podglądzie, bo nachodził SAM
    TEKST, a pola formalnie się nie przecinały.                            */
 @media (max-width: 380px) {
-  .wpisy-grupa-miesiaca, #listaWpisow { padding-left:20px; }
-  .wpisy-grupa-miesiaca::before, #listaWpisow::before { left:6px; }
+  .wpisy-grupa-miesiaca,
+  #listaWpisow:not(:has(.wpisy-grupa-miesiaca)) { padding-left:20px; }
+  .wpisy-grupa-miesiaca::before,
+  #listaWpisow:not(:has(.wpisy-grupa-miesiaca))::before { left:6px; }
   .wpisy-naglowek-miesiac { margin-left:-20px; }
   .wpis::before { left:-19px; }
   .wpis .linia1 { font-size:15px; }
@@ -1176,7 +1184,6 @@
 
 @media (max-width: 380px) { .wpis .plakietka-id { font-size:10.5px; } }
 
-
 /* ═══ IKONA JAKO WĘZEŁ OSI (24.08.2026, pomysł Marka) ════════════════════
    Zamiast małej kropki na osi + osobnej ikony w karcie — jedno kółko.
    Ikona wychodzi z karty na oś, więc treść wpisu dostaje całą szerokość.
@@ -1190,22 +1197,39 @@
        kółko 34 px → jego lewa krawędź musi być na 17 − 17 = 0 px
        `.wpis` zaczyna się na 44 px, więc left = 0 − 44 = −44 px
    Kółko ma tło `var(--karta)`, więc zasłania oś i wygląda jak węzeł. */
-.wpisy-grupa-miesiaca, #listaWpisow { padding-left:44px; }
-.wpisy-grupa-miesiaca::before, #listaWpisow::before { left:16px; }
+.wpisy-grupa-miesiaca,
+#listaWpisow:not(:has(.wpisy-grupa-miesiaca)) { padding-left:44px; }
+.wpisy-grupa-miesiaca::before,
+#listaWpisow:not(:has(.wpisy-grupa-miesiaca))::before { left:16px; }
 .wpisy-naglowek-miesiac { margin-left:-44px; }
 .wpis::before { display:none; }              /* kropkę zastępuje ikona */
 .wpis { padding:10px 12px; }
 .wpis .ikona-krag {
   position:absolute; left:-44px; top:11px;
   width:34px; height:34px; z-index:1;
-  background:var(--karta);
+  /* ⚠ `background-color`, a NIE skrót `background` — zgłoszenie Marka
+     25.08.2026: „flota nie ma kółek dookoła ikon".
+     Powód: palety RGB i Aurora nie rysują obwódki ramką, tylko TŁEM:
+       [data-paleta="rgb"] .ikona-krag, [data-paleta="aurora"] .ikona-krag {
+         border-color: transparent;
+         background: linear-gradient(var(--karta),var(--karta)) padding-box,
+                     conic-gradient(…) border-box;   ← tęczowy pierścień
+       }
+     Skrót `background` kasuje CAŁE tło razem z tym pierścieniem, więc
+     w tych dwóch paletach kółko po prostu znikało. `background-color`
+     ustawia wyłącznie warstwę koloru POD gradientem: w paletach z ramką
+     daje nieprzezroczyste tło (zasłania oś), a w RGB/Aurorze gradient
+     maluje się na wierzchu i pierścień zostaje. */
+  background-color:var(--karta);
 }
 .wpis .ikona-krag svg { width:19px; height:19px; }
 
 @media (max-width: 380px) {
   /* rynna 40 · oś left 14 → środek 15 · kółko 30 → lewa krawędź 0 → −40 */
-  .wpisy-grupa-miesiaca, #listaWpisow { padding-left:40px; }
-  .wpisy-grupa-miesiaca::before, #listaWpisow::before { left:14px; }
+  .wpisy-grupa-miesiaca,
+  #listaWpisow:not(:has(.wpisy-grupa-miesiaca)) { padding-left:40px; }
+  .wpisy-grupa-miesiaca::before,
+  #listaWpisow:not(:has(.wpisy-grupa-miesiaca))::before { left:14px; }
   .wpisy-naglowek-miesiac { margin-left:-40px; }
   .wpis .ikona-krag { left:-40px; width:30px; height:30px; }
   .wpis .ikona-krag svg { width:17px; height:17px; }
