@@ -968,6 +968,248 @@
      kierowcę przez telefon o odczytanie wersji, tu jest miejsce do podbicia. */
   .stopka-wersji{margin-top:10px; text-align:center; font-size:10px; color:var(--szary);
     opacity:.30; font-variant-numeric:tabular-nums; user-select:text;}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   F-73 (24.08.2026) — WYGLĄD LISTY „MOJE WPISY"
+
+   Zmiana WYŁĄCZNIE wizualna: ani jednej linii JS, ani jednego pola danych.
+   Lista rysuje się tym samym kodem co dotąd — inne są tylko reguły poniżej.
+   Cofnięcie = podmiana tego jednego bloku na końcu arkusza stylów.
+
+   ⚠ UWAGA DLA PRZYSZŁEGO SIEBIE: w komentarzu CSS NIE WOLNO napisać
+   dosłownie zamykającego znacznika stylu. Przeglądarka kończy arkusz na
+   tym ciągu znaków nawet w środku komentarza — reszta reguł przepada,
+   a strona wygląda jakby CSS w ogóle nie wszedł. Wpadka z 24.08.2026,
+   złapana testem (26 z 56 na czerwono).
+
+   Ustalone z Markiem przez makiety renderowane PRAWDZIWYM kodem aplikacji
+   (podstawione dane z arkusza + wywołana własna funkcja rysująca), nie
+   rysunkiem — dzięki temu wyszły rzeczy, których żaden szkic by nie pokazał.
+
+   Co się zmienia:
+     1. wpisy jako punkty na OSI miesiąca, nie osobne kafelki obok siebie,
+     2. „Popraw" i „Usuń" WIDOCZNE (nie chowamy ich za rozwinięciem — nie
+        każdy kierowca wpadnie na to, że trzeba kliknąć), ale o połowę
+        niższe: 40 px → 26 px, nadal para o równej szerokości,
+     3. rozwijanie PODPISANE słowem („szczegóły ▾" / „zwiń ▴"),
+     4. pastylka ZAWSZE w prawym dolnym rogu — kotwiczona, nie układana,
+     5. węzeł osi w kolorze/ikonie z arkusza (szczegóły w blokach niżej).
+
+   ⚠ Progi dla wąskich telefonów NIE są ozdobą. Powstały po pomiarze na
+   320/360/390/430 px — każdy z tych błędów był niewidoczny w podglądzie:
+     · przy 360 px data nachodziła na licznik (nachodził SAM TEKST, pola
+       formalnie się nie przecinały),
+     · we flocie data sklejała się z numerem wpisu,
+     · numer seryjny maszyny w kolumnie „model" nie miał gdzie się złamać.
+   ═════════════════════════════════════════════════════════════════════ */
+/* ══ WARIANT C2 — „Oś czasu", akcje zawsze widoczne ═════════════════════
+   Poprawki po uwagach Marka (24.08.2026):
+     1. „Popraw" i „Usuń" ZOSTAJĄ na wierzchu — nie każdy kierowca wpadnie
+        na to, że trzeba rozwinąć wpis, żeby cokolwiek z nim zrobić.
+        Zamiast chować: obniżamy wysokość o połowę (40 px → 26 px).
+     2. Rozwijanie jest teraz PODPISANE słowem, nie samą strzałką.
+     3. Tytuł łamie się ŚWIADOMIE na dwie linie, a nie przypadkiem.        */
+
+/* ── oś miesiąca ───────────────────────────────────────────────────── */
+.wpisy-grupa-miesiaca, #listaWpisow { position:relative; padding-left:26px; }
+.wpisy-grupa-miesiaca::before, #listaWpisow::before {
+  content:''; position:absolute; left:9px; top:6px; bottom:14px;
+  width:2px; background:var(--linia); border-radius:2px;
+}
+/* nagłówek miesiąca stoi POZA osią — inaczej oś biegłaby przez napis */
+.wpisy-naglowek-miesiac { margin-left:-26px; }
+
+.wpis {
+  position:relative; border-left:none; border-radius:12px;
+  padding:10px 12px; margin-bottom:8px; gap:10px;
+  box-shadow:0 1px 2px rgba(0,0,0,.05);
+}
+.wpis::before {
+  content:''; position:absolute; left:-22px; top:16px;
+  width:11px; height:11px; border-radius:50%;
+  background:var(--karta); border:3px solid var(--akcent); box-sizing:border-box;
+}
+.wpis.anulowany::before { border-color:var(--linia); }
+
+/* FLOTA: ikona ZOSTAJE — lista jest mieszana, ikona odróżnia auto od koparki.
+   (W ewidencji „Moje wpisy" pokazują jedną maszynę, więc tam ikona znika.) */
+.wpis .ikona-krag { width:32px; height:32px; }
+.wpis .ikona-krag svg { width:18px; height:18px; }
+
+/* Model / rejestracja ma już w appce `display:block`, czyli własną linię.
+   Dokładamy tylko oddech i pewność, że długa nazwa nie wypchnie kwoty.
+
+   ⚠ `overflow-wrap:anywhere` wykryte testem, nie na oko: u maszyn w kolumnie
+   „model" siedzi NUMER SERYJNY („DHKCEBDSA0001733") — jeden ciąg bez spacji,
+   którego przeglądarka nie ma gdzie złamać. Przy 430 px mieścił się, przy
+   390 i 360 wychodził poza kartę. `anywhere` łamie go dopiero wtedy, gdy
+   naprawdę brakuje miejsca, więc rejestracje aut („WE 4JS19") zostają
+   nietknięte. */
+.wpis .w-model { margin-top:2px; line-height:1.2; }
+
+/* ⚠ ZNALEZISKO PRZY OKAZJI (24.08.2026) — nie moja regresja, to jest w kodzie
+   od dawna i dopiero teraz zaczęło przeszkadzać.
+
+   Aplikacja ma regułę:  .wpis .linia1 span:last-child { flex:none; white-space:nowrap; }
+   pisaną z myślą o KWOCIE po prawej. Ale `:last-child` nie znaczy „ostatni
+   span w tym wierszu" — znaczy „span będący ostatnim dzieckiem SWOJEGO
+   rodzica". A `.w-model` (model / rejestracja) jest właśnie ostatnim
+   dzieckiem pierwszego spana. Przez to model dostawał `white-space:nowrap`,
+   którego nikt mu nie zamierzał dać.
+
+   Skutek widać dopiero przy maszynach: w kolumnie „model" siedzi u nich
+   NUMER SERYJNY („DHKCEBDSA0001733"), czyli jeden ciąg bez spacji. Z `nowrap`
+   nie miał prawa się złamać i przy 390 i 360 px wychodził poza kartę —
+   `word-break` i `overflow-wrap` były bezsilne, bo `nowrap` je wyprzedza.
+
+   Naprawiamy punktowo, nie ruszając tamtej reguły: kwota dalej ma zostać
+   w jednej linii, więc zdejmujemy `nowrap` WYŁĄCZNIE z modelu. */
+/* ⚠ Selektor musi być `span.w-model`, nie `.w-model`. Reguła aplikacji
+   (`.wpis .linia1 span:last-child`) ma wagę 0-3-1, bo `:last-child` liczy
+   się jak klasa, a `span` jak element. Zapis `.wpis .linia1 .w-model` to
+   0-3-0, czyli MNIEJ — i przegrywał, mimo że stoi niżej w pliku.
+   Z `span.w-model` wagi są równe (0-3-1), a wtedy decyduje kolejność. */
+.wpis .linia1 span.w-model { white-space:normal; overflow-wrap:anywhere; }
+
+/* ── tytuł: dwie linie z premedytacją ──────────────────────────────── */
+/* `baseline` wyrównywało kwotę do PIERWSZEJ linii tytułu; przy tytule
+   dwuliniowym wyglądało to na przesunięcie. `flex-start` trzyma kwotę
+   przy górnej krawędzi niezależnie od tego, ile linii ma tytuł. */
+.wpis .linia1 { align-items:flex-start; font-size:16px; line-height:1.25; }
+.wpis .linia1 > span:first-child { min-width:0; }
+
+/* ── licznik / kwota: cicha etykieta, mocna liczba ─────────────────── */
+.wpis .licznik-rog { font-size:12px; color:var(--szary); }
+.wpis .licznik-rog b { font-size:15px; }
+
+.wpis .linia2 { margin-top:2px; }
+.wpis .plakietka-id { background:transparent; padding:0; font-size:11px; opacity:.6; }
+.wpis .linia-data { margin-top:5px; }
+
+/* ── ROZWIJANIE: strzałka dostaje podpis ───────────────────────────── */
+/* Sam znak ▾ gasimy `font-size:0` i podmieniamy na tekst z ::before —
+   dzięki temu nie ruszamy JS-a. Obrót wyłączony: obracałby też napis. */
+.wpis .wpis-strzalka {
+  width:auto; height:22px; padding:0 9px; border-radius:999px;
+  font-size:0; margin-left:6px;
+}
+.wpis .wpis-strzalka::before {
+  content:'szczegóły ▾'; font-size:11.5px; font-weight:700; letter-spacing:.01em;
+}
+.wpis.rozwiniety .wpis-strzalka { transform:none; }
+.wpis.rozwiniety .wpis-strzalka::before { content:'zwiń ▴'; }
+
+/* ── AKCJE: widoczne, o połowę niższe, ale nadal PARA ──────────────────
+   Poprawka po uwadze Marka (24.08.2026): przyciski wracają na pełną
+   szerokość, po połowie każdy, wyśrodkowane — czyli tak, jak są dziś.
+   Zmieniamy WYŁĄCZNIE wysokość: 40 px → 26 px.
+
+   ⚠ Świadomie NIE nadpisujemy `flex` ani `justify-content`. Aplikacja ma
+   już regułę `.wpis .akcja > button { flex:1 1 0 }`, która robi dokładnie
+   to, o co chodzi — dwa równe pola na całą szerokość. Wcześniejsza wersja
+   psuła to przez `flex:none` i `justify-content:flex-end`, przez co
+   przyciski zbijały się w prawy róg i miały różne szerokości (dłuższy
+   napis = szerszy przycisk). */
+.wpis .akcja { margin-top:8px; gap:8px; }
+.wpis .akcja .przycisk-maly,
+.wpis .akcja .przycisk-czerwony {
+  font-size:13px; font-weight:600;
+  padding:0 10px; min-height:26px; height:26px;   /* było 40 px */
+  border-radius:8px; border-width:1px;
+}
+.wpis .akcja svg { width:14px; height:14px; }
+
+/* ── WĄSKIE TELEFONY ────────────────────────────────────────────────────
+   ⚠ Wykryte pomiarem, nie na oko: przy 360 px data zaczynała nachodzić na
+   „Licznik: …". Oś zabiera 26 px szerokości, a powiększona data dokłada
+   swoje — na iPhonie SE i starszych Androidach to razem za dużo.
+   Zbite pudełko nie było widoczne w zwykłym podglądzie, bo nachodził SAM
+   TEKST, a pola formalnie się nie przecinały.                            */
+@media (max-width: 380px) {
+  .wpisy-grupa-miesiaca, #listaWpisow { padding-left:20px; }
+  .wpisy-grupa-miesiaca::before, #listaWpisow::before { left:6px; }
+  .wpisy-naglowek-miesiac { margin-left:-20px; }
+  .wpis::before { left:-19px; }
+  .wpis .linia1 { font-size:15px; }
+  .wpis .licznik-rog { font-size:11px; }
+  .wpis .licznik-rog b { font-size:13.5px; }
+  .wpis .wpis-strzalka { padding:0 7px; }
+  .wpis .wpis-strzalka::before { font-size:11px; }
+}
+
+/* 320 px (iPhone SE 1. gen i podobne) — ostatni próg. Poniżej tej szerokości
+   data i licznik nie zmieszczą się obok siebie w żadnym rozsądnym stopniu
+   pisma, więc licznik schodzi do własnej linii i wyrównuje się do prawej.
+   Świadomie: lepiej dwie czytelne linie niż jedna, w której coś znika. */
+@media (max-width: 340px) {
+  .wpis .linia1 { flex-wrap:wrap; }
+  .wpis .linia1 > span:first-child { flex:1 0 100%; }
+  .wpis .licznik-rog { flex:1 0 100%; text-align:right; margin-top:1px; }
+}
+
+/* ── FLOTA, wiersz stopki karty (data · numer · „szczegóły") ────────────
+   ⚠ Wykryte pomiarem przy 360 px: `justify-content:space-between` rozdziela
+   TYLKO nadmiar miejsca — gdy go nie ma, data i numer wpisu sklejają się
+   w jeden ciąg („14.08.2026T-000344"). `gap` gwarantuje odstęp niezależnie
+   od tego, ile miejsca zostało; zawijanie jest wentylem na najwęższe ekrany.
+   Ewidencja tego nie potrzebuje — ma w tym wierszu o jeden element mniej. */
+/* ⚠ Poprzednia wersja „rozwiązywała" ciasnotę zawijaniem (`flex-wrap:wrap`)
+   — i to właśnie przez nią pastylka „szczegóły" lądowała w nowej linii.
+   Zawijanie było wentylem, a nie rozwiązaniem: wypuszczało ciśnienie
+   w najgorszym możliwym miejscu. Teraz pastylka jest KOTWICZONA w prawym
+   dolnym rogu, a ciasnotę pochłania numer wpisu (skraca się), nie układ. */
+.wpis .linia-data {
+  position:relative; padding-right:92px; min-height:22px;
+  gap:10px; flex-wrap:nowrap;
+}
+.wpis .linia-data > span:first-child { flex:none; }          /* data — nigdy nie łamana */
+/* ⚠ NUMER WPISU NA ZWINIĘTEJ KARCIE — ukryty (decyzja 24.08.2026).
+   Skracanie go do „T-000…" było gorsze niż nic: obcięty numer nie służy
+   już do niczego, a nadal zabierał miejsce. We flocie nic przez to nie
+   ginie — rozwinięte szczegóły mają wiersz „Nr wpisu: T-000398", czyli
+   numer jest jedno dotknięcie dalej, w całości i z podpisem.
+   ⚠ W EWIDENCJI zostaje widoczny: tam szczegóły go NIE zawierają,
+   a wiersz ma o jeden element mniej, więc jest na niego miejsce. */
+.wpis .linia-data .plakietka-id { display:none; }
+.wpis.rozwiniety .linia-data .plakietka-id { display:inline-block; }
+.wpis .linia-data .wpis-strzalka { position:absolute; right:0; bottom:0; margin:0; }
+
+@media (max-width: 380px) { .wpis .plakietka-id { font-size:10.5px; } }
+
+
+/* ═══ IKONA JAKO WĘZEŁ OSI (24.08.2026, pomysł Marka) ════════════════════
+   Zamiast małej kropki na osi + osobnej ikony w karcie — jedno kółko.
+   Ikona wychodzi z karty na oś, więc treść wpisu dostaje całą szerokość.
+   Zmierzone: treść 278 → 302 px, lista 785 → 765 px.
+   Bonus: ikona NIESIE informację (dystrybutor / koszyk / bilet / ogniwa),
+   więc rodzaj wydatku widać przed przeczytaniem czegokolwiek.
+
+   ⚠ GEOMETRIA — liczona, nie ustawiana na oko (uwaga Marka: „na środku
+   linii, nie lekko z boku"). Zasada: środek kółka == środek osi.
+       rynna 44 px · oś: left 16 px, szerokość 2 px  → środek osi = 17 px
+       kółko 34 px → jego lewa krawędź musi być na 17 − 17 = 0 px
+       `.wpis` zaczyna się na 44 px, więc left = 0 − 44 = −44 px
+   Kółko ma tło `var(--karta)`, więc zasłania oś i wygląda jak węzeł. */
+.wpisy-grupa-miesiaca, #listaWpisow { padding-left:44px; }
+.wpisy-grupa-miesiaca::before, #listaWpisow::before { left:16px; }
+.wpisy-naglowek-miesiac { margin-left:-44px; }
+.wpis::before { display:none; }              /* kropkę zastępuje ikona */
+.wpis { padding:10px 12px; }
+.wpis .ikona-krag {
+  position:absolute; left:-44px; top:11px;
+  width:34px; height:34px; z-index:1;
+  background:var(--karta);
+}
+.wpis .ikona-krag svg { width:19px; height:19px; }
+
+@media (max-width: 380px) {
+  /* rynna 40 · oś left 14 → środek 15 · kółko 30 → lewa krawędź 0 → −40 */
+  .wpisy-grupa-miesiaca, #listaWpisow { padding-left:40px; }
+  .wpisy-grupa-miesiaca::before, #listaWpisow::before { left:14px; }
+  .wpisy-naglowek-miesiac { margin-left:-40px; }
+  .wpis .ikona-krag { left:-40px; width:30px; height:30px; }
+  .wpis .ikona-krag svg { width:17px; height:17px; }
+}
 </style>
 </head>
 <body>
