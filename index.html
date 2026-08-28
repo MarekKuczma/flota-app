@@ -164,13 +164,21 @@
   [data-paleta="gamma"]{
     --akcent:#7e22ce;
     --gradient:linear-gradient(90deg,#14532d,#22c55e,#4ade80,#9333ea,#22c55e,#14532d);
-    --ikona-grad:linear-gradient(135deg,#14532d,#9333ea);
+    /* ⚠ POPRAWKA (Marek 28.08: „gradient w środku avataru nie działa,
+       wszystko działa tylko w Full RGB"). Animacja `plyn` przesuwa tło
+       POZIOMO, więc dwukolorowy gradient pod skosem 135° nie ma czego
+       pokazać — widać jedno pole, które ledwo dryfuje. Full RGB jako
+       jedyny miał tu gradient 90° z sześcioma barwami wracającymi do
+       startu i tylko on wyglądał na żywy. Palety animowane biorą więc
+       gradient nagłówka (już 90°, wielobarwny, zapętlony); przez
+       `var(--gradient)`, a nie kopię, żeby ciemny motyw szedł za nim sam. */
+    --ikona-grad:var(--gradient);
     --przycisk-cien:rgba(126,34,206,.38);
     --bg-akcentjasny:#f5f0ff; --tekst-akcentjasny:#7e22ce;
     --metryka-grad:linear-gradient(135deg,#f3fdf6 0%,#f7f2ff 100%);
     --turkus:#16a34a; --bg-turkus:#f0fdf4; --tekst-turkus:#15803d;
     --beta-poswiata:rgba(74,222,128,.55);
-    --stozek:#4ade80,#34d399,#22c55e,#16a34a,#0f766e,#4338ca,#7e22ce,#9333ea,#a855f7,#9333ea,#7e22ce,#4338ca,#0f766e,#16a34a,#22c55e,#34d399,#4ade80;
+    --stozek:#4ade80,#22c55e,#16a34a,#14532d,#3b0764,#7e22ce,#9333ea,#c084fc,#e9d5ff,#bbf7d0,#86efac,#4ade80;
     --wskaznik-grad:linear-gradient(90deg,#166534,#16a34a,#9333ea,#16a34a,#166534);
     --glow-krycie:.42;
     --luk:#86efac 0deg,#4ade80 42deg,#9333ea 86deg;
@@ -185,13 +193,13 @@
     --akcent:#1d4ed8;
     --gradient:linear-gradient(90deg,#7f1d1d,#dc2626,#f87171,#2563eb,#dc2626,#7f1d1d);
     --przycisk-grad:linear-gradient(90deg,#1e3a8a,#2563eb,#60a5fa,#b91c1c,#2563eb,#1e3a8a);
-    --ikona-grad:linear-gradient(135deg,#7f1d1d,#2563eb);
+    --ikona-grad:var(--gradient);   /* jw. — patrz komentarz przy Gammie */
     --przycisk-cien:rgba(29,78,216,.38);
     --bg-akcentjasny:#eff4ff; --tekst-akcentjasny:#1d4ed8;
     --metryka-grad:linear-gradient(135deg,#fff5f5 0%,#f0f5ff 100%);
     --turkus:#dc2626; --bg-turkus:#fef2f2; --tekst-turkus:#b91c1c;
     --beta-poswiata:rgba(248,113,113,.55);
-    --stozek:#f87171,#ef4444,#dc2626,#b91c1c,#7f1d1d,#312e81,#1d4ed8,#2563eb,#3b82f6,#2563eb,#1d4ed8,#312e81,#7f1d1d,#b91c1c,#dc2626,#ef4444,#f87171;
+    --stozek:#f87171,#dc2626,#b91c1c,#7f1d1d,#1e3a8a,#2563eb,#3b82f6,#93c5fd,#dbeafe,#fecaca,#f87171;
     --wskaznik-grad:linear-gradient(90deg,#7f1d1d,#dc2626,#2563eb,#dc2626,#7f1d1d);
     --glow-krycie:.42;
     --luk:#fca5a5 0deg,#f87171 42deg,#2563eb 86deg;
@@ -960,12 +968,12 @@
     /* Pasek płynie w kółko (animacja `plyn` niżej), więc gradient musi wracać
        do koloru początkowego — inaczej na zapętleniu widać szew. */
     --gradient:linear-gradient(90deg,#24314A,#4D96FF,#79DFFF,#8A2BE2,#4D96FF,#24314A);
-    --ikona-grad:linear-gradient(135deg, #1A1F36, #4D96FF);
+    --ikona-grad:var(--gradient);   /* jw. — patrz komentarz przy Gammie */
     --przycisk-cien:rgba(138,43,226,.38);
     --bg-akcentjasny:#eef4ff; --tekst-akcentjasny:#1d63d8;
     --metryka-grad:linear-gradient(135deg, #f2f7ff 0%, #f0eeff 100%);
     --turkus:#7c3aed; --bg-turkus:#f3e8ff; --tekst-turkus:#6b21a8;
-    --stozek:#79DFFF,#5FBEFF,#4D96FF,#4477F0,#3B6FE0,#5A4BD8,#6B3FD4,#7B33DB,#8A2BE2,#7B33DB,#6B3FD4,#5A4BD8,#3B6FE0,#4477F0,#4D96FF,#5FBEFF,#79DFFF;
+    --stozek:#79DFFF,#4D96FF,#3B6FE0,#24314A,#4C1D95,#8A2BE2,#A855F7,#C4A2FF,#DBEAFE,#A5E9FF,#79DFFF;
     --wskaznik-grad:var(--gradient);   /* Z-95: ten gradient już wraca do początku */
     --beta-poswiata:rgba(138,43,226,.55);
     --luk:#79DFFF 0deg, #4D96FF 42deg, #8A2BE2 86deg;   /* Z-87 */

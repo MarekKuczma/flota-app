@@ -20,7 +20,7 @@
  * Po zmianie plikow aplikacji podbij numer wersji ponizej.
  */
 
-var WERSJA_CACHE = 'flota-shell-v110';   // 28.08.2026: W-31a — poprawki po zgłoszeniu Marka: czytelne cyfry na kafelkach w Gammie i Herosie (własny gradient liczb, jak w Aurorze) + ich animacja, gładsze przejścia w obwódce avatara (17 przystanków) dla Gammy, Herosa i Aurory
+var WERSJA_CACHE = 'flota-shell-v111';   // 29.08.2026: W-31a+b — czytelne i animowane cyfry na kafelkach w Gammie i Herosie; stożek przepisany z LUSTRA na PĘTLĘ (znika kreska przechodząca przez awatar); wnętrze avatara palet animowanych bierze gradient poziomy zamiast dwukolorowego skośnego
 
 // Przekaźnik kodu kierowcy między kartą Safari a zainstalowaną ikonką
 // (FEEDBACK-BETA-TESTY.md pkt 8, patrz też pwa/index.html — NAZWA_RELAY_KODU).
