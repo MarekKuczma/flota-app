@@ -20,7 +20,7 @@
  * Po zmianie plikow aplikacji podbij numer wersji ponizej.
  */
 
-var WERSJA_CACHE = 'flota-shell-v108';   // 28.08.2026: W-30 — plakietka Beta-tester przeniesiona z linii powitania na dół avatara (bliźniaczo z ewidencją v99)
+var WERSJA_CACHE = 'flota-shell-v109';   // 28.08.2026: W-31 — ekran „Ustawienia" pod zębatką, tryb „jak w telefonie", osiem palet wspólnych z ewidencją (+ Grafit, Burgund, Gamma, Heros); id palet ujednolicone (domyslna→pomaranczowa, niebieska→blekit) z migracją telefonów
 
 // Przekaźnik kodu kierowcy między kartą Safari a zainstalowaną ikonką
 // (FEEDBACK-BETA-TESTY.md pkt 8, patrz też pwa/index.html — NAZWA_RELAY_KODU).
