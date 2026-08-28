@@ -20,7 +20,7 @@
  * Po zmianie plikow aplikacji podbij numer wersji ponizej.
  */
 
-var WERSJA_CACHE = 'flota-shell-v106';   // 28.08.2026: W-26 — banery tytułów, płyta powitania + pora dnia + obwódka avatara (bliźniaczo z ewidencją v97) + F-77 noindex
+var WERSJA_CACHE = 'flota-shell-v108';   // 28.08.2026: W-30 — plakietka Beta-tester przeniesiona z linii powitania na dół avatara (bliźniaczo z ewidencją v99)
 
 // Przekaźnik kodu kierowcy między kartą Safari a zainstalowaną ikonką
 // (FEEDBACK-BETA-TESTY.md pkt 8, patrz też pwa/index.html — NAZWA_RELAY_KODU).
