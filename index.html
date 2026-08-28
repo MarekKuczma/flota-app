@@ -170,7 +170,7 @@
     --metryka-grad:linear-gradient(135deg,#f3fdf6 0%,#f7f2ff 100%);
     --turkus:#16a34a; --bg-turkus:#f0fdf4; --tekst-turkus:#15803d;
     --beta-poswiata:rgba(74,222,128,.55);
-    --stozek:#4ade80,#22c55e,#9333ea,#22c55e,#4ade80;
+    --stozek:#4ade80,#34d399,#22c55e,#16a34a,#0f766e,#4338ca,#7e22ce,#9333ea,#a855f7,#9333ea,#7e22ce,#4338ca,#0f766e,#16a34a,#22c55e,#34d399,#4ade80;
     --wskaznik-grad:linear-gradient(90deg,#166534,#16a34a,#9333ea,#16a34a,#166534);
     --glow-krycie:.42;
     --luk:#86efac 0deg,#4ade80 42deg,#9333ea 86deg;
@@ -191,7 +191,7 @@
     --metryka-grad:linear-gradient(135deg,#fff5f5 0%,#f0f5ff 100%);
     --turkus:#dc2626; --bg-turkus:#fef2f2; --tekst-turkus:#b91c1c;
     --beta-poswiata:rgba(248,113,113,.55);
-    --stozek:#f87171,#dc2626,#2563eb,#dc2626,#f87171;
+    --stozek:#f87171,#ef4444,#dc2626,#b91c1c,#7f1d1d,#312e81,#1d4ed8,#2563eb,#3b82f6,#2563eb,#1d4ed8,#312e81,#7f1d1d,#b91c1c,#dc2626,#ef4444,#f87171;
     --wskaznik-grad:linear-gradient(90deg,#7f1d1d,#dc2626,#2563eb,#dc2626,#7f1d1d);
     --glow-krycie:.42;
     --luk:#fca5a5 0deg,#f87171 42deg,#2563eb 86deg;
@@ -278,12 +278,22 @@
     --sz-baza:#2b2f45;
   }
 
-  /* ===== W-31: animacja Gammy i Herosa (poziom Aurory / Full RGB) ===== */
+  /* ===== W-31: animacja Gammy i Herosa (poziom Aurory / Full RGB) =====
+     ⚠ POPRAWKA (Marek 28.08 wieczorem: „chyba full rgb jest jedyny, który ma
+     w dashboard animowane cyfry"). Dopisane `.metryka .m-w` — tak jak mają
+     Aurora i Full RGB. We flocie ma to sens, bo liczba jest tekstem wyciętym
+     z gradientu; w EWIDENCJI `.m-w` nie ma w ogóle tła, więc tam ta reguła
+     byłaby bez skutku i celowo jej nie ma (patrz komentarz przy Aurorze tam).
+     ⚠ Rozszerzając o kolejną paletę POWTARZAMY CAŁY selektor złożony —
+     podmiana samego fragmentu z atrybutem zostawia goły selektor trafiający
+     w <html> (tak powstała mleczna zasłona w Z-94/v93). */
   [data-paleta="gamma"] header,
   [data-paleta="gamma"] .przycisk,
+  [data-paleta="gamma"] .metryka .m-w,
   [data-paleta="gamma"] .avatar-krag,
   [data-paleta="heros"] header,
   [data-paleta="heros"] .przycisk,
+  [data-paleta="heros"] .metryka .m-w,
   [data-paleta="heros"] .avatar-krag{ background-size:300% 100%;
     animation:plyn 11s linear infinite; }
   [data-paleta="gamma"] .avatar-pierscien,
@@ -303,8 +313,28 @@
   [data-paleta="gamma"] nav button.aktywna .i svg,
   [data-paleta="heros"] nav button.aktywna .i svg{
     filter:drop-shadow(0 0 6px currentColor); }
-  [data-paleta="gamma"] .metryka .m-w{ filter:drop-shadow(0 0 8px rgba(147,51,234,.55)); }
-  [data-paleta="heros"] .metryka .m-w{ filter:drop-shadow(0 0 8px rgba(37,99,235,.55)); }
+  /* ⚠ POPRAWKA (zgłoszenie Marka 28.08 wieczorem: „w gamma i heros cyfry na
+     dashboard są mało widoczne, we flocie"). Liczba na kafelku to TEKST
+     WYCIĘTY Z --gradient (`background-clip:text` w regule bazowej), więc
+     bierze WSZYSTKIE przystanki gradientu nagłówka — a te mają skrajnie
+     ciemny początek (#14532d / #7f1d1d) i bardzo jasny środek (#4ade80 /
+     #f87171). Jeden koniec zawsze ginie: ciemny na ciemnym kafelku, jasny
+     na jasnym. Dokładnie ten problem, który Aurora rozwiązała własnym
+     gradientem dla liczb — robimy tak samo.
+     ⚠ `background-image`, a NIE skrót `background`: skrót skasowałby
+     `background-clip:text` z reguły bazowej i zamiast cyfr został by
+     kolorowy prostokąt. Każdy przystanek sprawdzony liczbowo względem OBU
+     końców tła kafelka — najsłabszy 4,56:1 przy progu 4,5:1. */
+  [data-paleta="gamma"] .metryka .m-w{
+    background-image:linear-gradient(120deg,#166534 0%, #15803d 45%, #7e22ce 100%);
+    filter:drop-shadow(0 0 8px rgba(147,51,234,.45)); }
+  [data-motyw="ciemny"][data-paleta="gamma"] .metryka .m-w{
+    background-image:linear-gradient(120deg,#86efac 0%, #a7f3d0 45%, #d8b4fe 100%); }
+  [data-paleta="heros"] .metryka .m-w{
+    background-image:linear-gradient(120deg,#991b1b 0%, #b91c1c 45%, #1d4ed8 100%);
+    filter:drop-shadow(0 0 8px rgba(37,99,235,.45)); }
+  [data-motyw="ciemny"][data-paleta="heros"] .metryka .m-w{
+    background-image:linear-gradient(120deg,#fca5a5 0%, #fecdd3 45%, #bfdbfe 100%); }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0; background:var(--tlo); color:var(--tekst);
     font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:17px;}
@@ -935,7 +965,7 @@
     --bg-akcentjasny:#eef4ff; --tekst-akcentjasny:#1d63d8;
     --metryka-grad:linear-gradient(135deg, #f2f7ff 0%, #f0eeff 100%);
     --turkus:#7c3aed; --bg-turkus:#f3e8ff; --tekst-turkus:#6b21a8;
-    --stozek:#79DFFF,#4D96FF,#8A2BE2,#4D96FF,#79DFFF;
+    --stozek:#79DFFF,#5FBEFF,#4D96FF,#4477F0,#3B6FE0,#5A4BD8,#6B3FD4,#7B33DB,#8A2BE2,#7B33DB,#6B3FD4,#5A4BD8,#3B6FE0,#4477F0,#4D96FF,#5FBEFF,#79DFFF;
     --wskaznik-grad:var(--gradient);   /* Z-95: ten gradient już wraca do początku */
     --beta-poswiata:rgba(138,43,226,.55);
     --luk:#79DFFF 0deg, #4D96FF 42deg, #8A2BE2 86deg;   /* Z-87 */
@@ -1175,8 +1205,10 @@
     [data-paleta="aurora"] .plakietka-beta,
     /* W-31 */
     [data-paleta="gamma"] header, [data-paleta="gamma"] .przycisk,
+    [data-paleta="gamma"] .metryka .m-w,
     [data-paleta="gamma"] .avatar-krag, [data-paleta="gamma"] .avatar-pierscien,
     [data-paleta="heros"] header, [data-paleta="heros"] .przycisk,
+    [data-paleta="heros"] .metryka .m-w,
     [data-paleta="heros"] .avatar-krag, [data-paleta="heros"] .avatar-pierscien,
     .pal-poz.spec .probka,
     nav .wskaznik i{ animation:none; }   /* Z-95 */

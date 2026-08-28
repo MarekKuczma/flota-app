@@ -20,7 +20,7 @@
  * Po zmianie plikow aplikacji podbij numer wersji ponizej.
  */
 
-var WERSJA_CACHE = 'flota-shell-v109';   // 28.08.2026: W-31 — ekran „Ustawienia" pod zębatką, tryb „jak w telefonie", osiem palet wspólnych z ewidencją (+ Grafit, Burgund, Gamma, Heros); id palet ujednolicone (domyslna→pomaranczowa, niebieska→blekit) z migracją telefonów
+var WERSJA_CACHE = 'flota-shell-v110';   // 28.08.2026: W-31a — poprawki po zgłoszeniu Marka: czytelne cyfry na kafelkach w Gammie i Herosie (własny gradient liczb, jak w Aurorze) + ich animacja, gładsze przejścia w obwódce avatara (17 przystanków) dla Gammy, Herosa i Aurory
 
 // Przekaźnik kodu kierowcy między kartą Safari a zainstalowaną ikonką
 // (FEEDBACK-BETA-TESTY.md pkt 8, patrz też pwa/index.html — NAZWA_RELAY_KODU).
