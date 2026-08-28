@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- F-77 (28.08.2026): appka znika z wyszukiwarek — dostęp tylko z linku/QR.
+     To NIE jest kontrola dostępu (granicą pozostaje kod kierowcy sprawdzany
+     serwerowo) — patrz E-56 w archiwum planu. -->
+<meta name="robots" content="noindex, nofollow">
 <title>Rozliczenie Floty Rinkon</title>
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" href="./ikona-192.png">
@@ -1236,6 +1240,37 @@
   .wpis .ikona-krag { left:-40px; width:30px; height:30px; }
   .wpis .ikona-krag svg { width:17px; height:17px; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   W-26 (28.08.2026) — nagłówki ekranów i powitanie, bliźniaczo z ewidencją
+   (ewidencja-v97; pełen opis decyzji Marka w archiwum planu):
+   1. Baner tytułu („NOWY WPIS" / „MOJE WPISY"): wyśrodkowany pasek na
+      górze karty, wielkie litery, tło --bg-akcentjasny (idzie za paletą).
+   2. Płyta powitania: to samo tło POD SEKCJĄ (avatar + powitanie),
+      nie pod całą kartą. Powitanie wg pory dnia — patrz powitanieDnia_.
+   3. Avatar: animowana obwódka-stożek w KAŻDEJ palecie (mechanizm 1:1
+      z .przycisk-glow / Z-81; dotąd miały ją tylko rgb i aurora). Reguła
+      stoi PO blokach palet — świadomie ujednolica im rytm (4s).
+   ═══════════════════════════════════════════════════════════════════════ */
+.ekran-baner{margin:-16px -16px 14px; padding:11px 14px; text-align:center;
+  font-size:15px; font-weight:700; letter-spacing:.09em;
+  text-transform:uppercase; border-radius:14px 14px 0 0;
+  background:var(--bg-akcentjasny); color:var(--tekst-akcentjasny);}
+
+.powitanie{gap:14px; border-radius:16px; background:var(--bg-akcentjasny);
+  padding:12px 14px; margin-bottom:16px;}
+
+.avatar-pierscien{padding:2.5px; border-radius:50%; position:relative;
+  isolation:isolate; flex:none;
+  background:conic-gradient(from var(--kat), var(--stozek));
+  animation:obrot 4s linear infinite;}
+.avatar-pierscien::after{content:''; position:absolute; inset:0;
+  border-radius:50%; background:conic-gradient(from var(--kat), var(--stozek));
+  filter:blur(9px); opacity:var(--glow-krycie); z-index:-1;}
+
+@media (prefers-reduced-motion: reduce){
+  .avatar-pierscien{ animation:none; }
+}
 </style>
 </head>
 <body>
@@ -1381,7 +1416,9 @@
   <div id="widokFormularz" class="ukryte">
     <div class="komunikat" id="komunikatWynik"></div>
     <div class="karta" id="kartaFormularz">
-      <h2 id="naglowekFormularza">Nowy wpis</h2>
+      <!-- W-26: tytuł jako baner — wyśrodkowany, wielkie litery, tło w stylu
+           palety; bliźniaczo z ewidencją (v97). -->
+      <h2 id="naglowekFormularza" class="ekran-baner">Nowy wpis</h2>
       <!-- F-56 (05.08.2026): wklejenie SMS-a od Orlenu (mFlota) — uzupełnia
            data/ilość/wartość/co kupiono, a „Do czego" gdy rejestracja z SMS-a
            pasuje do sprzętu w słowniku. Front-only, opcjonalne — usuwalne
@@ -1483,7 +1520,7 @@
   <!-- Moje wpisy -->
   <div id="widokWpisy" class="ukryte">
     <div class="karta">
-      <h2>Moje wpisy</h2>
+      <h2 class="ekran-baner">Moje wpisy</h2>   <!-- W-26: baner jak w ewidencji -->
       <label class="zgoda"><input type="checkbox" id="pokazAnulowane"> Pokaż anulowane</label>
       <div id="pasekWpisow" class="pasek-odswiezania ukryte"></div>
       <!-- Z-87: szkielet zamiast napisu „Ładowanie…" (skrypt podmienia go
@@ -2485,6 +2522,12 @@ function nazwaSprzetuWpisu_(w) {
   var nazwa = (s && s.model) ? (w.przeznaczenie + ' — ' + s.model) : w.przeznaczenie;
   return bezpiecznyTekst_(nazwa);
 }
+/* W-26: powitanie wg pory dnia. */
+function powitanieDnia_(){
+  var g = new Date().getHours();
+  return (g >= 18 || g < 4) ? 'Dobry wieczór' : 'Dzień dobry';
+}
+
 function inicjaly_(imie) {
   if (!imie) return '👤';
   var czesci = imie.trim().split(/\s+/);
@@ -3121,7 +3164,11 @@ function rysujDashboard() {
   // otwarte, odśwież je razem z dashboardem (np. po dociągnięciu danych z sieci).
   if (!el('widokPodsumowanie').classList.contains('ukryte')) rysujPodsumowanie();
   var imie = localStorage.getItem('flota_kierowca') || '';
-  el('dPowitanie').textContent = imie ? 'Cześć, ' + imie.split(' ').pop() + '!' : 'Cześć!';
+  // W-26: powitanie wg pory dnia (bliźniaczo z ewidencją) — po 18:00
+  // i przed 4:00 „Dobry wieczór", inaczej „Dzień dobry".
+  el('dPowitanie').textContent = imie
+    ? powitanieDnia_() + ', ' + imie.split(' ').pop() + '!'
+    : powitanieDnia_() + '!';
   el('dAwatar').textContent = inicjaly_(imie);
   // Odznaka dla beta-testerów (FEEDBACK-BETA-TESTY.md pkt 5) — wyłącznie
   // odczyt z Kierowcy.F ("W pilocie"), bez osobnej logiki wygaszania: gdy

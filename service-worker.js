@@ -20,7 +20,7 @@
  * Po zmianie plikow aplikacji podbij numer wersji ponizej.
  */
 
-var WERSJA_CACHE = 'flota-shell-v105';   // 25.08.2026: F-75 — nagłówek miesiąca ZAWSZE (jak w ewidencji) + klasa na kontenerze grupy + margines. Zmiana w CSS I w JS.
+var WERSJA_CACHE = 'flota-shell-v106';   // 28.08.2026: W-26 — banery tytułów, płyta powitania + pora dnia + obwódka avatara (bliźniaczo z ewidencją v97) + F-77 noindex
 
 // Przekaźnik kodu kierowcy między kartą Safari a zainstalowaną ikonką
 // (FEEDBACK-BETA-TESTY.md pkt 8, patrz też pwa/index.html — NAZWA_RELAY_KODU).
