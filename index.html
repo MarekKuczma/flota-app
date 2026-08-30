@@ -12,14 +12,53 @@
 <link rel="icon" href="./ikona-192.png">
 <link rel="apple-touch-icon" href="./ikona-192.png">
 <meta name="theme-color" content="#f97316">
+<script>
+/* KANON PALET (W-41): JEDYNE różnice tej appki wobec Ewidencji i Asystenta
+   (plus jeden wyjątek CSS: turkusowe --ikona-grad Pomarańczu — patrz
+   komentarz przy nadpisaniu pod wspólnym blokiem). Cała reszta to blok
+   wspólny, identyczny co do znaku w trzech plikach — patrz KANON-PALET.md. */
+var PALETY_APKA = {
+  prefiks: 'flota',
+  domyslna: 'pomaranczowa',
+  podstawowe: ['pomaranczowa', 'blekit', 'grafit', 'burgund'],
+  migracja: { domyslna: 'pomaranczowa', niebieska: 'blekit' },
+  migracjaJednorazowa: false,
+  ekranUstawienId: 'widokUstawienia',
+  kartaUstawienId: 'ustawieniaKarta'
+};
+</script>
+<script>
+/* KANON PALET — pre-paint (identyczny w 3 appkach): paleta i motyw idą na
+   <html> zanim przeglądarka cokolwiek narysuje, bo :root nie niesie już
+   żadnej palety. Pełna walidacja (bramka, rejestr) przejdzie w silniku
+   niżej w pliku; tu tylko szybki odczyt z localStorage. */
+(function(){
+  var d = document.documentElement, P = PALETY_APKA;
+  try {
+    var p = localStorage.getItem(P.prefiks + '_paleta') || P.domyslna;
+    /* Mapę migracji wolno tu przyłożyć tylko, gdy silnik jeszcze jej nie
+       przeszedł (flaga) — inaczej świeżo wybrana nowa Gamma (fioletowa)
+       byłaby na chwilę cofana na Jadeit przy każdym starcie Asystenta. */
+    if (P.migracja && P.migracja[p] &&
+        !(P.migracjaJednorazowa && localStorage.getItem(P.prefiks + '_migracja_palet')))
+      p = P.migracja[p];
+    d.setAttribute('data-paleta', p);
+    var m = localStorage.getItem(P.prefiks + '_motyw') || 'jasny';
+    if (m === 'auto') m = (window.matchMedia &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'ciemny' : 'jasny';
+    d.setAttribute('data-motyw', m === 'ciemny' ? 'ciemny' : 'jasny');
+  } catch (e) {
+    d.setAttribute('data-paleta', P.domyslna);
+    d.setAttribute('data-motyw', 'jasny');
+  }
+})();
+</script>
 <style>
+  /* ===== :root = wyłącznie globalny „chrom" appki (W-41) =====
+     Tokeny PALET (akcent, gradienty, stożki, turkusy…) NIE mieszkają już
+     tutaj — wszystkie niesie wspólny blok kanonu niżej, a paletę na <html>
+     ustawia pre-paint w <head>, więc :root nigdy nie musi „grać" pomarańczu. */
   :root{
-    /* Z-91: usunięte --akcent-c i --fiolet — zero wystąpień var(--akcent-c)
-       i var(--fiolet) w całym pliku (sprawdzone). Zostawały po wcześniejszych
-       wersjach i myliły przy przeglądaniu palet. */
-    --akcent:#f97316;
-    --gradient:linear-gradient(135deg, #fbbf24 0%, #f97316 55%, #dc2626 100%);
-    --przycisk-cien:rgba(234,88,12,.35);
     --tlo:#f4f6f8; --karta:#ffffff; --input-tlo:#ffffff; --input-brzeg:#d1d5db;
     --podpowiedz:#9aa0a6;   /* W-23 — patrz reguła ::placeholder niżej */
     --tekst:#1f2937; --szary:#6b7280; --blad:#d93025; --ok:#188038; --uwaga:#b45309;
@@ -27,30 +66,553 @@
     --bg-uwaga:#fef3c7; --brzeg-uwaga:#f59e0b; --tekst-uwaga:#92400e;
     --bg-ok:#e6f4ea; --tekst-ok:#135c26;
     --bg-blad:#fce8e6; --tekst-blad:#a50e0e;
-    --bg-akcentjasny:#fff1e6; --tekst-akcentjasny:#c2410c;
-    --metryka-grad:linear-gradient(135deg, #fff7ed 0%, #fef2f2 100%);
-    --turkus:#06b6d4; --bg-turkus:#e0f7fb; --tekst-turkus:#0e7490;
-    /* Z-81: kolory obracającej się obwódki (conic-gradient) — te same barwy
-       co w --gradient danej palety, tylko rozłożone na okrąg; efekt nie
-       wprowadza do appki żadnego nowego koloru. --glow-krycie: poświata na
-       jasnym tle rozlewa się w brudną plamę, na ciemnym może być mocniejsza.
-       --beta-poswiata: kolor pulsu plakietki beta = --turkus danej palety
-       (w niebieskiej robi się pomarańczowy, jak cała plakietka). */
-    --stozek:#fbbf24,#f97316,#dc2626,#f97316,#fbbf24;
-    --wskaznik-grad:linear-gradient(90deg,#fbbf24,#f97316,#dc2626,#f97316,#fbbf24);  /* Z-95 */
-    --glow-krycie:.40;
-    /* Z-87 (16.08.2026): szkielety ładowania — kolor wypełnienia i jasność
-       przebiegającego połysku. Bliźniacze do ewidencji, zmieniasz tu —
-       zmień i tam. */
+    /* Z-87: szkielety ładowania — bliźniaczo z ewidencją. */
     --sz-baza:#e8ebef; --sz-polysk:rgba(255,255,255,.85);
-    /* Z-87: barwy łuku spinnera na zasłonie.
-       ⚠ Zasłona jest ZAWSZE ciemna, niezależnie od motywu — dlatego --luk
-       NIE zależy od jasny/ciemny, tylko od palety, i musi być jasny.
-       Nie sięgamy po --akcent, bo w palecie niebieskiej to #2563eb, który
-       na ciemnym tle robi się ciężki i mało czytelny. */
-    --luk:#fde68a 0deg, #fbbf24 34deg, #f97316 62deg, #ef4444 86deg;
-    --luk-glow:#f97316;
-    --beta-poswiata:rgba(6,182,212,.55);
+  }
+/* ================================================================
+   KANON PALET RODZINY (W-41 "paczka wyglądu", 30.08.2026) — CSS.
+   TEN BLOK JEST IDENTYCZNY CO DO ZNAKU w trzech aplikacjach:
+   Flota, Ewidencja, Asystent Floty. Zmieniasz coś tutaj -> zmieniasz
+   w trzech plikach naraz i w Claude Ai/Dokumentacja/KANON-PALET.md.
+   Generowane z tabeli (skrypt w Claude Ai/Dokumentacja/kanon-generator/),
+   ale plik można też poprawić ręcznie — byle we wszystkich trzech.
+
+   Budowa: 12 palet x [data-paleta] (jasny) + [data-motyw="ciemny"]
+   [data-paleta] (nadpisania ciemne). Paleta i motyw są ustawiane na
+   <html> skryptem pre-paint w <head>, więc :root NIE niesie żadnej
+   palety — ogólny blok [data-motyw="ciemny"] każdej appki trzyma tylko
+   globalny "chrom" (tło, karty, teksty), ŻADNYCH tokenów palety.
+   Które appki pokazują którą paletę decyduje PALETY_APKA w JS —
+   definicje wszystkich 12 są wszędzie (włączenie palety = 1 linijka).
+   ⚠ Ciemne bloki specjalnych przebarwiają też tło/karty/linie/inputy —
+   to celowe (klimat palety), wartości wspólne całej rodziny.
+   ================================================================ */
+/* ---- Pomarańcz ---- */
+[data-paleta="pomaranczowa"]{
+  --akcent:#f97316;
+  --akcent-moc:#fb923c;
+  --on-akcent:#fff;
+  --gradient:linear-gradient(135deg, #fbbf24 0%, #f97316 55%, #dc2626 100%);
+  --ikona-grad:linear-gradient(135deg, #9a3412, #f97316);
+  --przycisk-cien:rgba(234,88,12,.35);
+  --bg-akcentjasny:#fff1e6;
+  --tekst-akcentjasny:#c2410c;
+  --metryka-grad:linear-gradient(135deg, #fff7ed 0%, #fef2f2 100%);
+  --stozek:#fbbf24,#f97316,#dc2626,#f97316,#fbbf24;
+  --wskaznik-grad:linear-gradient(90deg,#c2410c,#ea580c,#f97316,#ea580c,#c2410c);
+  --luk:#fde68a 0deg, #fbbf24 34deg, #f97316 62deg, #ef4444 86deg;
+  --luk-glow:#f97316;
+  --glow-krycie:.40;
+  --turkus:#06b6d4;
+  --bg-turkus:#e0f7fb;
+  --tekst-turkus:#0e7490;
+  --beta-poswiata:rgba(6,182,212,.55);
+}
+[data-motyw="ciemny"][data-paleta="pomaranczowa"]{
+  --akcent:#f97316;
+  --akcent-moc:#fdba74;
+  --gradient:linear-gradient(135deg, #d97706 0%, #ea580c 55%, #b91c1c 100%);
+  --bg-akcentjasny:#432614;
+  --tekst-akcentjasny:#fb923c;
+  --metryka-grad:linear-gradient(135deg, #2c2115 0%, #2b1c1c 100%);
+  --stozek:#f97316,#fb923c,#fbbf24,#fb923c,#f97316;
+  --wskaznik-grad:linear-gradient(90deg,#ea580c,#f97316,#fbbf24,#f97316,#ea580c);
+  --glow-krycie:.70;
+  --turkus:#22d3ee;
+  --bg-turkus:#0e3a44;
+  --tekst-turkus:#67e8f9;
+  --beta-poswiata:rgba(34,211,238,.55);
+}
+/* ---- Błękit ---- */
+[data-paleta="blekit"]{
+  --akcent:#1d4ed8;
+  --akcent-moc:#3b82f6;
+  --on-akcent:#fff;
+  --gradient:linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #38bdf8 100%);
+  --ikona-grad:linear-gradient(135deg, #1e3a8a, #38bdf8);
+  --przycisk-cien:rgba(56,189,248,.32);
+  --bg-akcentjasny:#eff6ff;
+  --tekst-akcentjasny:#1d4ed8;
+  --metryka-grad:linear-gradient(135deg, #f0f7ff 0%, #dbeafe 100%);
+  --stozek:#bae6fd,#38bdf8,#2563eb,#38bdf8,#bae6fd;
+  --wskaznik-grad:linear-gradient(90deg,#2563eb,#3b82f6,#38bdf8,#3b82f6,#2563eb);
+  --luk:#e0f2fe 0deg, #7dd3fc 40deg, #2563eb 86deg;
+  --luk-glow:#38bdf8;
+  --glow-krycie:.40;
+  --turkus:#f97316;
+  --bg-turkus:#fff1e6;
+  --tekst-turkus:#c2410c;
+  --beta-poswiata:rgba(249,115,22,.55);
+}
+[data-motyw="ciemny"][data-paleta="blekit"]{
+  --akcent:#7dd3fc;
+  --akcent-moc:#bae6fd;
+  --gradient:linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #0ea5e9 100%);
+  --bg-akcentjasny:#12314d;
+  --tekst-akcentjasny:#7dd3fc;
+  --metryka-grad:linear-gradient(135deg, #17222f 0%, #1b2733 100%);
+  --stozek:#2563eb,#38bdf8,#bae6fd,#38bdf8,#2563eb;
+  --wskaznik-grad:linear-gradient(90deg,#2563eb,#38bdf8,#7dd3fc,#38bdf8,#2563eb);
+  --glow-krycie:.70;
+  --turkus:#fb923c;
+  --bg-turkus:#432614;
+  --tekst-turkus:#fb923c;
+  --beta-poswiata:rgba(251,146,60,.55);
+}
+/* ---- Grafit ---- */
+[data-paleta="grafit"]{
+  --akcent:#3f3f46;
+  --akcent-moc:#71717a;
+  --on-akcent:#fff;
+  --gradient:linear-gradient(135deg, #27272a 0%, #52525b 70%, #a1a1aa 100%);
+  --ikona-grad:linear-gradient(135deg, #27272a, #71717a);
+  --przycisk-cien:rgba(39,39,42,.35);
+  --bg-akcentjasny:#f4f4f5;
+  --tekst-akcentjasny:#3f3f46;
+  --metryka-grad:linear-gradient(135deg, #fafafa 0%, #f4f4f5 100%);
+  --stozek:#a1a1aa,#52525b,#27272a,#52525b,#a1a1aa;
+  --wskaznik-grad:linear-gradient(90deg,#27272a,#52525b,#8b8b93,#52525b,#27272a);
+  --luk:#f4f4f5 0deg, #a1a1aa 45deg, #52525b 86deg;
+  --luk-glow:rgba(255,255,255,.5);
+  --glow-krycie:.40;
+  --turkus:#06b6d4;
+  --bg-turkus:#e0f7fb;
+  --tekst-turkus:#0e7490;
+  --beta-poswiata:rgba(6,182,212,.55);
+}
+[data-motyw="ciemny"][data-paleta="grafit"]{
+  --akcent:#c7c7cf;
+  --akcent-moc:#e4e4e7;
+  --bg-akcentjasny:#26262a;
+  --tekst-akcentjasny:#d4d4d8;
+  --metryka-grad:linear-gradient(135deg, #1f2127 0%, #24262c 100%);
+  --stozek:#52525b,#a1a1aa,#e4e4e7,#a1a1aa,#52525b;
+  --wskaznik-grad:linear-gradient(90deg,#71717a,#a1a1aa,#e4e4e7,#a1a1aa,#71717a);
+  --glow-krycie:.70;
+  --turkus:#22d3ee;
+  --bg-turkus:#0e3a44;
+  --tekst-turkus:#67e8f9;
+  --beta-poswiata:rgba(34,211,238,.55);
+}
+/* ---- Burgund ---- */
+[data-paleta="burgund"]{
+  --akcent:#9f1239;
+  --akcent-moc:#e11d48;
+  --on-akcent:#fff;
+  --gradient:linear-gradient(135deg, #450a1e 0%, #881337 55%, #be123c 100%);
+  --ikona-grad:linear-gradient(135deg, #450a1e, #be123c);
+  --przycisk-cien:rgba(159,18,57,.35);
+  --bg-akcentjasny:#fff1f2;
+  --tekst-akcentjasny:#9f1239;
+  --metryka-grad:linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  --stozek:#fb7185,#e11d48,#9f1239,#e11d48,#fb7185;
+  --wskaznik-grad:linear-gradient(90deg,#450a1e,#881337,#e11d48,#881337,#450a1e);
+  --luk:#fda4af 0deg, #fb7185 45deg, #e11d48 86deg;
+  --luk-glow:#e11d48;
+  --glow-krycie:.40;
+  --turkus:#06b6d4;
+  --bg-turkus:#e0f7fb;
+  --tekst-turkus:#0e7490;
+  --beta-poswiata:rgba(6,182,212,.55);
+}
+[data-motyw="ciemny"][data-paleta="burgund"]{
+  --akcent:#fb7185;
+  --akcent-moc:#fda4af;
+  --gradient:linear-gradient(135deg, #450a1e 0%, #881337 55%, #9f2544 100%);
+  --bg-akcentjasny:#3f1220;
+  --tekst-akcentjasny:#fda4af;
+  --metryka-grad:linear-gradient(135deg, #1f2127 0%, #262930 100%);
+  --stozek:#9f1239,#e11d48,#fb7185,#e11d48,#9f1239;
+  --wskaznik-grad:linear-gradient(90deg,#e11d48,#fb7185,#fda4af,#fb7185,#e11d48);
+  --glow-krycie:.70;
+  --turkus:#22d3ee;
+  --bg-turkus:#0e3a44;
+  --tekst-turkus:#67e8f9;
+  --beta-poswiata:rgba(34,211,238,.55);
+}
+/* ---- Jadeit ---- */
+[data-paleta="jadeit"]{
+  --akcent:#15803d;
+  --akcent-moc:#22c55e;
+  --on-akcent:#fff;
+  --gradient:linear-gradient(135deg,#22c55e,#7e22ce);
+  --ikona-grad:linear-gradient(135deg,#052e16,#16a34a 55%,#7e22ce);
+  --przycisk-cien:rgba(34,197,94,.35);
+  --bg-akcentjasny:#ecfdf5;
+  --tekst-akcentjasny:#15803d;
+  --metryka-grad:linear-gradient(135deg,#f0fdf4 0%,#f7f2ff 100%);
+  --stozek:#86efac,#22c55e,#7e22ce,#22c55e,#86efac;
+  --wskaznik-grad:linear-gradient(90deg,#4ade80,#7e22ce,#4ade80);
+  --luk:#bbf7d0 0deg, #4ade80 42deg, #7e22ce 86deg;
+  --luk-glow:#7e22ce;
+  --glow-krycie:.42;
+  --turkus:#9333ea;
+  --bg-turkus:#f5f0ff;
+  --tekst-turkus:#7e22ce;
+  --beta-poswiata:rgba(147,51,234,.55);
+}
+[data-motyw="ciemny"][data-paleta="jadeit"]{
+  --akcent:#4ade80;
+  --akcent-moc:#86efac;
+  --bg-akcentjasny:#14331f;
+  --tekst-akcentjasny:#4ade80;
+  --metryka-grad:linear-gradient(135deg,#1a2b20 0%,#211b2e 100%);
+  --stozek:#22c55e,#4ade80,#bbf7d0,#4ade80,#22c55e;
+  --glow-krycie:.70;
+  --turkus:#c084fc;
+  --bg-turkus:#221a2e;
+  --tekst-turkus:#d8b4fe;
+  --beta-poswiata:rgba(192,132,252,.55);
+}
+/* ---- Hot Iron ---- */
+[data-paleta="hot-iron"]{
+  --akcent:#b91c1c;
+  --akcent-moc:#dc2626;
+  --on-akcent:#fff;
+  --gradient:linear-gradient(135deg,#dc2626,#f59e0b);
+  --ikona-grad:linear-gradient(135deg,#450a0a,#dc2626 55%,#f59e0b);
+  --przycisk-cien:rgba(220,38,38,.35);
+  --bg-akcentjasny:#fef2f2;
+  --tekst-akcentjasny:#b91c1c;
+  --metryka-grad:linear-gradient(135deg,#fef2f2 0%,#fffbeb 100%);
+  --stozek:#fbbf24,#f59e0b,#dc2626,#f59e0b,#fbbf24;
+  --wskaznik-grad:linear-gradient(90deg,#f59e0b,#dc2626,#f59e0b);
+  --luk:#fde68a 0deg, #f59e0b 42deg, #dc2626 86deg;
+  --luk-glow:#dc2626;
+  --glow-krycie:.42;
+  --turkus:#d97706;
+  --bg-turkus:#fffbeb;
+  --tekst-turkus:#b45309;
+  --beta-poswiata:rgba(245,158,11,.55);
+}
+[data-motyw="ciemny"][data-paleta="hot-iron"]{
+  --akcent:#f87171;
+  --akcent-moc:#fca5a5;
+  --bg-akcentjasny:#421414;
+  --tekst-akcentjasny:#f87171;
+  --metryka-grad:linear-gradient(135deg,#2b1a17 0%,#2c2115 100%);
+  --stozek:#dc2626,#f59e0b,#fde68a,#f59e0b,#dc2626;
+  --glow-krycie:.70;
+  --turkus:#fbbf24;
+  --bg-turkus:#33270e;
+  --tekst-turkus:#fcd34d;
+  --beta-poswiata:rgba(251,191,36,.55);
+}
+/* ---- Widmo ---- */
+[data-paleta="widmo"]{
+  --akcent:#6d28d9;
+  --akcent-moc:#8b5cf6;
+  --on-akcent:#fff;
+  --gradient:linear-gradient(135deg,#7c3aed,#ef4444);
+  --ikona-grad:linear-gradient(135deg,#2e1065,#7c3aed 60%,#ef4444);
+  --przycisk-cien:rgba(139,92,246,.38);
+  --bg-akcentjasny:#f5f3ff;
+  --tekst-akcentjasny:#6d28d9;
+  --metryka-grad:linear-gradient(135deg,#f5f3ff 0%,#fef2f2 100%);
+  --stozek:#c4b5fd,#8b5cf6,#ef4444,#8b5cf6,#c4b5fd;
+  --wskaznik-grad:linear-gradient(90deg,#a78bfa,#ef4444,#a78bfa);
+  --luk:#ddd6fe 0deg, #a78bfa 42deg, #ef4444 86deg;
+  --luk-glow:#7c3aed;
+  --glow-krycie:.45;
+  --turkus:#dc2626;
+  --bg-turkus:#fef2f2;
+  --tekst-turkus:#b91c1c;
+  --beta-poswiata:rgba(239,68,68,.55);
+}
+[data-motyw="ciemny"][data-paleta="widmo"]{
+  --akcent:#a78bfa;
+  --akcent-moc:#c4b5fd;
+  --bg-akcentjasny:#271744;
+  --tekst-akcentjasny:#c4b5fd;
+  --metryka-grad:linear-gradient(135deg,#211b2e 0%,#2b1a1a 100%);
+  --stozek:#7c3aed,#a78bfa,#ddd6fe,#a78bfa,#7c3aed;
+  --glow-krycie:.70;
+  --turkus:#f87171;
+  --bg-turkus:#3a1a1a;
+  --tekst-turkus:#fca5a5;
+  --beta-poswiata:rgba(248,113,113,.55);
+}
+/* ---- Fiord ---- */
+[data-paleta="fiord"]{
+  --akcent:#0e7490;
+  --akcent-moc:#0891b2;
+  --on-akcent:#fff;
+  --gradient:linear-gradient(135deg,#0e7490,#38bdf8,#99f6e4);
+  --ikona-grad:linear-gradient(135deg,#083344,#0e7490 55%,#38bdf8);
+  --przycisk-cien:rgba(56,189,248,.32);
+  --bg-akcentjasny:#ecfeff;
+  --tekst-akcentjasny:#0e7490;
+  --metryka-grad:linear-gradient(135deg,#ecfeff 0%,#f0f9ff 100%);
+  --stozek:#99f6e4,#38bdf8,#0e7490,#38bdf8,#99f6e4;
+  --wskaznik-grad:linear-gradient(90deg,#67e8f9,#0e7490,#67e8f9);
+  --luk:#99f6e4 0deg, #38bdf8 42deg, #0e7490 86deg;
+  --luk-glow:#38bdf8;
+  --glow-krycie:.42;
+  --turkus:#10b981;
+  --bg-turkus:#ecfdf5;
+  --tekst-turkus:#047857;
+  --beta-poswiata:rgba(16,185,129,.55);
+}
+[data-motyw="ciemny"][data-paleta="fiord"]{
+  --akcent:#67e8f9;
+  --akcent-moc:#a5f3fc;
+  --bg-akcentjasny:#0c3542;
+  --tekst-akcentjasny:#67e8f9;
+  --metryka-grad:linear-gradient(135deg,#132c33 0%,#16283b 100%);
+  --stozek:#0e7490,#38bdf8,#a5f3fc,#38bdf8,#0e7490;
+  --glow-krycie:.70;
+  --turkus:#34d399;
+  --bg-turkus:#123527;
+  --tekst-turkus:#6ee7b7;
+  --beta-poswiata:rgba(52,211,153,.55);
+}
+/* ---- Aurora (specjalna) ---- */
+[data-paleta="aurora"]{
+  --akcent:#1d63d8;
+  --akcent-moc:#4D96FF;
+  --on-akcent:#fff;
+  --gradient:linear-gradient(90deg,#24314A,#4D96FF,#79DFFF,#8A2BE2,#4D96FF,#24314A);
+  --grad-maly:linear-gradient(135deg,#4D96FF,#8A2BE2);
+  --ikona-grad:var(--gradient);
+  --przycisk-cien:rgba(138,43,226,.38);
+  --bg-akcentjasny:#eef4ff;
+  --tekst-akcentjasny:#1d63d8;
+  --metryka-grad:linear-gradient(135deg, #f2f7ff 0%, #f0eeff 100%);
+  --stozek:#79DFFF,#4D96FF,#3B6FE0,#24314A,#4C1D95,#8A2BE2,#A855F7,#C4A2FF,#DBEAFE,#A5E9FF,#79DFFF;
+  --wskaznik-grad:linear-gradient(90deg,#1e3a8a,#1d63d8,#7c3aed,#1d63d8,#1e3a8a);
+  --luk:#79DFFF 0deg, #4D96FF 42deg, #8A2BE2 86deg;
+  --luk-glow:#8A2BE2;
+  --glow-krycie:.42;
+  --turkus:#7c3aed;
+  --bg-turkus:#f3e8ff;
+  --tekst-turkus:#6b21a8;
+  --beta-poswiata:rgba(138,43,226,.55);
+}
+[data-motyw="ciemny"][data-paleta="aurora"]{
+  --akcent:#79DFFF;
+  --akcent-moc:#a5ecff;
+  --gradient:linear-gradient(90deg,#1A1F36,#4D96FF,#79DFFF,#8A2BE2,#4D96FF,#1A1F36);
+  --bg-akcentjasny:#152246;
+  --tekst-akcentjasny:#9dc4ff;
+  --metryka-grad:linear-gradient(135deg, #1b2440 0%, #221f43 100%);
+  --wskaznik-grad:linear-gradient(90deg,#4D96FF,#79DFFF,#C4A2FF,#79DFFF,#4D96FF);
+  --glow-krycie:.85;
+  --turkus:#c4a2ff;
+  --bg-turkus:#2a1f4a;
+  --tekst-turkus:#d8c2ff;
+  --beta-poswiata:rgba(138,43,226,.55);
+  --tlo:#12172b;
+  --karta:#1A1F36;
+  --linia:#28324d;
+  --input-tlo:#24314A;
+  --input-brzeg:#33415f;
+  --sz-baza:#2b3550;
+  --wcisk:#232947;
+}
+/* ---- Full RGB (specjalna) ---- */
+[data-paleta="rgb"]{
+  --akcent:#22d3ee;
+  --akcent-moc:#a855f7;
+  --on-akcent:#fff;
+  --gradient:linear-gradient(90deg,#ff2d95,#a855f7,#22d3ee,#22c55e,#facc15,#ff2d95);
+  --grad-maly:linear-gradient(135deg,#ff2d95,#a855f7,#22d3ee);
+  --ikona-grad:var(--gradient);
+  --przycisk-cien:rgba(168,85,247,.45);
+  --bg-akcentjasny:#f3e8ff;
+  --tekst-akcentjasny:#7e22ce;
+  --metryka-grad:linear-gradient(135deg,#faf5ff 0%,#eff6ff 100%);
+  --stozek:#ff2d95,#a855f7,#22d3ee,#22c55e,#facc15,#ff2d95;
+  --wskaznik-grad:var(--gradient);
+  --luk:#22d3ee 0deg, #a855f7 34deg, #ff2d95 62deg, #facc15 86deg;
+  --luk-glow:#a855f7;
+  --glow-krycie:.55;
+  --turkus:#a855f7;
+  --bg-turkus:#f3e8ff;
+  --tekst-turkus:#7e22ce;
+  --beta-poswiata:rgba(168,85,247,.55);
+}
+[data-motyw="ciemny"][data-paleta="rgb"]{
+  --bg-akcentjasny:#231a3d;
+  --tekst-akcentjasny:#d8b4fe;
+  --metryka-grad:linear-gradient(135deg,#191f30 0%,#1d1830 100%);
+  --glow-krycie:.85;
+  --bg-turkus:#2a1740;
+  --tekst-turkus:#d8b4fe;
+  --tlo:#0a0b10;
+  --karta:#141824;
+  --linia:#232a3d;
+  --input-tlo:#1a1f2e;
+  --input-brzeg:#2f3852;
+  --sz-baza:#2a2f38;
+  --wcisk:#1b202e;
+}
+/* ---- Gamma (specjalna) ---- */
+[data-paleta="gamma"]{
+  --akcent:#7e22ce;
+  --akcent-moc:#9333ea;
+  --on-akcent:#fff;
+  --gradient:linear-gradient(90deg,#14532d,#22c55e,#4ade80,#9333ea,#22c55e,#14532d);
+  --grad-maly:linear-gradient(135deg,#22c55e,#7e22ce);
+  --ikona-grad:var(--gradient);
+  --przycisk-cien:rgba(126,34,206,.38);
+  --bg-akcentjasny:#f5f0ff;
+  --tekst-akcentjasny:#7e22ce;
+  --metryka-grad:linear-gradient(135deg,#f3fdf6 0%,#f7f2ff 100%);
+  --stozek:#4ade80,#22c55e,#16a34a,#14532d,#3b0764,#7e22ce,#9333ea,#c084fc,#e9d5ff,#bbf7d0,#86efac,#4ade80;
+  --wskaznik-grad:linear-gradient(90deg,#166534,#16a34a,#9333ea,#16a34a,#166534);
+  --luk:#86efac 0deg,#4ade80 42deg,#9333ea 86deg;
+  --luk-glow:#9333ea;
+  --glow-krycie:.42;
+  --turkus:#16a34a;
+  --bg-turkus:#f0fdf4;
+  --tekst-turkus:#15803d;
+  --beta-poswiata:rgba(74,222,128,.55);
+}
+[data-motyw="ciemny"][data-paleta="gamma"]{
+  --akcent:#c084fc;
+  --akcent-moc:#d8b4fe;
+  --gradient:linear-gradient(90deg,#0f3d21,#16a34a,#22c55e,#7e22ce,#16a34a,#0f3d21);
+  --bg-akcentjasny:#221a2e;
+  --tekst-akcentjasny:#d8b4fe;
+  --metryka-grad:linear-gradient(135deg,#16281c 0%,#1e1a2b 100%);
+  --wskaznik-grad:linear-gradient(90deg,#22c55e,#4ade80,#c084fc,#4ade80,#22c55e);
+  --glow-krycie:.85;
+  --turkus:#4ade80;
+  --bg-turkus:#14331f;
+  --tekst-turkus:#86efac;
+  --beta-poswiata:rgba(74,222,128,.55);
+  --tlo:#0d1f14;
+  --karta:#16281c;
+  --linia:#24402d;
+  --input-tlo:#1e3527;
+  --input-brzeg:#2c4936;
+  --sz-baza:#223a2a;
+  --wcisk:#1c3023;
+}
+/* ---- Heros (specjalna) ---- */
+[data-paleta="heros"]{
+  --akcent:#1d4ed8;
+  --akcent-moc:#2563eb;
+  --on-akcent:#fff;
+  --gradient:linear-gradient(90deg,#7f1d1d,#dc2626,#f87171,#2563eb,#dc2626,#7f1d1d);
+  --grad-maly:linear-gradient(135deg,#dc2626,#1d4ed8);
+  --ikona-grad:var(--gradient);
+  --przycisk-cien:rgba(29,78,216,.38);
+  --przycisk-grad:linear-gradient(90deg,#1e3a8a,#2563eb,#60a5fa,#b91c1c,#2563eb,#1e3a8a);
+  --bg-akcentjasny:#eff4ff;
+  --tekst-akcentjasny:#1d4ed8;
+  --metryka-grad:linear-gradient(135deg,#fff5f5 0%,#f0f5ff 100%);
+  --stozek:#f87171,#dc2626,#b91c1c,#7f1d1d,#1e3a8a,#2563eb,#3b82f6,#93c5fd,#dbeafe,#fecaca,#f87171;
+  --wskaznik-grad:linear-gradient(90deg,#7f1d1d,#dc2626,#2563eb,#dc2626,#7f1d1d);
+  --luk:#fca5a5 0deg,#f87171 42deg,#2563eb 86deg;
+  --luk-glow:#2563eb;
+  --glow-krycie:.42;
+  --turkus:#dc2626;
+  --bg-turkus:#fef2f2;
+  --tekst-turkus:#b91c1c;
+  --beta-poswiata:rgba(248,113,113,.55);
+}
+[data-motyw="ciemny"][data-paleta="heros"]{
+  --akcent:#93c5fd;
+  --akcent-moc:#bfdbfe;
+  --gradient:linear-gradient(90deg,#6b1717,#b91c1c,#dc2626,#1d4ed8,#b91c1c,#6b1717);
+  --przycisk-grad:linear-gradient(90deg,#1e3a8a,#1d4ed8,#3b82f6,#991b1b,#1d4ed8,#1e3a8a);
+  --bg-akcentjasny:#1c2440;
+  --tekst-akcentjasny:#bfdbfe;
+  --metryka-grad:linear-gradient(135deg,#241a1f 0%,#1b1d2e 100%);
+  --wskaznik-grad:linear-gradient(90deg,#dc2626,#f87171,#93c5fd,#f87171,#dc2626);
+  --glow-krycie:.85;
+  --turkus:#f87171;
+  --bg-turkus:#3a1a1a;
+  --tekst-turkus:#fca5a5;
+  --beta-poswiata:rgba(248,113,113,.55);
+  --tlo:#101223;
+  --karta:#1b1d2e;
+  --linia:#2a2d45;
+  --input-tlo:#252840;
+  --input-brzeg:#343854;
+  --sz-baza:#2b2f45;
+  --wcisk:#222438;
+}
+/* ---- silnik animacji palet specjalnych — część wspólna ----
+   Nazwy @keyframes są GLOBALNE (lekcja W-41 v10: kolizja = ciche
+   nadpisanie i kręcące się przyciski) — `plyn`, `obrot`, `przebiegPolysk`
+   są zdefiniowane TYLKO tutaj; appka nie może mieć drugiej definicji.
+   Tempa rodziny: gamma/heros 11 s, rgb 9 s, aurora 14 s; połysk TYLKO
+   w Full RGB. Selektory obejmują elementy wszystkich trzech appek
+   (header/.przycisk/.hero) — selektor bez elementu w danej appce po
+   prostu nic nie łapie. Reguły dla elementów istniejących tylko w jednej
+   appce (avatar, metryki, pasek nawigacji) zostają PO stronie appki. */
+@property --kat { syntax:'<angle>'; initial-value:0deg; inherits:true; }
+@keyframes obrot { to { --kat:360deg; } }
+@keyframes plyn { to { background-position:300% 0; } }
+@keyframes przebiegPolysk { 0%{transform:translateX(-130%);} 45%,100%{transform:translateX(130%);} }
+[data-paleta="aurora"] header, [data-paleta="aurora"] .przycisk, [data-paleta="aurora"] .hero{
+  background-size:300% 100%; animation:plyn 14s linear infinite; }
+[data-paleta="rgb"] header, [data-paleta="rgb"] .przycisk, [data-paleta="rgb"] .hero{
+  background-size:300% 100%; animation:plyn 9s linear infinite; }
+[data-paleta="gamma"] header, [data-paleta="gamma"] .przycisk, [data-paleta="gamma"] .hero,
+[data-paleta="heros"] header, [data-paleta="heros"] .przycisk, [data-paleta="heros"] .hero{
+  background-size:300% 100%; animation:plyn 11s linear infinite; }
+[data-paleta="rgb"] header{position:relative; overflow:hidden;}
+[data-paleta="rgb"] header::after{content:''; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(105deg, transparent 36%, rgba(255,255,255,.38) 50%, transparent 64%);
+  transform:translateX(-130%); animation:przebiegPolysk 5.5s ease-in-out infinite;}
+
+/* ---- ekran „Ustawienia": tryb + kafle palet — część wspólna ----
+   Reguły 1:1 z ewidencji (wzorzec W-31; układ 2x2, próbka na całą
+   szerokość kafla, biały ptaszek na próbce). */
+.ekran-baner{margin:-16px -16px 14px; padding:11px 14px; text-align:center;
+  font-size:15px; font-weight:700; letter-spacing:.09em;
+  text-transform:uppercase; border-radius:14px 14px 0 0;
+  background:var(--bg-akcentjasny); color:var(--tekst-akcentjasny);}
+.ust-sekcja{font-size:11.5px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.07em; color:var(--szary); margin:18px 2px 9px;
+  display:flex; align-items:center; gap:7px;}
+.ust-sekcja:first-of-type{margin-top:2px;}
+.ust-sekcja .ikona{width:14px; height:14px;}
+.ust-tryb{display:flex; gap:8px;}
+.ust-tryb button{flex:1; min-width:0; border:1.5px solid var(--linia);
+  background:var(--karta); color:var(--szary); font-family:inherit;
+  font-size:12px; font-weight:600; line-height:1.25; padding:11px 3px 9px;
+  border-radius:12px; display:flex; flex-direction:column; align-items:center;
+  gap:6px; min-height:auto; transition:border-color .2s, color .2s, background .2s;}
+.ust-tryb button .ikona{width:19px; height:19px;}
+.ust-tryb button.wybrany{border-color:var(--akcent);
+  color:var(--tekst-akcentjasny); background:var(--bg-akcentjasny);
+  font-weight:700;}
+.pal-lista{display:grid; grid-template-columns:1fr 1fr; gap:9px;}
+.pal-poz{display:block; width:100%; padding:9px; border-radius:13px;
+  border:1.5px solid var(--linia); background:var(--karta); color:var(--tekst);
+  font-family:inherit; text-align:left; position:relative; min-height:auto;
+  transition:border-color .2s, box-shadow .2s;}
+.pal-poz .probka{display:block; width:100%; height:38px; border-radius:9px;
+  margin-bottom:7px;}
+/* Próbki specjalnych ruszają się już na liście — widać, że są inne,
+   zanim się je wybierze. */
+.pal-poz.spec .probka{background-size:250% 100%; animation:plyn 5s linear infinite;}
+.pal-poz .tekst{display:block;}
+.pal-poz b{font-size:13.5px; display:block; line-height:1.2;}
+.pal-poz .opis{display:block; font-size:11px; color:var(--szary);}
+.pal-poz .ptaszek{position:absolute; top:16px; right:16px; width:20px; height:20px;
+  color:#fff; opacity:0; filter:drop-shadow(0 1px 3px rgba(0,0,0,.55));}
+.pal-poz.wybrana{border-color:var(--akcent); box-shadow:0 0 0 3px var(--przycisk-cien);}
+.pal-poz.wybrana .ptaszek{opacity:1;}
+.pal-poz.wybrana b{font-weight:700;}
+.ust-notka{font-size:11.5px; color:var(--szary); line-height:1.45;
+  margin:11px 2px 0; display:flex; gap:7px; align-items:flex-start;}
+.ust-notka .ikona{width:14px; height:14px; flex:none; margin-top:1px; opacity:.7;}
+@media (prefers-reduced-motion: reduce){
+  .pal-poz.spec .probka{ animation:none; }
+}
+/* ============== KONIEC WSPÓLNEGO BLOKU KANONU (CSS) ============== */
+
+  /* ⚠ JEDYNY WYJĄTEK FLOTY od wspólnego bloku (do decyzji przy rundzie
+     panelu powitalnego): ikony i avatar Pomarańczu są TURKUSOWE (system
+     drugiego akcentu floty), a nie pomarańczowe jak w ewidencji.
+     Reguła stoi PO bloku kanonu, więc wygrywa w obu motywach — dokładnie
+     tak, jak było przed W-41. */
+  [data-paleta="pomaranczowa"]{
     --ikona-grad:linear-gradient(135deg, #0f2a43, #06b6d4);
   }
   [data-motyw="ciemny"]{
@@ -66,226 +628,25 @@
     --bg-uwaga:#453615; --brzeg-uwaga:#8a5a12; --tekst-uwaga:#fcd34d;
     --bg-ok:#123522; --tekst-ok:#86efac;
     --bg-blad:#451a17; --tekst-blad:#fca5a5;
-    --bg-akcentjasny:#432614; --tekst-akcentjasny:#fb923c;
-    --metryka-grad:linear-gradient(135deg, #2c2115 0%, #2b1c1c 100%);
-    --turkus:#22d3ee; --bg-turkus:#0e3a44; --tekst-turkus:#67e8f9;
-    --glow-krycie:.70;                       /* Z-81 */
-    --beta-poswiata:rgba(34,211,238,.55);    /* Z-81 */
+    /* ⚠ ŻADNYCH tokenów palety w tym bloku (W-41) — ciemne wartości KAŻDEJ
+       palety, także domyślnego pomarańczu, niesie wspólny blok kanonu wyżej. */
     /* Z-87: szkielet na ciemnym tle — jaśniejszy niż karta, ale nie biały,
        i dużo słabszy połysk (białe pasmo na ciemnym wygląda jak błysk lampy).
        --luk celowo NIE jest tu nadpisywany: zasłona jest ciemna w obu
        motywach, więc łuk zależy od palety, nie od jasny/ciemny. */
     --sz-baza:#2a2f38; --sz-polysk:rgba(255,255,255,.10);
   }
-  /* Opcjonalna paleta niebiesko-pomarańczowa (FEEDBACK-BETA-TESTY.md pkt 3,
-     18.07.2026) — drugi, niezależny przełącznik obok jasny/ciemny (patrz
-     wczytajPaleta_() w JS). Niebieski przejmuje rolę głównego akcentu
-     (nagłówek, przyciski, avatar), pomarańcz zostaje jako akcent drugorzędny
-     — dokładnie te same odcienie pomarańczu co w oryginalnej palecie
-     (--bg-akcentjasny/--tekst-akcentjasny), żeby nie wymyślać nowego koloru. */
-  /* Z-89 (16.08.2026): niebieska paleta „Błękit dzienny". Nagłówek rozjaśniony
-     w stronę lazuru, akcent POCIEMNIONY do #1d4ed8 — przy jaśniejszym pasku
-     #2563eb tracił kontrast na białych kartach.
-     Drugi akcent (--turkus) ZOSTAJE pomarańczowy: decyzja Marka — kafelki
-     wpisów mają zachować ciepłe akcenty dokładnie tam, gdzie były. Jedyny
-     wyjątek to „Popraw" (reguła niżej), bo stał w jednym rzędzie z czerwonym
-     „Usuń" i oba kolory biły się o uwagę. */
-  [data-paleta="blekit"]{
-    --gradient:linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #38bdf8 100%);
-    --ikona-grad:linear-gradient(135deg, #1e3a8a, #38bdf8);
-    --akcent:#1d4ed8;
-    --przycisk-cien:rgba(56,189,248,.32);
-    --bg-akcentjasny:#eff6ff; --tekst-akcentjasny:#1d4ed8;
-    --metryka-grad:linear-gradient(135deg, #f0f7ff 0%, #dbeafe 100%);
-    --turkus:#f97316; --bg-turkus:#fff1e6; --tekst-turkus:#c2410c;
-    --stozek:#bae6fd,#38bdf8,#2563eb,#38bdf8,#bae6fd;   /* Z-81 */
-    --wskaznik-grad:linear-gradient(90deg,#2563eb,#3b82f6,#38bdf8,#3b82f6,#2563eb);  /* Z-95 */
-    --beta-poswiata:rgba(249,115,22,.55);                /* Z-81 */
-    --luk:#e0f2fe 0deg, #7dd3fc 40deg, #2563eb 86deg;    /* Z-87 */
-    --luk-glow:#38bdf8;                                   /* Z-87 */
-  }
-  /* ============ W-31 (28.08.2026): palety wspólne dla OBU appek ============
-     Decyzja Marka: te same cztery podstawowe tu i w ewidencji, różni się
-     TYLKO domyślna (flota startuje na pomarańczu, ewidencja na graficie).
-     „Pomarańcz" nie ma własnego bloku — jego wartości siedzą w :root, a że
-     żaden blok palety wtedy nie pasuje, :root sam wygrywa.
-     ⚠ Flota ma zmienne, których ewidencja nie zna (--turkus, --bg-turkus,
-     --tekst-turkus, --beta-poswiata). Przeniesione palety MUSZĄ je ustawić,
-     inaczej odziedziczą pomarańczowy drugi akcent z :root.
-     ⚠⚠ KOLEJNOŚĆ JEST TU ODWROTNA NIŻ W EWIDENCJI. Tam bloki palet stoją
-     PRZED `[data-motyw="ciemny"]`, więc ciemny motyw sam je przykrywa.
-     Tutaj `[data-motyw="ciemny"]` (linia ~57) jest WYŻEJ niż bloki palet,
-     więc przy równej wadze selektora wygrywa blok palety — czyli JASNE
-     wartości obowiązywałyby też w ciemnym. Dlatego każda paleta MUSI mieć
-     `[data-motyw="ciemny"][data-paleta="…"]` powtarzający wszystko, co
-     ustawia blok jasny, a co ciemny motyw też ustawia. To jest dokładnie
-     ta pułapka, którą Marek złapał w Z-91 („zmienna z bloku palety działa
-     w OBU motywach, dopóki blok ciemny jej nie nadpisze"). */
-
-  /* ---- Grafit (z ewidencji) ---- */
-  [data-paleta="grafit"]{
-    --akcent:#3f3f46;
-    --gradient:linear-gradient(135deg, #27272a 0%, #52525b 70%, #a1a1aa 100%);
-    --ikona-grad:linear-gradient(135deg, #27272a, #71717a);
-    --przycisk-cien:rgba(39,39,42,.35);
-    --bg-akcentjasny:#f4f4f5; --tekst-akcentjasny:#3f3f46;
-    --metryka-grad:linear-gradient(135deg, #fafafa 0%, #f4f4f5 100%);
-    /* Drugi akcent zostaje turkusowy jak w pomarańczowej — grafit jest
-       bezbarwny z założenia, więc ciepłe/zimne akcenty kafelków muszą
-       skądś wziąć kolor, a turkus jest neutralny wobec szarości. */
-    --turkus:#06b6d4; --bg-turkus:#e0f7fb; --tekst-turkus:#0e7490;
-    --beta-poswiata:rgba(6,182,212,.55);
-    --stozek:#a1a1aa,#52525b,#27272a,#52525b,#a1a1aa;
-    --wskaznik-grad:linear-gradient(90deg,#27272a,#52525b,#8b8b93,#52525b,#27272a);
-    --glow-krycie:.40;
-    --luk:#f4f4f5 0deg, #a1a1aa 45deg, #52525b 86deg;
-    --luk-glow:rgba(255,255,255,.5);
-  }
-  /* ---- Burgund (z ewidencji) ---- */
-  [data-paleta="burgund"]{
-    --akcent:#9f1239;
-    --gradient:linear-gradient(135deg, #450a1e 0%, #881337 55%, #be123c 100%);
-    --ikona-grad:linear-gradient(135deg, #450a1e, #be123c);
-    --przycisk-cien:rgba(159,18,57,.35);
-    --bg-akcentjasny:#fff1f2; --tekst-akcentjasny:#9f1239;
-    --metryka-grad:linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    --turkus:#06b6d4; --bg-turkus:#e0f7fb; --tekst-turkus:#0e7490;
-    --beta-poswiata:rgba(6,182,212,.55);
-    --stozek:#fb7185,#e11d48,#9f1239,#e11d48,#fb7185;
-    --wskaznik-grad:linear-gradient(90deg,#450a1e,#881337,#e11d48,#881337,#450a1e);
-    --glow-krycie:.40;
-    --luk:#fda4af 0deg, #fb7185 45deg, #e11d48 86deg;
-    --luk-glow:#e11d48;
-  }
-  /* ---- Gamma (specjalna, animowana) ----
-     Barwa bazowa z „Asystenta Floty" (zieleń→fiolet), tam STATYCZNA —
-     animację robimy od zera. Gradient wraca do koloru początkowego
-     (A…D…A), inaczej na zapętleniu widać szew (Z-95). */
-  [data-paleta="gamma"]{
-    --akcent:#7e22ce;
-    --gradient:linear-gradient(90deg,#14532d,#22c55e,#4ade80,#9333ea,#22c55e,#14532d);
-    /* ⚠ POPRAWKA (Marek 28.08: „gradient w środku avataru nie działa,
-       wszystko działa tylko w Full RGB"). Animacja `plyn` przesuwa tło
-       POZIOMO, więc dwukolorowy gradient pod skosem 135° nie ma czego
-       pokazać — widać jedno pole, które ledwo dryfuje. Full RGB jako
-       jedyny miał tu gradient 90° z sześcioma barwami wracającymi do
-       startu i tylko on wyglądał na żywy. Palety animowane biorą więc
-       gradient nagłówka (już 90°, wielobarwny, zapętlony); przez
-       `var(--gradient)`, a nie kopię, żeby ciemny motyw szedł za nim sam. */
-    --ikona-grad:var(--gradient);
-    --przycisk-cien:rgba(126,34,206,.38);
-    --bg-akcentjasny:#f5f0ff; --tekst-akcentjasny:#7e22ce;
-    --metryka-grad:linear-gradient(135deg,#f3fdf6 0%,#f7f2ff 100%);
-    --turkus:#16a34a; --bg-turkus:#f0fdf4; --tekst-turkus:#15803d;
-    --beta-poswiata:rgba(74,222,128,.55);
-    --stozek:#4ade80,#22c55e,#16a34a,#14532d,#3b0764,#7e22ce,#9333ea,#c084fc,#e9d5ff,#bbf7d0,#86efac,#4ade80;
-    --wskaznik-grad:linear-gradient(90deg,#166534,#16a34a,#9333ea,#16a34a,#166534);
-    --glow-krycie:.42;
-    --luk:#86efac 0deg,#4ade80 42deg,#9333ea 86deg;
-    --luk-glow:#9333ea;
-  }
-  /* ---- Heros (specjalna, animowana) ----
-     ⚠ --przycisk-grad: duży przycisk akcji NIE bierze --gradient, tylko
-     osobny, przechylony w błękit. Czerwień w naszych appkach znaczy błąd
-     i usuwanie — czerwony „Zapisz" przez większość pętli mówiłby coś
-     innego, niż robi. Czerwień zostaje tam, gdzie jest tłem: w nagłówku. */
-  [data-paleta="heros"]{
-    --akcent:#1d4ed8;
-    --gradient:linear-gradient(90deg,#7f1d1d,#dc2626,#f87171,#2563eb,#dc2626,#7f1d1d);
-    --przycisk-grad:linear-gradient(90deg,#1e3a8a,#2563eb,#60a5fa,#b91c1c,#2563eb,#1e3a8a);
-    --ikona-grad:var(--gradient);   /* jw. — patrz komentarz przy Gammie */
-    --przycisk-cien:rgba(29,78,216,.38);
-    --bg-akcentjasny:#eff4ff; --tekst-akcentjasny:#1d4ed8;
-    --metryka-grad:linear-gradient(135deg,#fff5f5 0%,#f0f5ff 100%);
-    --turkus:#dc2626; --bg-turkus:#fef2f2; --tekst-turkus:#b91c1c;
-    --beta-poswiata:rgba(248,113,113,.55);
-    --stozek:#f87171,#dc2626,#b91c1c,#7f1d1d,#1e3a8a,#2563eb,#3b82f6,#93c5fd,#dbeafe,#fecaca,#f87171;
-    --wskaznik-grad:linear-gradient(90deg,#7f1d1d,#dc2626,#2563eb,#dc2626,#7f1d1d);
-    --glow-krycie:.42;
-    --luk:#fca5a5 0deg,#f87171 42deg,#2563eb 86deg;
-    --luk-glow:#2563eb;
-  }
-  /* Z-89: wyjątek od --turkus. Zmiennej nie da się tu użyć — reszta
-     pomarańczowych miejsc (obwódka karty, kółko ikony, plakietka numeru,
-     „Łączone", strzałka) ma zostać bez zmian. */
+  /* ---- bloki JASNE palet: WE WSPÓLNYM BLOKU KANONU wyżej ----
+     Z-89: „Popraw"/„Wklej SMS" w błękicie i aurorze biorą kolor akcentu,
+     nie --turkus (stały w jednym rzędzie z czerwonym „Usuń"). */
   [data-paleta="blekit"] .przycisk-maly{color:#1d4ed8; border-color:#1d4ed8;}
-  [data-motyw="ciemny"][data-paleta="blekit"]{
-    /* Z-89: ten sam gradient co w jasnym, ale prawy koniec przycięty o jeden
-       ton (#38bdf8 → #0ea5e9). Powód: na ciemnym tle lazurowy pasek stawał się
-       najjaśniejszym punktem ekranu i przyciągał wzrok mocniej niż treść —
-       ten sam zarzut, który przy ewidencji zapisaliśmy jako E3. Jasny motyw
-       zostaje bez zmian. */
-    --gradient:linear-gradient(135deg, #2563eb 0%, #3b82f6 50%, #0ea5e9 100%);
-    /* Z-91: regresja z Z-89, wyłapana przez Marka („w niebieskim chciałbym coś
-       lekko jaśniejszego"). W Z-89 pociemniłem --akcent do #1d4ed8 dla kontrastu
-       na BIAŁYCH kartach — ale flota nie nadpisuje --akcent w motywie ciemnym,
-       więc ta sama ciemna wartość obowiązywała też tam: aktywna zakładka
-       rgb(29,78,216) na pasku rgb(37,42,51), czyli granat na ciemnym.
-       ⚠ Zasada: zmienna ustawiona w bloku palety działa w OBU motywach,
-       dopóki blok ciemny jej nie nadpisze. Sprawdzać oba. */
-    --akcent:#7dd3fc;
-    --bg-akcentjasny:#132447; --tekst-akcentjasny:#93c5fd;
-    --metryka-grad:linear-gradient(135deg, #16233d 0%, #1b2f4d 100%);
-    --turkus:#fb923c; --bg-turkus:#432614; --tekst-turkus:#fb923c;
-    --stozek:#bae6fd,#60a5fa,#2563eb,#60a5fa,#bae6fd;   /* Z-81 */
-    --wskaznik-grad:linear-gradient(90deg,#2563eb,#3b82f6,#0ea5e9,#3b82f6,#2563eb);  /* Z-95 */
-    --beta-poswiata:rgba(251,146,60,.55);                /* Z-81 */
-  }
-  /* Z-89: jw. — #1d4ed8 jest na ciemnym tle nieczytelny, stąd jasny błękit. */
+  /* ---- ciemne nadpisania palet: WE WSPÓLNYM BLOKU KANONU wyżej ---- */
   [data-motyw="ciemny"][data-paleta="blekit"] .przycisk-maly{
     color:#93c5fd; border-color:#93c5fd;}
 
   /* ===== W-31: ciemne nadpisania nowych palet =====
      Każdy blok powtarza KOMPLET zmiennych, które ustawia jego blok jasny
      i które ciemny motyw też rusza — patrz ostrzeżenie wyżej. */
-  [data-motyw="ciemny"][data-paleta="grafit"]{
-    --akcent:#a1a1aa;
-    --bg-akcentjasny:#26262a; --tekst-akcentjasny:#d4d4d8;
-    --metryka-grad:linear-gradient(135deg, #1f2127 0%, #262930 100%);
-    --turkus:#22d3ee; --bg-turkus:#0e3a44; --tekst-turkus:#67e8f9;
-    --beta-poswiata:rgba(34,211,238,.55);
-    --stozek:#52525b,#71717a,#a1a1aa,#71717a,#52525b;
-    --wskaznik-grad:linear-gradient(90deg,#71717a,#a1a1aa,#d4d4d8,#a1a1aa,#71717a);
-  }
-  [data-motyw="ciemny"][data-paleta="burgund"]{
-    /* Prawy koniec gradientu przycięty o ton (#be123c → #9f2544) — na ciemnym
-       tle jaskrawy koniec robił z paska najjaśniejszy punkt ekranu (Z-90). */
-    --gradient:linear-gradient(135deg, #450a1e 0%, #881337 55%, #9f2544 100%);
-    --akcent:#fb7185;
-    --bg-akcentjasny:#3f1220; --tekst-akcentjasny:#fda4af;
-    --metryka-grad:linear-gradient(135deg, #1f2127 0%, #262930 100%);
-    --turkus:#22d3ee; --bg-turkus:#0e3a44; --tekst-turkus:#67e8f9;
-    --beta-poswiata:rgba(34,211,238,.55);
-    --stozek:#9f1239,#e11d48,#fb7185,#e11d48,#9f1239;
-    /* Z-96: ciemne burgundy na karcie #1c1f26 są niewidoczne — zakres
-       przesunięty w róż. */
-    --wskaznik-grad:linear-gradient(90deg,#e11d48,#fb7185,#fda4af,#fb7185,#e11d48);
-  }
-  [data-motyw="ciemny"][data-paleta="gamma"]{
-    /* Palety specjalne przebarwiają też tła (jak Aurora) — stąd --tlo/--karta. */
-    --tlo:#0d1f14; --karta:#16281c; --input-tlo:#1e3527; --input-brzeg:#2c4936;
-    --linia:#24402d; --glow-krycie:.85;
-    --akcent:#c084fc;
-    --bg-akcentjasny:#221a2e; --tekst-akcentjasny:#d8b4fe;
-    --metryka-grad:linear-gradient(135deg,#16281c 0%,#1e1a2b 100%);
-    --gradient:linear-gradient(90deg,#0f3d21,#16a34a,#22c55e,#7e22ce,#16a34a,#0f3d21);
-    --turkus:#4ade80; --bg-turkus:#14331f; --tekst-turkus:#86efac;
-    --beta-poswiata:rgba(74,222,128,.55);
-    --sz-baza:#223a2a;
-  }
-  [data-motyw="ciemny"][data-paleta="heros"]{
-    --tlo:#101223; --karta:#1b1d2e; --input-tlo:#252840; --input-brzeg:#343854;
-    --linia:#2a2d45; --glow-krycie:.85;
-    --akcent:#93c5fd;
-    --bg-akcentjasny:#1c2440; --tekst-akcentjasny:#bfdbfe;
-    --metryka-grad:linear-gradient(135deg,#241a1f 0%,#1b1d2e 100%);
-    --gradient:linear-gradient(90deg,#6b1717,#b91c1c,#dc2626,#1d4ed8,#b91c1c,#6b1717);
-    --przycisk-grad:linear-gradient(90deg,#1e3a8a,#1d4ed8,#3b82f6,#991b1b,#1d4ed8,#1e3a8a);
-    --turkus:#f87171; --bg-turkus:#3a1a1a; --tekst-turkus:#fca5a5;
-    --beta-poswiata:rgba(248,113,113,.55);
-    --sz-baza:#2b2f45;
-  }
-
   /* ===== W-31: animacja Gammy i Herosa (poziom Aurory / Full RGB) =====
      ⚠ POPRAWKA (Marek 28.08 wieczorem: „chyba full rgb jest jedyny, który ma
      w dashboard animowane cyfry"). Dopisane `.metryka .m-w` — tak jak mają
@@ -295,12 +656,10 @@
      ⚠ Rozszerzając o kolejną paletę POWTARZAMY CAŁY selektor złożony —
      podmiana samego fragmentu z atrybutem zostawia goły selektor trafiający
      w <html> (tak powstała mleczna zasłona w Z-94/v93). */
-  [data-paleta="gamma"] header,
-  [data-paleta="gamma"] .przycisk,
+  /* header i .przycisk płyną z reguł WSPÓLNEGO BLOKU KANONU; tu elementy
+     tej appki (animowane cyfry W-31a i avatar). */
   [data-paleta="gamma"] .metryka .m-w,
   [data-paleta="gamma"] .avatar-krag,
-  [data-paleta="heros"] header,
-  [data-paleta="heros"] .przycisk,
   [data-paleta="heros"] .metryka .m-w,
   [data-paleta="heros"] .avatar-krag{ background-size:300% 100%;
     animation:plyn 11s linear infinite; }
@@ -771,9 +1130,8 @@
      zasłania środek. Kąt animujemy zmienną zarejestrowaną przez @property
      (bez rejestracji przeglądarka nie umie interpolować kąta — wtedy
      obwódka jest statyczna, co jest akceptowalnym fallbackiem, np. iOS
-     przed 16.4). Identyczny blok w ewidencji — zmieniasz tu, zmień i tam. */
-  @property --kat { syntax:'<angle>'; initial-value:0deg; inherits:true; }
-  @keyframes obrot { to { --kat:360deg; } }
+     przed 16.4). Identyczny blok w ewidencji — zmieniasz tu, zmień i tam.
+     W-41: @property --kat i @keyframes obrot definiuje WSPÓLNY BLOK KANONU. */
 
   /* --- przycisk główny („＋ Nowy wpis", „ZAPISZ") — wariant A ---
      isolation:isolate jest KONIECZNE: bez niego poświata (::after,
@@ -847,44 +1205,7 @@
     fill:none; stroke:currentColor; stroke-width:1.75;
     stroke-linecap:round; stroke-linejoin:round;}
 
-  /* ================= Z-83: paleta RGB (ukryta) =================
-     Widoczna wyłącznie dla kierowców z „Paleta specjalna = TAK" w zakładce
-     Kierowcy — front dostaje flagę `paletySpecjalne` w odpowiedzi `status`.
-     Cały wygląd siedzi w zmiennych, które appka już zna (--gradient,
-     --stozek, --akcent...), więc nic poza tym blokiem nie musiało się
-     zmienić. Dołożenie kolejnej palety specjalnej = jeszcze jeden taki
-     blok + jedna pozycja w PALETY w JS. */
-  [data-paleta="rgb"]{
-    --akcent:#22d3ee;   /* Z-91: --akcent-c usunięte, patrz :root */
-    --gradient:linear-gradient(90deg,#ff2d95,#a855f7,#22d3ee,#22c55e,#facc15,#ff2d95);
-    --ikona-grad:linear-gradient(90deg,#ff2d95,#a855f7,#22d3ee,#22c55e,#facc15,#ff2d95);
-    --przycisk-cien:rgba(168,85,247,.45);
-    --stozek:#ff2d95,#a855f7,#22d3ee,#22c55e,#facc15,#ff2d95;
-    --wskaznik-grad:var(--gradient);   /* Z-95: ten gradient już wraca do początku */
-    /* Z-87: łuk spinnera przebiega przez cały zestaw barw RGB */
-    --luk:#22d3ee 0deg, #a855f7 34deg, #ff2d95 62deg, #facc15 86deg;
-    --luk-glow:#a855f7;
-    --glow-krycie:.55;
-    --turkus:#a855f7; --bg-turkus:#f3e8ff; --tekst-turkus:#7e22ce;
-    --bg-akcentjasny:#f3e8ff; --tekst-akcentjasny:#7e22ce;
-    --metryka-grad:linear-gradient(135deg,#faf5ff 0%,#eff6ff 100%);
-    --beta-poswiata:rgba(168,85,247,.55);
-  }
-  [data-motyw="ciemny"][data-paleta="rgb"]{
-    --tlo:#0a0b10; --karta:#141824; --input-tlo:#1a1f2e; --input-brzeg:#2f3852;
-    --linia:#232a3d; --glow-krycie:.85;
-    --bg-turkus:#2a1740; --tekst-turkus:#d8b4fe;
-    --bg-akcentjasny:#231a3d; --tekst-akcentjasny:#d8b4fe;
-    --metryka-grad:linear-gradient(135deg,#191f30 0%,#1d1830 100%);
-  }
-  /* --- 2. tęcza płynie tam, gdzie appka używa --gradient --- */
-  /* ⚠ Z-95: `plyn` nie należy już wyłącznie do palet specjalnych — używa go
-     też reguła bazowa `nav .wskaznik i` (kreska w KAŻDEJ palecie). Klatki
-     kluczowe są globalne niezależnie od miejsca w pliku, ale przenosić tego
-     stąd nie ma po co: to nadal to samo przesunięcie tła. */
-  @keyframes plyn { to { background-position:300% 0; } }
-  [data-paleta="rgb"] header,
-  [data-paleta="rgb"] .przycisk,
+  /* ---- tokeny RGB/Aurory i @keyframes plyn: WE WSPÓLNYM BLOKU KANONU ---- */
   [data-paleta="rgb"] .metryka .m-w,
   [data-paleta="rgb"] .avatar-krag{ background-size:300% 100%; animation:plyn 9s linear infinite; }
   /* --- 1. avatar: wirujący pierścień + poświata --- */
@@ -897,12 +1218,7 @@
   [data-paleta="aurora"] .avatar-pierscien::after{content:''; position:absolute; inset:0;
     border-radius:50%; background:conic-gradient(from var(--kat), var(--stozek));
     filter:blur(9px); opacity:.75; z-index:-1;}
-  /* --- 3. połysk przebiegający po nagłówku --- */
-  @keyframes przebiegPolysk { 0%{transform:translateX(-130%);} 45%,100%{transform:translateX(130%);} }
-  [data-paleta="rgb"] header{position:relative; overflow:hidden;}
-  [data-paleta="rgb"] header::after{content:''; position:absolute; inset:0; pointer-events:none;
-    background:linear-gradient(105deg, transparent 36%, rgba(255,255,255,.38) 50%, transparent 64%);
-    transform:translateX(-130%); animation:przebiegPolysk 5.5s ease-in-out infinite;}
+  /* --- 3. połysk po nagłówku Full RGB: WE WSPÓLNYM BLOKU KANONU --- */
   /* Z-83: aurora USUNIĘTA 15.08.2026 — na prawdziwym telefonie plama
      (inset:-10%) wystawała poza ekran i robiła boczne przewijanie
      („psuje skalę aplikacji" — Marek). Reszta efektów zostaje. */
@@ -963,37 +1279,9 @@
 
      Wybrane przez Marka z mockupu: pasek PŁYNĄCY (N3) + akcent FIOLETOWY (A2).
      Odrzucone: pasek statyczny bez fioletu (N1) i z fioletowym ogonem (N2). */
-  [data-paleta="aurora"]{
-    --akcent:#1d63d8;
-    /* Pasek płynie w kółko (animacja `plyn` niżej), więc gradient musi wracać
-       do koloru początkowego — inaczej na zapętleniu widać szew. */
-    --gradient:linear-gradient(90deg,#24314A,#4D96FF,#79DFFF,#8A2BE2,#4D96FF,#24314A);
-    --ikona-grad:var(--gradient);   /* jw. — patrz komentarz przy Gammie */
-    --przycisk-cien:rgba(138,43,226,.38);
-    --bg-akcentjasny:#eef4ff; --tekst-akcentjasny:#1d63d8;
-    --metryka-grad:linear-gradient(135deg, #f2f7ff 0%, #f0eeff 100%);
-    --turkus:#7c3aed; --bg-turkus:#f3e8ff; --tekst-turkus:#6b21a8;
-    --stozek:#79DFFF,#4D96FF,#3B6FE0,#24314A,#4C1D95,#8A2BE2,#A855F7,#C4A2FF,#DBEAFE,#A5E9FF,#79DFFF;
-    --wskaznik-grad:var(--gradient);   /* Z-95: ten gradient już wraca do początku */
-    --beta-poswiata:rgba(138,43,226,.55);
-    --luk:#79DFFF 0deg, #4D96FF 42deg, #8A2BE2 86deg;   /* Z-87 */
-    --luk-glow:#8A2BE2;                                  /* Z-87 */
-    --glow-krycie:.42;
-  }
   /* Z-89: ten sam wyjątek co w niebieskiej — „Popraw"/„Wklej SMS" mają wziąć
      kolor akcentu, a nie --turkus, bo reszta fioletowych miejsc zostaje. */
   [data-paleta="aurora"] .przycisk-maly{color:#1d63d8; border-color:#1d63d8;}
-  [data-motyw="ciemny"][data-paleta="aurora"]{
-    /* Tło i karty to dosłownie dwa pierwsze kolory palety Marka. */
-    --tlo:#12172b; --karta:#1A1F36; --input-tlo:#24314A; --input-brzeg:#33415f;
-    --linia:#28324d;
-    --gradient:linear-gradient(90deg,#1A1F36,#4D96FF,#79DFFF,#8A2BE2,#4D96FF,#1A1F36);
-    --akcent:#79DFFF;
-    --turkus:#c4a2ff; --bg-turkus:#2a1f4a; --tekst-turkus:#d8c2ff;
-    --bg-akcentjasny:#152246; --tekst-akcentjasny:#9dc4ff;
-    --metryka-grad:linear-gradient(135deg, #1b2440 0%, #221f43 100%);
-    --glow-krycie:.85;
-  }
   [data-motyw="ciemny"][data-paleta="aurora"] .przycisk-maly{
     color:#9dc4ff; border-color:#9dc4ff;}
   /* ⚠ Dolne menu w motywie ciemnym ma na sztywno ciepły grafit #252a33 (Z-89).
@@ -1023,8 +1311,6 @@
      o kolejną paletę POWTARZAMY CAŁY selektor złożony
      (`[data-paleta="rgb"] .x, [data-paleta="aurora"] .x`), nigdy nie
      podmieniamy samego fragmentu z atrybutem. */
-  [data-paleta="aurora"] header,
-  [data-paleta="aurora"] .przycisk,
   [data-paleta="aurora"] .metryka .m-w,
   [data-paleta="aurora"] .avatar-krag{ background-size:300% 100%;
     animation:plyn 14s linear infinite; }
@@ -1159,44 +1445,7 @@
      wybierakiem — zastąpił go ekran #widokUstawienia. Sama .zaslona zostaje,
      korzysta z niej arkusz komunikatu. */
 
-  /* ==================== W-31: ekran „Ustawienia" ====================
-     Bliźniaczo z ewidencją. Układ dwukolumnowy 2×2 — przy ośmiu paletach
-     (4 + 4) trzy kolumny zostawiałyby jeden kafel sam w wierszu. */
-  .ust-sekcja{font-size:11.5px; font-weight:700; text-transform:uppercase;
-    letter-spacing:.07em; color:var(--szary); margin:18px 2px 9px;
-    display:flex; align-items:center; gap:7px;}
-  .ust-sekcja:first-of-type{margin-top:2px;}
-  .ust-sekcja .ikona{width:14px; height:14px;}
-  .ust-tryb{display:flex; gap:8px;}
-  .ust-tryb button{flex:1; min-width:0; border:1.5px solid var(--linia);
-    background:var(--karta); color:var(--szary); font-family:inherit;
-    font-size:12px; font-weight:600; line-height:1.25; padding:11px 3px 9px;
-    border-radius:12px; display:flex; flex-direction:column; align-items:center;
-    gap:6px; min-height:auto; transition:border-color .2s, color .2s, background .2s;}
-  .ust-tryb button .ikona{width:19px; height:19px;}
-  .ust-tryb button.wybrany{border-color:var(--akcent);
-    color:var(--tekst-akcentjasny); background:var(--bg-akcentjasny); font-weight:700;}
-  .pal-lista{display:grid; grid-template-columns:1fr 1fr; gap:9px;}
-  .pal-poz{display:block; width:100%; padding:9px; border-radius:13px;
-    border:1.5px solid var(--linia); background:var(--karta); color:var(--tekst);
-    font-family:inherit; text-align:left; position:relative; min-height:auto;
-    transition:border-color .2s, box-shadow .2s;}
-  .pal-poz .probka{display:block; width:100%; height:38px; border-radius:9px;
-    margin-bottom:7px;}
-  /* Próbki palet specjalnych ruszają się już TUTAJ — widać, że są inne,
-     zanim się je wybierze. */
-  .pal-poz.spec .probka{background-size:250% 100%; animation:plyn 5s linear infinite;}
-  .pal-poz .tekst{display:block;}
-  .pal-poz b{font-size:13.5px; display:block; line-height:1.2;}
-  .pal-poz .opis{display:block; font-size:11px; color:var(--szary);}
-  .pal-poz .ptaszek{position:absolute; top:16px; right:16px; width:20px; height:20px;
-    color:#fff; opacity:0; filter:drop-shadow(0 1px 3px rgba(0,0,0,.55));}
-  .pal-poz.wybrana{border-color:var(--akcent); box-shadow:0 0 0 3px var(--przycisk-cien);}
-  .pal-poz.wybrana .ptaszek{opacity:1;}
-  .pal-poz.wybrana b{font-weight:700;}
-  .ust-notka{font-size:11.5px; color:var(--szary); line-height:1.45;
-    margin:11px 2px 0; display:flex; gap:7px; align-items:flex-start;}
-  .ust-notka .ikona{width:14px; height:14px; flex:none; margin-top:1px; opacity:.7;}
+  /* ---- ekran „Ustawienia" (tryb + palety): CSS WE WSPÓLNYM BLOKU KANONU ---- */
 
   @media (prefers-reduced-motion: reduce){
     [data-paleta="rgb"] header, [data-paleta="rgb"] .przycisk, [data-paleta="rgb"] .metryka .m-w,
@@ -1509,11 +1758,7 @@
       z .przycisk-glow / Z-81; dotąd miały ją tylko rgb i aurora). Reguła
       stoi PO blokach palet — świadomie ujednolica im rytm (4s).
    ═══════════════════════════════════════════════════════════════════════ */
-.ekran-baner{margin:-16px -16px 14px; padding:11px 14px; text-align:center;
-  font-size:15px; font-weight:700; letter-spacing:.09em;
-  text-transform:uppercase; border-radius:14px 14px 0 0;
-  background:var(--bg-akcentjasny); color:var(--tekst-akcentjasny);}
-
+/* .ekran-baner: WE WSPÓLNYM BLOKU KANONU (W-41) */
 .powitanie{gap:14px; border-radius:16px; background:var(--bg-akcentjasny);
   padding:12px 14px; margin-bottom:16px;}
 
@@ -2020,133 +2265,137 @@ function bezpiecznyTekst_(t) {
     .replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// ---------- motyw (jasny / ciemny / jak w telefonie) ----------
-/* W-31: trzeci tryb „auto" — idzie za ustawieniem telefonu. W localStorage
-   trzymamy WYBÓR ('jasny' / 'ciemny' / 'auto'), a nie wynik: inaczej po
-   zmianie ustawień systemu appka zostałaby przy starym wyglądzie i nie dałoby
-   się odróżnić „kierowca chciał jasny" od „system był wtedy jasny".
-   Bliźniaczo z ewidencją. */
-function wyborMotywu_() { return localStorage.getItem('flota_motyw') || 'jasny'; }
-function motywSystemu_() {
+/* ================================================================
+   KANON PALET RODZINY (W-41 "paczka wyglądu", 30.08.2026) — JS.
+   TEN BLOK JEST IDENTYCZNY CO DO ZNAKU w trzech aplikacjach.
+   Wszystko, co różni appki, siedzi w PALETY_APKA (zdefiniowanym w <head>
+   danej appki): prefiks kluczy localStorage, paleta domyślna, lista i
+   kolejność palet podstawowych, mapa migracji starych id, id ekranu
+   i karty ustawień. Wymaga: el(), ikonaHTML_() i sprite'u ikon
+   (ic-sun/ic-moon/ic-phone/ic-check/ic-lock/ic-user) po stronie appki.
+   ================================================================ */
+var KLUCZ_PALETA      = PALETY_APKA.prefiks + '_paleta';
+var KLUCZ_MOTYW       = PALETY_APKA.prefiks + '_motyw';
+var KLUCZ_PALETY_SPEC = PALETY_APKA.prefiks + '_palety_specjalne';
+
+/* Rejestr WSZYSTKICH palet rodziny — definicje CSS też są we wszystkich
+   appkach. O widoczności decyduje PALETY_APKA.podstawowe (podstawowe,
+   w kolejności appki) + bramka specjalnych. `pasek` -> <meta theme-color>
+   (najciemniejszy odcień nagłówka; wyjątek aurora #4D96FF — świadoma
+   decyzja Marka 30.08.2026). Opis "domyślna" dokleja się w locie tej
+   palecie, która jest domyślna w danej appce. */
+var PALETY_REJESTR = [
+  { id:'pomaranczowa', nazwa:'Pomarańcz', opis:'energiczna', pasek:'#f97316',
+    probka:'linear-gradient(135deg,#fbbf24,#f97316 55%,#dc2626)' },
+  { id:'blekit', nazwa:'Błękit', opis:'spokojniejsza', pasek:'#2563eb',
+    probka:'linear-gradient(135deg,#2563eb,#3b82f6 50%,#38bdf8)' },
+  { id:'grafit', nazwa:'Grafit', opis:'stonowana', pasek:'#27272a',
+    probka:'linear-gradient(135deg,#27272a,#52525b 70%,#a1a1aa)' },
+  { id:'burgund', nazwa:'Burgund', opis:'cieplejsza', pasek:'#4c0519',
+    probka:'linear-gradient(135deg,#4c0519,#9f1239 55%,#e11d48)' },
+  { id:'jadeit', nazwa:'Jadeit', opis:'spokojna zieleń', pasek:'#14532d',
+    probka:'linear-gradient(135deg,#22c55e,#7e22ce)' },
+  { id:'hot-iron', nazwa:'Hot Iron', opis:'czerwień i bursztyn', pasek:'#7f1d1d',
+    probka:'linear-gradient(135deg,#dc2626,#f59e0b)' },
+  { id:'widmo', nazwa:'Widmo', opis:'fiolet i czerwień', pasek:'#4c1d95',
+    probka:'linear-gradient(135deg,#7c3aed,#ef4444)' },
+  { id:'fiord', nazwa:'Fiord', opis:'chłodny turkus', pasek:'#083344',
+    probka:'linear-gradient(135deg,#0e7490,#38bdf8,#99f6e4)' },
+  { id:'aurora', nazwa:'Aurora', opis:'chłodna poświata', pasek:'#4D96FF',
+    probka:'linear-gradient(90deg,#24314A,#4D96FF,#79DFFF,#8A2BE2)', specjalna:true },
+  { id:'rgb', nazwa:'Full RGB', opis:'pełne kolory', pasek:'#a855f7',
+    probka:'linear-gradient(90deg,#ff2d95,#a855f7,#22d3ee,#22c55e,#facc15)', specjalna:true },
+  { id:'gamma', nazwa:'Gamma', opis:'zieleń i fiolet', pasek:'#14532d',
+    probka:'linear-gradient(135deg,#14532d,#22c55e 45%,#9333ea)', specjalna:true },
+  { id:'heros', nazwa:'Heros', opis:'czerwień i błękit', pasek:'#7f1d1d',
+    probka:'linear-gradient(135deg,#7f1d1d,#dc2626 45%,#2563eb)', specjalna:true }
+];
+function paletaDomyslna_(){
+  return (typeof KONFIG !== 'undefined' && KONFIG && KONFIG.PALETA_DOMYSLNA)
+    ? KONFIG.PALETA_DOMYSLNA : PALETY_APKA.domyslna;
+}
+/* PALETY = to, co dana appka w ogóle pokazuje (podstawowe appki w jej
+   kolejności + wszystkie specjalne rodziny). Reszta rejestru czeka
+   w kodzie — włączenie = dopisanie id do PALETY_APKA.podstawowe. */
+var PALETY = PALETY_APKA.podstawowe.map(function(id){
+  return PALETY_REJESTR.filter(function(p){ return p.id === id; })[0];
+}).concat(PALETY_REJESTR.filter(function(p){ return p.specjalna; }));
+
+function paletaDozwolona_(id){
+  var p = PALETY.filter(function(x){ return x.id === id; })[0];
+  if (!p) return false;
+  return !p.specjalna || localStorage.getItem(KLUCZ_PALETY_SPEC) === 'TAK';
+}
+/* Migracja starych id (telefon pamięta paletę po id). Mapa per appka.
+   `migracjaJednorazowa` (Asystent): mapę wolno puścić tylko raz, bo
+   `gamma` zmieniła znaczenie — bez flagi świeżo wybrana fioletowa Gamma
+   byłaby cofana przy każdym starcie (złapane testem przy v9). */
+function migrujPalety_(){
+  var mapa = PALETY_APKA.migracja || {};
+  if (PALETY_APKA.migracjaJednorazowa) {
+    var KLUCZ_FLAGI = PALETY_APKA.prefiks + '_migracja_palet';
+    if (localStorage.getItem(KLUCZ_FLAGI)) return;
+    localStorage.setItem(KLUCZ_FLAGI, 'w41');
+  }
+  var p = localStorage.getItem(KLUCZ_PALETA);
+  if (p && mapa[p]) localStorage.setItem(KLUCZ_PALETA, mapa[p]);
+}
+/* Tryb: jasny / ciemny / auto ("Jak w telefonie"). W localStorage siedzi
+   WYBÓR, nie wynik — inaczej po zmianie ustawień telefonu appka
+   zostałaby przy starym wyglądzie. */
+function wyborMotywu_(){ return localStorage.getItem(KLUCZ_MOTYW) || 'jasny'; }
+function motywSystemu_(){
   return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)
     ? 'ciemny' : 'jasny';
 }
-function motywEfektywny_() {
+function motywEfektywny_(){
   var w = wyborMotywu_();
   return w === 'auto' ? motywSystemu_() : w;
 }
-function wczytajMotyw_() {
+/* Jedno wejście dla całej appki: ustawia motyw, paletę (z bramką — utrata
+   uprawnienia cicho cofa na domyślną), pasek systemowy telefonu
+   (theme-color reaguje TYLKO na paletę, nie na tryb — decyzja Marka
+   20.07.2026) i odświeża otwarty ekran ustawień. */
+function wczytajWyglad(){
+  migrujPalety_();
   document.documentElement.setAttribute('data-motyw', motywEfektywny_());
-}
-if (window.matchMedia) {
-  var zapytanieMotywu_ = window.matchMedia('(prefers-color-scheme: dark)');
-  var naZmianeSystemu_ = function () {
-    if (wyborMotywu_() === 'auto') {
-      wczytajMotyw_();
-      if (el('widokUstawienia') && !el('widokUstawienia').classList.contains('ukryte')) {
-        rysujUstawienia_();
-      }
-    }
-  };
-  if (zapytanieMotywu_.addEventListener) zapytanieMotywu_.addEventListener('change', naZmianeSystemu_);
-  else if (zapytanieMotywu_.addListener) zapytanieMotywu_.addListener(naZmianeSystemu_);   // starsze iOS
-}
-wczytajMotyw_();
-
-// ---------- paleta kolorów ----------
-// Osobny, niezależny przełącznik obok jasny/ciemny (FEEDBACK-BETA-TESTY.md
-// pkt 3, 18.07.2026) — ten sam wzorzec co wczytajMotyw_(): atrybut na <html>
-// + zapamiętanie w localStorage. W-31: wybór przeniesiony z ikonki paletki
-// w nagłówku na ekran „Ustawienia" (zębatka).
-// Z-83: rejestr palet. Dołożenie kolejnej = jedna pozycja tutaj + jeden blok
-// CSS `[data-paleta="..."]`. `specjalna:true` znaczy „widoczna tylko dla osób
-// z TAK w kolumnie Paleta specjalna" — flaga przychodzi z serwera przy `status`.
-// W-31 (28.08.2026): osiem palet, te same co w ewidencji. Różni się wyłącznie
-// domyślna — tu pomarańcz, w ewidencji grafit.
-// ⚠ Dwa dawne `id` ZMIENIONE, żeby obie appki mówiły o palecie tak samo:
-// 'domyslna' → 'pomaranczowa', 'niebieska' → 'blekit'. Powód: nazwa
-// „domyslna" znaczy co innego w każdej appce, a to dokładnie ten rodzaj
-// pułapki, co `formatLicznik_` znaczący co innego tu i tam (D94).
-// Telefony z zapisanym starym id przenosi migrujStareId_() niżej —
-// bez niej kierowca z niebieską wróciłby na pomarańcz.
-// `id` 'rgb' i 'aurora' zostają nietknięte (Z-94/Z-96).
-var PALETY = [
-  { id:'pomaranczowa', nazwa:'Pomarańcz', opis:'domyślna',     pasek:'#f97316',
-    probka:'linear-gradient(135deg,#fbbf24,#f97316 55%,#dc2626)' },
-  { id:'blekit',    nazwa:'Błękit',    opis:'spokojniejsza', pasek:'#2563eb',
-    probka:'linear-gradient(135deg,#2563eb,#3b82f6 50%,#38bdf8)' },
-  // W-31: dwie przeniesione z ewidencji.
-  { id:'grafit',    nazwa:'Grafit',    opis:'stonowana',     pasek:'#27272a',
-    probka:'linear-gradient(135deg,#27272a,#52525b 70%,#a1a1aa)' },
-  { id:'burgund',   nazwa:'Burgund',   opis:'cieplejsza',    pasek:'#4c0519',
-    probka:'linear-gradient(135deg,#4c0519,#9f1239 55%,#e11d48)' },
-  // Z-94: „Aurora" przed „Full RGB" — spokojniejsza z dwóch pierwszych.
-  { id:'aurora',    nazwa:'Aurora',    opis:'chłodna poświata', pasek:'#4D96FF',
-    probka:'linear-gradient(90deg,#24314A,#4D96FF,#79DFFF,#8A2BE2)', specjalna:true },  // W-41: próbka 90deg z ewidencji (kanon)
-  { id:'rgb',       nazwa:'Full RGB',  opis:'pełne kolory',  pasek:'#a855f7',
-    probka:'linear-gradient(90deg,#ff2d95,#a855f7,#22d3ee,#22c55e,#facc15)', specjalna:true },
-  // W-31: dwie nowe, animowane. Barwy bazowe z „Asystenta Floty" — tam
-  // STATYCZNE, animację dorobiliśmy u siebie.
-  { id:'gamma',     nazwa:'Gamma',     opis:'zieleń i fiolet', pasek:'#14532d',
-    probka:'linear-gradient(135deg,#14532d,#22c55e 45%,#9333ea)', specjalna:true },
-  { id:'heros',     nazwa:'Heros',     opis:'czerwień i błękit', pasek:'#7f1d1d',
-    probka:'linear-gradient(135deg,#7f1d1d,#dc2626 45%,#2563eb)', specjalna:true }
-];
-/* W-31: przeniesienie telefonów ze starych `id`. Jednorazowe, ciche —
-   kierowca ma po aktualizacji zobaczyć dokładnie tę paletę, którą miał. */
-var STARE_ID_PALET = { domyslna: 'pomaranczowa', niebieska: 'blekit' };
-function migrujStareId_() {
-  var zapisana = localStorage.getItem('flota_paleta');
-  if (zapisana && STARE_ID_PALET[zapisana]) {
-    localStorage.setItem('flota_paleta', STARE_ID_PALET[zapisana]);
-  }
-}
-function paletaDozwolona_(id) {
-  var p = PALETY.filter(function (x) { return x.id === id; })[0];
-  if (!p) return false;
-  return !p.specjalna || localStorage.getItem('flota_palety_specjalne') === 'TAK';
-}
-function wczytajPalete_() {
-  migrujStareId_();                                             // W-31
-  var p = localStorage.getItem('flota_paleta') || 'pomaranczowa';
-  // Ktoś mógł stracić uprawnienie (albo mieć w telefonie paletę z czasów, gdy
-  // je miał) — wtedy cicho wracamy do domyślnej, zamiast pokazywać coś,
-  // czego nie powinien widzieć.
-  if (!paletaDozwolona_(p)) { p = 'pomaranczowa'; localStorage.setItem('flota_paleta', p); }
-  // W-31: atrybut ustawiamy ZAWSZE (wcześniej dla domyślnej był zdejmowany).
-  // Pomarańcz nie ma własnego bloku CSS — jego wartości siedzą w :root, więc
-  // gdy żaden `[data-paleta="…"]` nie pasuje, :root sam wygrywa. Bliźniaczo
-  // z ewidencją, gdzie tak samo działa grafit.
+  var p = localStorage.getItem(KLUCZ_PALETA) || paletaDomyslna_();
+  if (!paletaDozwolona_(p)) { p = paletaDomyslna_(); localStorage.setItem(KLUCZ_PALETA, p); }
   document.documentElement.setAttribute('data-paleta', p);
-  // Pasek systemowy telefonu (theme-color) — reaguje TYLKO na paletę, nie na
-  // tryb jasny/ciemny (decyzja Marka 20.07.2026). System przyjmuje jeden pełny
-  // kolor (gradientu tam być nie może), więc bierzemy główny akcent palety.
-  var wybrana = PALETY.filter(function (x) { return x.id === p; })[0] || PALETY[0];
+  var wybrana = PALETY.filter(function(x){ return x.id === p; })[0] || PALETY[0];
   var meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute('content', wybrana.pasek);
+  var ekran = el(PALETY_APKA.ekranUstawienId);
+  if (ekran && !ekran.classList.contains('ukryte')) rysujUstawienia_();
 }
-/* ==================== W-31: ekran „Ustawienia" ====================
-   Bliźniaczo z ewidencją. Zastępuje dawny wysuwany wybierak palet
-   (rysujWybierakPalet_ / zamknijWybierakPalet_ / #arkuszPalet — usunięte).
-   Lista MUSI powstawać przy każdym otwarciu: bramka Z-83 decyduje, które
-   pozycje w ogóle pokazać, a flaga z serwera potrafi się zmienić w sesji. */
-function rysujUstawienia_() {
+/* W trybie „auto" wygląd idzie za telefonem NA ŻYWO. */
+if (window.matchMedia) {
+  var zapytanieMotywu_ = window.matchMedia('(prefers-color-scheme: dark)');
+  var naZmianeSystemu_ = function(){ if (wyborMotywu_() === 'auto') wczytajWyglad(); };
+  if (zapytanieMotywu_.addEventListener) zapytanieMotywu_.addEventListener('change', naZmianeSystemu_);
+  else if (zapytanieMotywu_.addListener) zapytanieMotywu_.addListener(naZmianeSystemu_);
+}
+/* Ekran „Ustawienia". Lista palet MUSI powstawać przy każdym otwarciu —
+   bramka specjalnych decyduje, co w ogóle pokazać, a flaga z serwera
+   potrafi się zmienić w trakcie sesji. */
+function rysujUstawienia_(){
   var tryb  = wyborMotywu_();
-  var teraz = localStorage.getItem('flota_paleta') || 'pomaranczowa';
-  var widoczne = PALETY.filter(function (p) { return paletaDozwolona_(p.id); });
-  var zwykle = widoczne.filter(function (p) { return !p.specjalna; });
-  var spec   = widoczne.filter(function (p) { return  p.specjalna; });
+  var teraz = localStorage.getItem(KLUCZ_PALETA) || paletaDomyslna_();
+  var widoczne = PALETY.filter(function(p){ return paletaDozwolona_(p.id); });
+  var zwykle = widoczne.filter(function(p){ return !p.specjalna; });
+  var spec   = widoczne.filter(function(p){ return  p.specjalna; });
 
-  function kafel(p) {
+  function kafel(p){
+    var opis = (p.id === paletaDomyslna_()) ? 'domyślna' : p.opis;
     return '<button type="button" class="pal-poz' + (p.specjalna ? ' spec' : '') +
       (p.id === teraz ? ' wybrana' : '') + '" data-paleta-id="' + p.id + '">' +
       '<span class="probka" style="background:' + p.probka + '"></span>' +
       '<span class="tekst"><b>' + p.nazwa + '</b>' +
-      '<span class="opis">' + p.opis + '</span></span>' +
+      '<span class="opis">' + opis + '</span></span>' +
       '<svg class="ikona ptaszek" viewBox="0 0 24 24" aria-hidden="true">' +
       '<use href="#ic-check"></use></svg></button>';
   }
-  function przyciskTrybu(id, ikona, napis) {
+  function przyciskTrybu(id, ikona, napis){
     return '<button type="button" class="' + (tryb === id ? 'wybrany' : '') +
       '" data-tryb="' + id + '">' + ikonaHTML_(ikona) + napis + '</button>';
   }
@@ -2160,33 +2409,36 @@ function rysujUstawienia_() {
     '<div class="ust-sekcja">Paleta</div>' +
     '<div class="pal-lista">' + zwykle.map(kafel).join('') + '</div>';
 
-  // Cała sekcja specjalnych znika, gdy kierowca nie ma do nich prawa (Z-83).
+  /* Cała sekcja specjalnych znika bez uprawnienia — żadnej pustej ramki. */
   if (spec.length) {
     h += '<div class="ust-sekcja">' + ikonaHTML_('ic-lock') + 'Palety specjalne</div>' +
       '<div class="pal-lista">' + spec.map(kafel).join('') + '</div>' +
       '<div class="ust-notka">' + ikonaHTML_('ic-user') +
-      '<span>Przyznane Tobie przez Marka — innym kierowcom te palety się nie pokazują.</span></div>';
+      '<span>Przyznane Tobie przez Marka — innym osobom te palety się nie pokazują.</span></div>';
   }
   h += '<div class="ust-notka">' + ikonaHTML_('ic-phone') +
     '<span>Wygląd zapamiętuje się w tym telefonie. Na innym urządzeniu ustawisz go osobno.</span></div>';
 
-  el('ustawieniaKarta').innerHTML = h;
+  el(PALETY_APKA.kartaUstawienId).innerHTML = h;
 
-  el('ustawieniaKarta').querySelectorAll('[data-tryb]').forEach(function (b) {
-    b.onclick = function () {
-      localStorage.setItem('flota_motyw', b.dataset.tryb);
-      wczytajMotyw_();
+  el(PALETY_APKA.kartaUstawienId).querySelectorAll('[data-tryb]').forEach(function(b){
+    b.onclick = function(){
+      localStorage.setItem(KLUCZ_MOTYW, b.dataset.tryb);
+      wczytajWyglad();
       rysujUstawienia_();
     };
   });
-  el('ustawieniaKarta').querySelectorAll('[data-paleta-id]').forEach(function (b) {
-    b.onclick = function () {
-      localStorage.setItem('flota_paleta', b.dataset.paletaId);
-      wczytajPalete_();
+  el(PALETY_APKA.kartaUstawienId).querySelectorAll('[data-paleta-id]').forEach(function(b){
+    b.onclick = function(){
+      localStorage.setItem(KLUCZ_PALETA, b.dataset.paletaId);
+      wczytajWyglad();
       rysujUstawienia_();
     };
   });
 }
+wczytajWyglad();
+/* ============== KONIEC WSPÓLNEGO BLOKU KANONU (JS) ============== */
+
 /* Zębatka jako PRZEŁĄCZNIK: drugie kliknięcie wraca na ekran, z którego
    przyszedłeś (wzorzec z „Asystenta Floty"). */
 var WIDOK_PRZED_USTAWIENIAMI = 'start';
@@ -2199,7 +2451,7 @@ el('ustawieniaBtn').addEventListener('click', function () {
   rysujUstawienia_();
   przelaczWidok('ustawienia');
 });
-wczytajPalete_();
+/* wczytajWyglad() wywołał już wspólny blok kanonu wyżej. */
 
 // ---------- ręczne wpisanie kodu (zabezpieczenie, FEEDBACK-BETA-TESTY.md pkt 8) ----------
 // Automatyczny przekaźnik przez Cache Storage zawiódł w praktyce na
@@ -3428,7 +3680,7 @@ function pobierzStatus() {
       // Flagę wolno nadpisać wyłącznie, gdy serwer faktycznie ją przysłał.
       if (typeof d.paletySpecjalne !== 'undefined') {
         localStorage.setItem('flota_palety_specjalne', d.paletySpecjalne ? 'TAK' : 'NIE');
-        wczytajPalete_();
+        wczytajWyglad();
       }
       el('kto').textContent = d.kierowca;
       rysujDashboard();
@@ -3505,7 +3757,7 @@ function odswiezWpisyCache() {
         // Z-83 poprawka: patrz komentarz przy bliźniaczym zapisie wyżej.
         if (typeof d.paletySpecjalne !== 'undefined') {
           localStorage.setItem('flota_palety_specjalne', d.paletySpecjalne ? 'TAK' : 'NIE');
-          wczytajPalete_();
+          wczytajWyglad();
         }
         el('kto').textContent = d.kierowca;
       }

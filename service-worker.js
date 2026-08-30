@@ -20,7 +20,7 @@
  * Po zmianie plikow aplikacji podbij numer wersji ponizej.
  */
 
-var WERSJA_CACHE = 'flota-shell-v112';   // 30.08.2026: W-41 kanon palet — próbka Aurory na liście przechodzi na wersję 90deg z ewidencji (jedyna zmiana)
+var WERSJA_CACHE = 'flota-shell-v113';   // 30.08.2026: W-41 paczka wyglądu — wspólny blok kanonu palet identyczny z Ewidencją i Asystentem; ciemny motyw doszlifowany do wersji z ewidencji (20 wartości), wyjątek: turkusowe ikony Pomarańczu zostają
 
 // Przekaźnik kodu kierowcy między kartą Safari a zainstalowaną ikonką
 // (FEEDBACK-BETA-TESTY.md pkt 8, patrz też pwa/index.html — NAZWA_RELAY_KODU).
