@@ -20,7 +20,7 @@
  * Po zmianie plikow aplikacji podbij numer wersji ponizej.
  */
 
-var WERSJA_CACHE = 'flota-shell-v111';   // 29.08.2026: W-31a+b — czytelne i animowane cyfry na kafelkach w Gammie i Herosie; stożek przepisany z LUSTRA na PĘTLĘ (znika kreska przechodząca przez awatar); wnętrze avatara palet animowanych bierze gradient poziomy zamiast dwukolorowego skośnego
+var WERSJA_CACHE = 'flota-shell-v112';   // 30.08.2026: W-41 kanon palet — próbka Aurory na liście przechodzi na wersję 90deg z ewidencji (jedyna zmiana)
 
 // Przekaźnik kodu kierowcy między kartą Safari a zainstalowaną ikonką
 // (FEEDBACK-BETA-TESTY.md pkt 8, patrz też pwa/index.html — NAZWA_RELAY_KODU).
