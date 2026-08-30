@@ -20,7 +20,7 @@
  * Po zmianie plikow aplikacji podbij numer wersji ponizej.
  */
 
-var WERSJA_CACHE = 'flota-shell-v113';   // 30.08.2026: W-41 paczka wyglądu — wspólny blok kanonu palet identyczny z Ewidencją i Asystentem; ciemny motyw doszlifowany do wersji z ewidencji (20 wartości), wyjątek: turkusowe ikony Pomarańczu zostają
+var WERSJA_CACHE = 'flota-shell-v114';   // 30.08.2026: W-35 panel powitalny — tło panelu na karcie z obwódką (1:1 z ewidencją); plakietka/puls/pierścień już były flotowe, turkusowy avatar Pomarańczu zatwierdzony decyzją Marka
 
 // Przekaźnik kodu kierowcy między kartą Safari a zainstalowaną ikonką
 // (FEEDBACK-BETA-TESTY.md pkt 8, patrz też pwa/index.html — NAZWA_RELAY_KODU).
