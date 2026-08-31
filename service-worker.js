@@ -20,7 +20,7 @@
  * Po zmianie plikow aplikacji podbij numer wersji ponizej.
  */
 
-var WERSJA_CACHE = 'flota-shell-v118';  // 31.08.2026: W-42 komunikaty o liczniku napisane od nowa — kod schodzi spod treści do osobnej linijki („uwaga EW-004", „błąd FL-014"), liczby dostają twarde spacje i pogrubienie, daty idą po polsku, a każdy komunikat zaczyna się od „Zapisano." albo „Nie zapisano"
+var WERSJA_CACHE = 'flota-shell-v119';  // 31.08.2026: W-43 nagłówek zamkniętego miesiąca — strzałka dostaje podpis „szczegóły/zwiń" (jak przy wpisach), plakietka skrócona do „zamknięty", a po rozwinięciu dochodzi zdanie „możesz tylko przeglądać wpisy"
 
 // Przekaźnik kodu kierowcy między kartą Safari a zainstalowaną ikonką
 // (FEEDBACK-BETA-TESTY.md pkt 8, patrz też pwa/index.html — NAZWA_RELAY_KODU).

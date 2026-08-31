@@ -917,6 +917,33 @@ var PALETY_APKA = {
     display:inline-flex; align-items:center; justify-content:center;
     transition:transform .15s ease; margin-left:auto;}
   .wpisy-naglowek-miesiac.rozwiniety .naglowek-strzalka{transform:rotate(90deg);}
+  /* W-43 (31.08.2026, wariant D z makiety): strzałka nagłówka miesiąca dostaje
+     PODPIS — ten sam wzorzec co przy wpisie (W-11). Znak gasimy `font-size:0`
+     i podmieniamy tekstem z ::before, więc JS zostaje nietknięty. Obrót
+     wyłączony: obracałby też napis. */
+  /* `row-gap`, nie `gap`: odstępy w poziomie robią spacje w markupie, a przy
+     zawinięciu (wąski telefon, 320 px) plakietka i strzałka inaczej by się
+     skleiły. */
+  .wpisy-naglowek-miesiac{flex-wrap:wrap; row-gap:6px;}
+  /* ⚠ Nagłówek miesiąca ma `text-transform:uppercase`, więc bez tego resetu
+     plakietka i podpis strzałki krzyczały WERSALIKAMI („SZCZEGÓŁY ▾") —
+     inaczej niż ta sama strzałka przy wpisie i wbrew zasadzie Z6 z W-42.
+     `.plakietka-zalegly` zerowała to u siebie od dawna; teraz robią to obie. */
+  .wpisy-naglowek-miesiac .plakietka,
+  .naglowek-strzalka::before{text-transform:none; letter-spacing:normal;}
+  .naglowek-strzalka{width:auto; height:22px; padding:0 9px; border-radius:999px;
+    font-size:0; white-space:nowrap;}
+  .naglowek-strzalka::before{content:'szczegóły ▾'; font-size:11.5px;
+    font-weight:700;}
+  .wpisy-naglowek-miesiac.rozwiniety .naglowek-strzalka{transform:none;}
+  .wpisy-naglowek-miesiac.rozwiniety .naglowek-strzalka::before{content:'zwiń ▴';}
+  /* Zdanie o tym, czego się NIE da — dopiero po rozwinięciu (wariant D).
+     Zwinięta lista zostaje czysta, a kierowca czyta to wtedy, gdy realnie
+     patrzy na wpisy i mógłby chcieć któryś poprawić. */
+  .naglowek-dopisek{display:none; width:100%; margin:2px 2px 0;
+    font-size:12px; font-weight:400; color:var(--szary);
+    text-transform:none; letter-spacing:normal; line-height:1.4;}
+  .wpisy-naglowek-miesiac.rozwiniety .naglowek-dopisek{display:block;}
   .wpis{display:flex; gap:12px; background:var(--karta); border-radius:12px;
     border-left:3px solid var(--turkus); box-shadow:0 1px 2px rgba(0,0,0,.06);
     padding:12px 12px 12px 14px; margin-bottom:10px;}
@@ -4401,11 +4428,16 @@ function renderujListeWpisow() {
     if (pokazNaglowki) {
       var naglowek = document.createElement('div');
       naglowek.className = 'wpisy-naglowek-miesiac' + (grupa.zwiniety ? ' zwijalny' : '');
+      // W-43 (31.08.2026, decyzja Marka „zamknięty to zamknięty"): plakietka
+      // „zamknięty" pokazuje się TAKŻE dla bieżącego miesiąca. Do 31.08 flota
+      // miała warunek `miesiac !== biezacy`, więc miesiąc zamknięty w trakcie
+      // wyglądał jak otwarty — a ewidencja pokazywała go poprawnie. Równamy
+      // do ewidencji. „Zaległy" nadal tylko dla miesięcy, które się skończyły.
       naglowek.innerHTML = nazwaMiesiaca_(grupa.miesiac) +
-        (grupa.miesiac === biezacy ? '' :
-          grupa.zwiniety ? ' <span class="plakietka">zamknięty — podgląd</span>'
-                         : ' <span class="plakietka plakietka-zalegly">zaległy</span>') +
-        (grupa.zwiniety ? ' <span class="naglowek-strzalka">▸</span>' : '');
+        (grupa.zwiniety ? ' <span class="plakietka">zamknięty</span>' +
+            ' <span class="naglowek-strzalka">▸</span><span class="naglowek-dopisek">Miesiąc zgłoszony — możesz tylko przeglądać wpisy.</span>'
+          : (grupa.miesiac === biezacy ? ''
+             : ' <span class="plakietka plakietka-zalegly">zaległy</span>'));
       lista.appendChild(naglowek);
       kontenerMiesiaca = document.createElement('div');
       // F-73 (25.08.2026): kontener miesiąca dostaje KLASĘ. Do tej pory był
