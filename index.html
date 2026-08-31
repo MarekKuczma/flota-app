@@ -931,6 +931,13 @@ var PALETY_APKA = {
      `.plakietka-zalegly` zerowała to u siebie od dawna; teraz robią to obie. */
   .wpisy-naglowek-miesiac .plakietka,
   .naglowek-strzalka::before{text-transform:none; letter-spacing:normal;}
+  /* ⚠ Bazowa `.plakietka` ma `margin-top:6px` — sensowny w karcie wpisu, ale
+     w nagłówku (flex, align-items:center) spychał ją o 3 px poniżej osi
+     nazwy miesiąca i strzałki. Uwaga Marka 31.08: „nie są idealnie
+     wyśrodkowane, chodzi mi o wysokość góra-dół". Zerujemy margines i dajemy
+     obu pigułkom tę samą wysokość 22 px, żeby stały równo ramię w ramię. */
+  .wpisy-naglowek-miesiac .plakietka{margin-top:0; height:22px; padding:0 10px;
+    display:inline-flex; align-items:center; font-size:12.5px;}
   .naglowek-strzalka{width:auto; height:22px; padding:0 9px; border-radius:999px;
     font-size:0; white-space:nowrap;}
   .naglowek-strzalka::before{content:'szczegóły ▾'; font-size:11.5px;

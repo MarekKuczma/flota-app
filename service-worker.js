@@ -20,7 +20,7 @@
  * Po zmianie plikow aplikacji podbij numer wersji ponizej.
  */
 
-var WERSJA_CACHE = 'flota-shell-v119';  // 31.08.2026: W-43 nagłówek zamkniętego miesiąca — strzałka dostaje podpis „szczegóły/zwiń" (jak przy wpisach), plakietka skrócona do „zamknięty", a po rozwinięciu dochodzi zdanie „możesz tylko przeglądać wpisy"
+var WERSJA_CACHE = 'flota-shell-v120';  // 31.08.2026: W-43a wyrównanie w pionie — plakietka „zamknięty" miała margin-top z reguły bazowej i siedziała 3 px niżej niż nazwa miesiąca i strzałka
 
 // Przekaźnik kodu kierowcy między kartą Safari a zainstalowaną ikonką
 // (FEEDBACK-BETA-TESTY.md pkt 8, patrz też pwa/index.html — NAZWA_RELAY_KODU).
