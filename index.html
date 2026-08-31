@@ -924,7 +924,12 @@ var PALETY_APKA = {
   /* `row-gap`, nie `gap`: odstępy w poziomie robią spacje w markupie, a przy
      zawinięciu (wąski telefon, 320 px) plakietka i strzałka inaczej by się
      skleiły. */
-  .wpisy-naglowek-miesiac{flex-wrap:wrap; row-gap:6px;}
+  /* ⚠ `column-gap` MUSI tu być: nagłówek jest kontenerem flex, a flex USUWA
+     spacje z markupu między elementami — plakietka kleiła się do nazwy
+     miesiąca bez ani jednego piksela odstępu (i tak było jeszcze przed W-43,
+     tylko nikt tego nie nazwał). `row-gap` osobno, bo przy zawinięciu na
+     wąskim telefonie pigułki inaczej stykają się pionowo. */
+  .wpisy-naglowek-miesiac{flex-wrap:wrap; row-gap:6px; column-gap:9px;}
   /* ⚠ Nagłówek miesiąca ma `text-transform:uppercase`, więc bez tego resetu
      plakietka i podpis strzałki krzyczały WERSALIKAMI („SZCZEGÓŁY ▾") —
      inaczej niż ta sama strzałka przy wpisie i wbrew zasadzie Z6 z W-42.
@@ -938,6 +943,22 @@ var PALETY_APKA = {
      obu pigułkom tę samą wysokość 22 px, żeby stały równo ramię w ramię. */
   .wpisy-naglowek-miesiac .plakietka{margin-top:0; height:22px; padding:0 10px;
     display:inline-flex; align-items:center; font-size:12.5px;}
+  /* ── KOREKTA OPTYCZNA (W-43c, 31.08.2026, wariant B z porównania) ──────
+     Marek: „wyrównanie jest, ale optycznie wygląda jakby nie było". Zmierzone
+     w przeglądarce (Canvas TextMetrics, realny zasięg liter — nie prostokąty):
+       linia pisma:      miesiąc 11 px · plakietka 11 px · strzałka 11 px  ✔
+       środek atramentu: miesiąc  5 px · plakietka 7,5 px · strzałka 7,5 px ✘
+     Formalnie wyrównanie jest wzorowe — wszystko stoi na jednej linii pisma.
+     Ale nazwa miesiąca to WERSALIKI bez ogonków („SIERPIEŃ 2026"), więc cały
+     jej atrament siedzi nad linią pisma, a etykiety mają ę, ó, ł, y i schodzą
+     pod nią. Stąd 2,5 px różnicy w środku masy — i wrażenie, że pigułki
+     zwisają. Podnosimy je o 2 px.
+     ⚠ To korekta CZYSTO WIZUALNA: `position:relative` nie rusza układu, więc
+     nic się nie przesuwa ani nie ucina. Gdyby kiedyś zmienił się krój pisma
+     albo nazwa miesiąca przestała być wersalikami — przeliczyć na nowo
+     (test `testy_w43.js` mierzy te środki i przypilnuje). */
+  .wpisy-naglowek-miesiac .plakietka,
+  .wpisy-naglowek-miesiac .naglowek-strzalka{position:relative; top:-2px;}
   .naglowek-strzalka{width:auto; height:22px; padding:0 9px; border-radius:999px;
     font-size:0; white-space:nowrap;}
   .naglowek-strzalka::before{content:'szczegóły ▾'; font-size:11.5px;
