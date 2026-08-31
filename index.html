@@ -833,6 +833,26 @@ var PALETY_APKA = {
     border-radius:12px; padding:12px; min-height:48px; margin-top:10px;}
   .przycisk-maly{background:var(--karta); color:var(--turkus); border:1.5px solid var(--turkus);
     border-radius:10px; font-size:15px; font-weight:600; padding:8px 14px; min-height:40px;}
+  /* W-36 (30.08.2026, wariant C z makiety): TRZECI i CZWARTY poziom
+     przycisków. Powód: na pulpicie wszystko wyglądało jednakowo, więc
+     „Zamykam miesiąc" (nieodwracalne) nie różniło się od „Podsumowania"
+     (sam podgląd). Teraz waga wizualna odpowiada wadze akcji:
+       .przycisk        akcja główna       gradient palety
+       .przycisk-drugi  ważna akcja        obwódka akcentu
+       .przycisk-trzeci podgląd/nawigacja  obwódka szara, mniejszy
+       .przycisk-link   marginalna/groźna  sam tekst
+     ⚠ Klasy IDENTYCZNE w Ewidencji i we Flocie — zmieniasz tu, zmień i tam. */
+  .przycisk-trzeci{display:flex; align-items:center; justify-content:center; gap:8px;
+    width:100%; background:var(--karta); color:var(--tekst);
+    border:1.5px solid var(--linia); font-family:inherit; font-size:15px;
+    font-weight:600; border-radius:12px; padding:11px; min-height:46px; margin-top:8px;}
+  .przycisk-trzeci:active{background:var(--bg-akcentjasny);}
+  .przycisk-link{display:flex; align-items:center; justify-content:center; gap:7px;
+    width:100%; background:none; border:0; font-family:inherit; font-size:13.5px;
+    font-weight:600; padding:11px; margin-top:6px; min-height:44px;
+    color:var(--szary);}
+  .przycisk-link.grozny{color:var(--blad);}
+
   .przycisk-czerwony{background:var(--karta); color:var(--blad); border:1.5px solid var(--blad);
     border-radius:10px; font-size:15px; font-weight:600; padding:8px 14px; min-height:40px;}
 
@@ -1892,8 +1912,10 @@ var PALETY_APKA = {
       <div class="przycisk-glow" style="margin-top:4px;">
         <button type="button" class="przycisk" id="dNowy"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-plus"></use></svg> Nowy wpis</button>
       </div>
-      <button type="button" class="przycisk-drugi" id="dPodsumowanie"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-chart"></use></svg> Podsumowanie miesiąca</button>
+      <!-- W-36: „Zamykam miesiąc" PRZED „Podsumowaniem" i jako jedyna
+           akcentowana akcja — bliźniaczo z ewidencją. -->
       <button type="button" class="przycisk-drugi" id="dMiesiacBtn"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-check"></use></svg> Zamykam miesiąc</button>
+      <button type="button" class="przycisk-trzeci" id="dPodsumowanie"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-chart"></use></svg> Podsumowanie miesiąca</button>
     </div>
     <div class="karta">
       <h2>Ostatnie wpisy</h2>

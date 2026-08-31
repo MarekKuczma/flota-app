@@ -20,7 +20,7 @@
  * Po zmianie plikow aplikacji podbij numer wersji ponizej.
  */
 
-var WERSJA_CACHE = 'flota-shell-v114';   // 30.08.2026: W-35 panel powitalny — tło panelu na karcie z obwódką (1:1 z ewidencją); plakietka/puls/pierścień już były flotowe, turkusowy avatar Pomarańczu zatwierdzony decyzją Marka
+var WERSJA_CACHE = 'flota-shell-v115';   // 30.08.2026: W-36 hierarchia przycisków pulpitu — „Zamykam miesiąc" jedyną akcentowaną akcją (i przed „Podsumowaniem"), podsumowanie na lżejszym trzecim poziomie; klasy 1:1 z ewidencją
 
 // Przekaźnik kodu kierowcy między kartą Safari a zainstalowaną ikonką
 // (FEEDBACK-BETA-TESTY.md pkt 8, patrz też pwa/index.html — NAZWA_RELAY_KODU).
