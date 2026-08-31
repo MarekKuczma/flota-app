@@ -1011,6 +1011,12 @@ var PALETY_APKA = {
      obydwa kończą się tym samym #widokSukces. */
   .sukces-ikona{font-size:56px; text-align:center; margin:10px 0 0; color:#16a34a;}
   [data-motyw="ciemny"] .sukces-ikona{color:#86efac;}
+  /* W-42 (31.08.2026): kod komunikatu — mała szara linijka POD treścią.
+     Marek: „może warto żeby kierowca widział numer errora, jak zrobi screen
+     to ja będę wiedział". Nigdy przed zdaniem: to przypis, nie nagłówek. */
+  .kod-komunikatu{display:block; margin-top:7px; padding-top:6px;
+    border-top:1px solid currentColor; font-size:11.5px; font-weight:400;
+    opacity:.65; letter-spacing:.02em;}
   .sukces-tekst{text-align:center; font-size:18px; font-weight:600; margin:6px 0 2px;}
   .sukces-id{text-align:center; color:var(--szary); font-size:15px; margin:0 0 8px;}
   /* W-39 (31.08.2026): wskazówka pod przyciskami ekranu sukcesu. Pokazuje
@@ -2206,6 +2212,96 @@ function el(id){ return document.getElementById(id); }
    flota `bezpiecznyTekst_` (podkreślnik). Dzięki temu blok arkusza jest
    w obu appkach IDENTYCZNY i da się go przenosić bez poprawek. */
 function bezpiecznyTekstAK_(t){ return bezpiecznyTekst_(String(t == null ? '' : t)); }
+
+/* Jedyna różnica między appkami w bloku niżej. */
+var KOMUNIKATY_APKA = { prefiks: 'FL' };
+/* ═══ KANON KOMUNIKATÓW RODZINY (W-42, 31.08.2026) ══════════════════════════
+   Jeden sposób pokazywania komunikatów z serwera w OBU appkach. Blok jest
+   IDENTYCZNY CO DO ZNAKU w ewidencji i we flocie — jedyna różnica siedzi
+   w `KOMUNIKATY_APKA` tuż wyżej (prefiks EW / FL).
+
+   Skąd się wziął (zgłoszenie Marka 31.08.2026): kierowca dostał komunikat
+   o liczniku, którego nie zrozumiał. Po przejrzeniu wszystkich jedenastu
+   tekstów wyszły cztery osobne problemy:
+     1. ewidencja wypisywała surowe „W004: …" — kod techniczny PRZED treścią;
+     2. nie było widać, CZY wpis się zapisał (ostrzeżenie po zapisie wyglądało
+        tak samo jak blokada);
+     3. liczby szły bez spacji i bez wyróżnienia („55236" zamiast 55 236 km);
+     4. we flocie najważniejsze liczby siedziały w [nawiasie kwadratowym].
+
+   Co robi ten blok:
+     - odcina kod od treści i pokazuje go OSOBNO, pod spodem, po ludzku
+       („uwaga EW-007", „błąd FL-014") — żeby kierowca mógł zrobić zdjęcie
+       ekranu, a Marek od razu wiedział, co i z której appki;
+     - grupuje cyfry twardą spacją i pogrubia liczby, daty oraz polecenia.
+
+   Pogrubienia liczymy TUTAJ, na już zescape'owanym tekście — serwer wysyła
+   czysty tekst, bez znaczników. Dzięki temu starsza (zacacheowana) wersja PWA
+   pokaże po prostu zwykłe zdanie, a nie gwiazdki czy inne śmieci. */
+
+var NBSP_KOMUNIKATU = String.fromCharCode(160);
+/* Znacznik schowka celowo zbudowany z '<' i '>': wejście jest JUŻ
+   zescape'owane, więc surowych nawiasów kątowych nie ma tam prawa być. */
+var SCHOWEK_KOMUNIKATU = /<@(\d+)@>/g;
+var CYFRY_KOMUNIKATU = /\b(\d[\d\s]*\d|\d)\s?(km|mth|L)\b/g;
+var DATY_KOMUNIKATU = /\b(\d{2}\.\d{2}(?:\.\d{4})?)\b/g;
+var KOD_KOMUNIKATU = /^\s*([EW])(\d{3})\s*:\s*/;
+/* Polecenia pogrubiamy Z LISTY, nie regexem po czasownikach: lista jest krótka
+   (sami piszemy te teksty), a gdy któreś zdanie się zmieni, najgorsze co się
+   stanie to brak pogrubienia — nigdy rozjechany HTML. */
+var POLECENIA_KOMUNIKATU = [
+  'popraw wpis w „Moje wpisy”',
+  'sprawdź wpis w „Moje wpisy”',
+  'sprawdź i popraw odpowiednie wpisy',
+  'popraw ten wpis albo poprzedni',
+  'Popraw liczbę i zapisz jeszcze raz.',
+  'Popraw jedną z tych liczb.'
+];
+
+function rozbijKomunikat_(s){
+  var t = String(s == null ? '' : s);
+  var m = t.match(KOD_KOMUNIKATU);
+  return m ? { waga: m[1], numer: m[2], tekst: t.slice(m[0].length) }
+           : { waga: '', numer: '', tekst: t };
+}
+/* 'W','007' -> 'uwaga EW-007'. Litera niesie wagę: W = zapisane, E = nie. */
+function etykietaKodu_(waga, numer){
+  if (!numer) return '';
+  return (waga === 'W' ? 'uwaga ' : 'błąd ') + KOMUNIKATY_APKA.prefiks + '-' + numer;
+}
+/* 55236 -> 55 236, twardą spacją: liczba nie ma się łamać na końcu linii. */
+function grupujCyfry_(cyfry){
+  var s = String(cyfry).replace(/\s/g, '');
+  return s.length < 4 ? s : s.replace(/\B(?=(\d{3})+$)/g, NBSP_KOMUNIKATU);
+}
+/* Wejście MUSI być już zescape'owane. Gotowe kawałki <b> chowamy pod znacznik,
+   żeby kolejne podmiany nie weszły w środek wstawionego HTML-a (inaczej „2026"
+   z daty dostałoby spację jako osobna liczba). */
+function wyroznijLiczby_(bezpieczny){
+  var schowek = [];
+  function schowaj(html){ schowek.push(html); return '<@' + (schowek.length - 1) + '@>'; }
+  var t = String(bezpieczny == null ? '' : bezpieczny);
+  t = t.replace(DATY_KOMUNIKATU, function(_, d){ return schowaj('<b>' + d + '</b>'); });
+  t = t.replace(CYFRY_KOMUNIKATU, function(_, n, j){
+    return schowaj('<b>' + grupujCyfry_(n) + NBSP_KOMUNIKATU + j + '</b>');
+  });
+  t = t.replace(/^(Nie zapisano|Zapisano\.)/, function(w){ return schowaj('<b>' + w + '</b>'); });
+  for (var i = 0; i < POLECENIA_KOMUNIKATU.length; i++){
+    var p = POLECENIA_KOMUNIKATU[i], k = t.indexOf(p);
+    if (k >= 0) t = t.slice(0, k) + schowaj('<b>' + p + '</b>') + t.slice(k + p.length);
+  }
+  return t.replace(SCHOWEK_KOMUNIKATU, function(_, i){ return schowek[Number(i)]; });
+}
+/* Cały komunikat gotowy do innerHTML: treść + (jeśli był kod) szara linijka.
+   `opcje.bezKodu` — dla tekstów, które nie przyszły po żadnej akcji (plakietka
+   „Do poprawy" przy wpisie): wpis jest na ekranie, nie ma czego zgłaszać. */
+function komunikatHTML_(surowy, opcje){
+  var r = rozbijKomunikat_(surowy);
+  var html = wyroznijLiczby_(bezpiecznyTekstAK_(r.tekst));
+  var kod = (opcje && opcje.bezKodu) ? '' : etykietaKodu_(r.waga, r.numer);
+  return html + (kod ? '<span class="kod-komunikatu">' + kod + '</span>' : '');
+}
+/* KONIEC WSPÓLNEGO BLOKU KOMUNIKATÓW */
 
 function pokazArkuszKom_(o){
   var a = el('arkuszKom');
@@ -3414,8 +3510,10 @@ function pokazSukces(tekst, podtekst, ostrzezenia, poEdycji) {
   var so = el('sOstrzezenia');
   if (ostrzezenia && ostrzezenia.length) {
     so.classList.remove('ukryte');
-    so.innerHTML = '<b>Zwróć uwagę:</b><ul>' +
-      ostrzezenia.map(function (o) { return '<li>' + bezKodu_(o) + '</li>'; }).join('') + '</ul>';
+    /* W-42: przez komunikatHTML_ — kod pod treścią, liczby pogrubione.
+       Nagłówek „Zwróć uwagę" zdjęty: teksty zaczynają się od „Zapisano.". */
+    so.innerHTML = '<ul>' +
+      ostrzezenia.map(function (o) { return '<li>' + komunikatHTML_(o) + '</li>'; }).join('') + '</ul>';
   } else { so.classList.add('ukryte'); so.innerHTML = ''; }
   sukcesPoEdycji = !!poEdycji;
   sukcesPoZgloszeniu = false;                 // W-39: to zwykły zapis wpisu
@@ -3469,8 +3567,10 @@ el('sStart').addEventListener('click', function () {
 function pokazBladBackendu(bledy) {
   var k = el('komunikatWynik');
   k.className = 'komunikat blad';
-  k.innerHTML = '<b>Nie zapisano:</b><ul>' +
-    (bledy || ['Nieznany błąd']).map(function (b) { return '<li>' + bezKodu_(b) + '</li>'; }).join('') +
+  /* W-42: „Nie zapisano" jest teraz w treści każdego komunikatu, więc
+     nagłówek znikł — inaczej kierowca czytał to dwa razy. */
+  k.innerHTML = '<ul>' +
+    (bledy || ['Nieznany błąd']).map(function (b) { return '<li>' + komunikatHTML_(b) + '</li>'; }).join('') +
     '</ul>';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
