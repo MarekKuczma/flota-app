@@ -7,7 +7,7 @@
      To NIE jest kontrola dostępu (granicą pozostaje kod kierowcy sprawdzany
      serwerowo) — patrz E-56 w archiwum planu. -->
 <meta name="robots" content="noindex, nofollow">
-<title>Rozliczenie Floty Rinkon</title>
+<title>Rozliczenie Karty Flota</title>
 <link rel="manifest" href="./manifest.json">
 <link rel="icon" href="./ikona-192.png">
 <link rel="apple-touch-icon" href="./ikona-192.png">
@@ -929,7 +929,15 @@ var PALETY_APKA = {
      miesiąca bez ani jednego piksela odstępu (i tak było jeszcze przed W-43,
      tylko nikt tego nie nazwał). `row-gap` osobno, bo przy zawinięciu na
      wąskim telefonie pigułki inaczej stykają się pionowo. */
-  .wpisy-naglowek-miesiac{flex-wrap:wrap; row-gap:6px; column-gap:9px;}
+  /* W-44 (01.09.2026): 9 → 12 px. Marek: „lekko za blisko jest". Wybrane
+     z porównania 9/11/12/13 px na prawdziwym nagłówku.
+     ⚠ Cena: nagłówek to jedna linia dopiero wtedy, gdy zmieści nazwę miesiąca
+     + plakietkę + podpis strzałki. „SIERPIEŃ 2026" potrzebuje 317 px przy
+     9 px odstępu i 323 px przy 12 — czyli na wąskim telefonie łamie się
+     o ~6 px wcześniej niż dotąd. Łamanie samo w sobie NIE jest nowe (dzieje
+     się już przy 360 px, a „PAŹDZIERNIK 2026" łamie się nawet przy 390 px) —
+     osobne zadanie W-45. */
+  .wpisy-naglowek-miesiac{flex-wrap:wrap; row-gap:6px; column-gap:12px;}
   /* ⚠ Nagłówek miesiąca ma `text-transform:uppercase`, więc bez tego resetu
      plakietka i podpis strzałki krzyczały WERSALIKAMI („SZCZEGÓŁY ▾") —
      inaczej niż ta sama strzałka przy wpisie i wbrew zasadzie Z6 z W-42.
@@ -1912,7 +1920,7 @@ var PALETY_APKA = {
 <header>
   <img src="./ikona-192.png" alt="Rinkon">
   <div class="naglowek-tekst">
-    <h1 id="tytul">Rozliczenie Floty Rinkon</h1>
+    <h1 id="tytul">Rozliczenie Karty Flota</h1>
     <div class="kto" id="kto"></div>
   </div>
   <!-- W-31 (28.08.2026): jedna zębatka ZAMIAST dwóch ikon (słońce/księżyc
@@ -2293,6 +2301,25 @@ var KOMUNIKATY_APKA = { prefiks: 'FL' };
    Pogrubienia liczymy TUTAJ, na już zescape'owanym tekście — serwer wysyła
    czysty tekst, bez znaczników. Dzięki temu starsza (zacacheowana) wersja PWA
    pokaże po prostu zwykłe zdanie, a nie gwiazdki czy inne śmieci. */
+
+/* ═══ NAGŁÓWEK RODZINY (W-49, 01.09.2026) ═════════════════════════
+   Druga linijka nagłówka w trzech appkach: „Rinkon • <osoba>". Blok jest
+   IDENTYCZNY CO DO ZNAKU w ewidencji, flocie i asystencie.
+
+   Skąd się wziął (uwaga przekazana Markowi 01.09.2026): po samych tytułach
+   nie było widać, czym która appka jest — „Ewidencja Floty Rinkon"
+   i „Rozliczenie Floty Rinkon" różnią się jednym słowem w Środku, a oko czyta
+   początek. Osoba ZOSTAJE tam, gdzie była — to jedyne miejsce poza pulpitem,
+   gdzie kierowca widzi, na czyim koncie wpisuje, a wpisy przypisuje się po
+   kodzie. Przed nią staje firma.
+
+   Bez osoby (przed zalogowaniem, u gościa z QR) zostaje samo „Rinkon" — żeby
+   nie wisiał samotny separator. */
+function liniaFirmy_(osoba){
+  var o = String(osoba == null ? '' : osoba).trim();
+  return o ? 'Rinkon \u2022 ' + o : 'Rinkon';
+}
+/* KONIEC WSPÓLNEGO BLOKU NAGŁÓWKA */
 
 var NBSP_KOMUNIKATU = String.fromCharCode(160);
 /* Znacznik schowka celowo zbudowany z '<' i '>': wejście jest JUŻ
@@ -2696,7 +2723,7 @@ function odczytajKodZRelay_() {
 // ---------- start ----------
 function uruchomAplikacje_() {
   pokaz('nawigacja');
-  el('kto').textContent = localStorage.getItem('flota_kierowca') || '';
+  el('kto').textContent = liniaFirmy_(localStorage.getItem('flota_kierowca'));   // W-49
   el('f-data').value = dzisiaj();
   odswiezKolejkeInfo();
   pokazWersje_();   // W-22 — od razu, jeszcze przed odpowiedzią serwera
@@ -3906,7 +3933,7 @@ function pobierzStatus() {
         localStorage.setItem('flota_palety_specjalne', d.paletySpecjalne ? 'TAK' : 'NIE');
         wczytajWyglad();
       }
-      el('kto').textContent = d.kierowca;
+      el('kto').textContent = liniaFirmy_(d.kierowca);   // W-49
       rysujDashboard();
     }
     if (d.zalegleMiesiace && d.zalegleMiesiace.length) {
@@ -3983,7 +4010,7 @@ function odswiezWpisyCache() {
           localStorage.setItem('flota_palety_specjalne', d.paletySpecjalne ? 'TAK' : 'NIE');
           wczytajWyglad();
         }
-        el('kto').textContent = d.kierowca;
+        el('kto').textContent = liniaFirmy_(d.kierowca);   // W-49
       }
     } else if (d && bledyMajaKod_(d.bledy, 'E011')) {
       odrzucKodFloty_('Zły lub nieaktywny kod dostępu.');
@@ -4368,7 +4395,7 @@ function wczytajWpisy() {
       return;
     }
     localStorage.setItem('flota_wpisy', JSON.stringify({ czas: Date.now(), wpisy: d.wpisy }));
-    if (d.kierowca) el('kto').textContent = d.kierowca;
+    if (d.kierowca) el('kto').textContent = liniaFirmy_(d.kierowca);   // W-49
     ostatnieWpisy = d.wpisy;
     renderujListeWpisow();
     pokazPasekWpisow_(null);
