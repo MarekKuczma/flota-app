@@ -20,7 +20,7 @@
  * Po zmianie plikow aplikacji podbij numer wersji ponizej.
  */
 
-var WERSJA_CACHE = 'flota-shell-v124';  // 01.09.2026: W-49 — nagłówek: „Rozliczenie Karty Flota" + linijka „Rinkon • <osoba>" (W-44 w tej samej paczce: odstęp przy plakietce 9 → 12 px)
+var WERSJA_CACHE = 'flota-shell-v125';  // 01.09.2026: Z-8b we flocie — wybierak na pełnym ekranie zamiast systemowego bębenka w „Do czego”, „Co kupiono”, „Budowa” ORAZ w każdym wierszu „Tankowania łączonego”. Natywne <select> zostają schowane jako źródło wartości. Wybór miesiąca w „Zamykam miesiąc” zostaje systemowy.
 
 // Przekaźnik kodu kierowcy między kartą Safari a zainstalowaną ikonką
 // (FEEDBACK-BETA-TESTY.md pkt 8, patrz też pwa/index.html — NAZWA_RELAY_KODU).
