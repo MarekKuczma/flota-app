@@ -20,7 +20,7 @@
  * Po zmianie plikow aplikacji podbij numer wersji ponizej.
  */
 
-var WERSJA_CACHE = 'flota-shell-v128';  // 01.09.2026: „Tankowanie łączone” — ogniwo łańcucha jak w „Moje wpisy”, „Inne” — znak zapytania, sprzęt budowlany — zagęszczarka (wybór Marka spośród czterech propozycji).
+var WERSJA_CACHE = 'flota-shell-v129';  // 01.09.2026: zgłoszenia Marka — agregat/skoczek/Stihl („Sprzęt drobny”) odzyskały turkusową kreskę i ikonę zagęszczarki; „Inne” i „Tankowanie łączone” mają żółty kafelek ikony.
 
 // Przekaźnik kodu kierowcy między kartą Safari a zainstalowaną ikonką
 // (FEEDBACK-BETA-TESTY.md pkt 8, patrz też pwa/index.html — NAZWA_RELAY_KODU).

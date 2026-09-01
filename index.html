@@ -1478,6 +1478,16 @@ var PALETY_APKA = {
   .pole-wyb .ik-rodzaj.k-przycz svg{stroke:#FD79A8}
   .pole-wyb .ik-rodzaj.k-bud{background:rgba(126,214,223,.20)}
   .pole-wyb .ik-rodzaj.k-bud svg{stroke:#3FA9B4}
+  /* „Inne" i „Tankowanie łączone" — kafelek w tym samym żółtym, co kreska
+     na liście (#ffd32a). W jasnym motywie sama kreska ikony idzie ciemniejszym
+     bursztynem, bo #ffd32a na jasnym tle jest nieczytelne; to ta sama sztuczka,
+     co przy turkusie sprzętu budowlanego. */
+  .pole-wyb .ik-rodzaj.k-mix{background:rgba(255,211,42,.22)}
+  .pole-wyb .ik-rodzaj.k-mix svg{stroke:#8a6100}
+  [data-motyw="ciemny"] .pole-wyb .ik-rodzaj.k-mix svg{stroke:#ffd32a}
+  .pole-wyb .ik-rodzaj.k-inne{background:rgba(99,110,114,.16)}
+  .pole-wyb .ik-rodzaj.k-inne svg{stroke:#636E72}
+  [data-motyw="ciemny"] .pole-wyb .ik-rodzaj.k-inne svg{stroke:#9aa3a8}
   /* Ciemny motyw: turkus rozjaśniony, tak samo jak w Asystencie. */
   [data-motyw="ciemny"] .pole-wyb .ik-rodzaj.k-bud svg{stroke:#7ED6DF}
   .pole-wyb .txt{min-width:0; flex:1;}
@@ -3364,7 +3374,16 @@ var PROG_SZUKANIA_WYB = 15;
 function kodRodzajuWyb_(typ){
   var r = String(typ || '').trim().toLowerCase();
   if (!r) return 'brak';
-  if (r === 'sprzęt budowlany' || r.indexOf('budowl') !== -1) return 'bud';
+  /* „Sprzęt drobny" MUSI tu być. Rodzina ma DWA słowniki rodzajów i nazywają
+     one to samo inaczej — sprawdzone w arkuszach 01.09, nie z pamięci:
+       Spis Floty / Panel   → „Sprzęt budowlany", „sam. ciężarowy", „sam. osobowy"
+       Sprzęt (flota)       → „Sprzęt drobny", „Samochód ciężarowy", „Koparka"
+       Sprzęt (ewidencja)   → „Samochód dostawczy / bus", „Koparko-ładowarka"
+     Agregat, Pompa, Skoczek i Stihl siedzą pod „Sprzęt drobny" — po przepisaniu
+     mapowania z Asystenta (który zna tylko słownik Spisu) wpadły w szary
+     fallback i straciły ikonę. Zgłoszenie Marka 01.09. */
+  if (r.indexOf('sprzęt') !== -1 || r.indexOf('sprzet') !== -1 ||
+      r.indexOf('budowl') !== -1) return 'bud';
   if (r.indexOf('przyczepa') !== -1 || r.indexOf('naczepa') !== -1) return 'przycz';
   if (r.indexOf('kopark') !== -1 || r.indexOf('ładowarka') !== -1) return 'kop';
   if (r.indexOf('hds') !== -1 || r.indexOf('dźwig') !== -1) return 'hds';
@@ -3553,6 +3572,10 @@ function odswiezPoleWyb_(idSel){
      i dostawcze busa. Prośba Marka 01.09 — „w asystencie tak się robi". */
   var rodzaj = maWartosc ? (o.getAttribute('data-rodzaj') || '') : '';
   var ikRodzaju = rodzaj ? ikonaRodzajuWyb_(rodzaj) : '';
+  /* Kafelek bierze kolor z RODZAJU, nie z tego, skąd wzięła się ikona.
+     Inaczej „Inne" i „Tankowanie łączone" (ikony ze sprite'u) siedziały na
+     pomarańczowym tle akcentu zamiast na swoim żółtym — zgłoszenie Marka. */
+  var kafelek = (rodzaj && rodzaj !== 'brak') ? ' ik-rodzaj k-' + rodzaj : '';
   /* Drugie źródło ikony: sama WARTOŚĆ, gdy pole nie wybiera pojazdu.
      Tak działa „Co kupiono" — paliwo, zakup, autostrada mają swoje ikony
      w appce od dawna (lista wpisów, podsumowanie), więc pole bierze te same.
@@ -3561,7 +3584,7 @@ function odswiezPoleWyb_(idSel){
     ? (cfg.ikonaWartosci(sel.value, o) || '') : '';
   btn.className = 'pole-wyb' + (maWartosc ? '' : ' pusty');
   btn.innerHTML =
-    '<span class="ik' + (ikRodzaju ? ' ik-rodzaj k-' + rodzaj : '') + '">' +
+    '<span class="ik' + kafelek + '">' +
     (ikRodzaju || ikonaHTML_(idWartosci || cfg.ikona)) + '</span>' +
     '<span class="txt"><span class="a">' + bezpiecznyTekst(tytul) + '</span>' +
     (pod ? '<span class="b' + (vin ? ' vin' : '') + '">' + bezpiecznyTekst(pod) + '</span>' : '') +
