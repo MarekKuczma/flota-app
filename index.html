@@ -722,6 +722,21 @@ var PALETY_APKA = {
     transition:background .2s;}
   #ustawieniaBtn.otwarte{background:rgba(255,255,255,.42);}
   main{max-width:560px; margin:0 auto; padding:14px 14px 90px;}
+  /* ── W-46 (02.09.2026): „co już zgłoszone" na pulpicie ──
+     Plakietka: wariant B z makiety (ramka + ślad tła) — Marek 02.09.
+     Kolory z tokenów palety, nie z ręki, więc kontrast jest już policzony
+     we wszystkich 16 kombinacjach palety i motywu.
+     ⚠ Te same nazwy klas co w Ewidencji — appki mają wyglądać tak samo,
+     bo dla kierowcy to jedna i ta sama sprawa. */
+  .plakietka-mies{display:inline-block; font-size:12.5px; font-weight:700;
+    padding:3px 10px; border-radius:999px; margin:0 0 8px;
+    background:var(--bg-ok); border:1px solid var(--ok); color:var(--tekst-ok);}
+  .karta-zgl{border-radius:12px; padding:14px; margin:12px 0;
+    background:var(--karta); border:1px solid var(--linia);}
+  .karta-zgl .zgl-tyt{font-weight:700; font-size:16px; margin:0 0 4px;}
+  .karta-zgl .zgl-pod{font-size:14px; color:var(--szary); margin:0;}
+  .karta-zgl .zgl-pod + .zgl-pod{margin-top:6px;}
+
   .baner{background:var(--bg-uwaga); border:1px solid var(--brzeg-uwaga); color:var(--tekst-uwaga);
     border-radius:12px; padding:12px 14px; margin-bottom:12px; font-size:15px;}
   .baner b{display:block; margin-bottom:2px;}
@@ -2066,6 +2081,8 @@ var PALETY_APKA = {
 
 <main>
   <div class="baner ukryte" id="baner"></div>
+  <!-- W-46: „masz zgłoszone…" — rysuje rysujZgloszone_ -->
+  <div class="karta-zgl ukryte" id="kartaZgloszone"></div>
   <!-- W-05 (01.08.2026): komunikat Marka — ukryty gdy brak treści. -->
   <!-- F-71/E-37: pasek „komunikat Marka" usunięty — komunikat przychodzi
        teraz wysuwanym arkuszem, patrz sprawdzKomunikatMarka_. -->
@@ -4423,6 +4440,7 @@ function pobierzStatus() {
       el('kto').textContent = liniaFirmy_(d.kierowca);   // W-49
       rysujDashboard();
     }
+    rysujZgloszone_(d.zgloszoneMiesiace);   // W-46
     if (d.zalegleMiesiace && d.zalegleMiesiace.length) {
       var m = d.zalegleMiesiace[0];
       var nazwa = MIESIACE_PL[parseInt(m.substring(5), 10) - 1] + ' ' + m.substring(0, 4);
@@ -4437,6 +4455,40 @@ function pobierzStatus() {
     KOMUNIKATY_MARKA = d.komunikaty || [];
     sprawdzKomunikatMarka_();
   }).catch(function () {});
+}
+
+/* W-46 (02.09.2026): „lipiec i sierpień 2026" zamiast wyliczanki z przecinkami.
+   Marek prosił wprost o taki zapis przy dwóch miesiącach. */
+function listaMiesiecyTekst_(nazwy){
+  if (nazwy.length <= 1) return nazwy[0] || '';
+  return nazwy.slice(0, -1).join(', ') + ' i ' + nazwy[nazwy.length - 1];
+}
+
+/* W-46 (02.09.2026): karta „co już zgłoszone" na pulpicie.
+   ⚠ We FLOCIE deklaracja idzie za OSOBĄ, nie za maszyną — więc to zawsze
+   zgłoszenia patrzącego i nie ma tu pola „kto". W Ewidencji jest odwrotnie
+   (klucz `miesiąc|idPojazdu`) i tam nazwisko jest konieczne. Ta sama karta,
+   dwie różne treści — bo to dwie różne rzeczy, mimo tego samego przycisku.
+   ⚠ Napisy NEUTRALNE PŁCIOWO (Marek 02.09: „mamy i kobiety, i mężczyzn") —
+   w polskim płeć zdradza czas przeszły, więc ani jednego „zgłosiłeś". */
+function rysujZgloszone_(lista){
+  var karta = el('kartaZgloszone');
+  if (!karta) return;
+  var zgl = lista || [];
+  if (!zgl.length){ schowaj('kartaZgloszone'); karta.innerHTML = ''; return; }
+  var nazwy = zgl.map(function(m){
+    return MIESIACE_PL[parseInt(m.substring(5), 10) - 1] + ' ' + m.substring(0, 4);
+  });
+  var jeden = nazwy.length === 1;
+  karta.innerHTML =
+    '<span class="plakietka-mies">\u2713 zgłoszone</span>' +
+    '<p class="zgl-tyt">' + (jeden ? 'Masz zgłoszony ' : 'Masz zgłoszone: ') +
+      bezpiecznyTekst(listaMiesiecyTekst_(nazwy)) + '</p>' +
+    '<p class="zgl-pod">Jeśli trzeba coś poprawić albo dopisać — zrób to, ' +
+      'a potem zgłoś miesiąc ponownie.</p>' +
+    '<p class="zgl-pod">' + (jeden ? 'Zniknie' : 'Znikną') +
+      ' stąd, gdy Marek ' + (jeden ? 'go' : 'je') + ' zamknie i zarchiwizuje.</p>';
+  pokaz('kartaZgloszone');
 }
 
 /* F-71/E-37: komunikat Marka wysuwanym arkuszem. Raz dziennie, dopóki

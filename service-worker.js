@@ -20,7 +20,7 @@
  * Po zmianie plikow aplikacji podbij numer wersji ponizej.
  */
 
-var WERSJA_CACHE = 'flota-shell-v129';  // 01.09.2026: zgłoszenia Marka — agregat/skoczek/Stihl („Sprzęt drobny”) odzyskały turkusową kreskę i ikonę zagęszczarki; „Inne” i „Tankowanie łączone” mają żółty kafelek ikony.
+var WERSJA_CACHE = 'flota-shell-v130';  // 02.09.2026: W-46/W-47 — pulpit mówi, co już zgłoszone („Masz zgłoszone: lipiec i sierpień”), a w ewidencji także KTO zgłosił i czy maszyna ma opiekuna. Wymaga API v18.
 
 // Przekaźnik kodu kierowcy między kartą Safari a zainstalowaną ikonką
 // (FEEDBACK-BETA-TESTY.md pkt 8, patrz też pwa/index.html — NAZWA_RELAY_KODU).
