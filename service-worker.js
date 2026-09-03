@@ -20,7 +20,7 @@
  * Po zmianie plikow aplikacji podbij numer wersji ponizej.
  */
 
-var WERSJA_CACHE = 'flota-shell-v130';  // 02.09.2026: W-46/W-47 — pulpit mówi, co już zgłoszone („Masz zgłoszone: lipiec i sierpień”), a w ewidencji także KTO zgłosił i czy maszyna ma opiekuna. Wymaga API v18.
+var WERSJA_CACHE = 'flota-shell-v131';  // 03.09.2026: W-52 — karta „masz zgłoszone" zwinięta do jednej linijki i PRZENIESIONA do pulpitu (stała w <main>, więc wisiała też nad „Nowym wpisem" i „Moimi wpisami").  // 02.09.2026: W-46/W-47 — pulpit mówi, co już zgłoszone („Masz zgłoszone: lipiec i sierpień”), a w ewidencji także KTO zgłosił i czy maszyna ma opiekuna. Wymaga API v18.
 
 // Przekaźnik kodu kierowcy między kartą Safari a zainstalowaną ikonką
 // (FEEDBACK-BETA-TESTY.md pkt 8, patrz też pwa/index.html — NAZWA_RELAY_KODU).

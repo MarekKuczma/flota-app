@@ -862,6 +862,12 @@ var PALETY_APKA = {
     border:1.5px solid var(--linia); font-family:inherit; font-size:15px;
     font-weight:600; border-radius:12px; padding:11px; min-height:46px; margin-top:8px;}
   .przycisk-trzeci:active{background:var(--bg-akcentjasny);}
+  /* W-52 (Marek, 03.09.2026): karta „masz zgłoszone" ma być na co dzień JEDNĄ
+     linijką — plakietka + tytuł + „rozwiń". Reszta tekstu dopiero po dotknięciu.
+     Trzeci poziom hierarchii rodziny (W-36): sam tekst w akcencie, bez ramki. */
+  .zgl-wiecej{display:inline-flex; align-items:center; min-height:44px; padding:0 2px;
+    background:none; border:0; font-family:inherit; font-size:13px; font-weight:700;
+    color:var(--akcent); cursor:pointer;}
   .przycisk-link{display:flex; align-items:center; justify-content:center; gap:7px;
     width:100%; background:none; border:0; font-family:inherit; font-size:13.5px;
     font-weight:600; padding:11px; margin-top:6px; min-height:44px;
@@ -2081,8 +2087,9 @@ var PALETY_APKA = {
 
 <main>
   <div class="baner ukryte" id="baner"></div>
-  <!-- W-46: „masz zgłoszone…" — rysuje rysujZgloszone_ -->
-  <div class="karta-zgl ukryte" id="kartaZgloszone"></div>
+  <!-- W-52 (03.09.2026): karta „masz zgłoszone" PRZENIESIONA stąd do #widokStart.
+       Stała tu, w <main> poza ekranami, więc wisiała nad każdym z nich — także
+       nad „Nowym wpisem" i „Moimi wpisami", gdzie Markowi nie była potrzebna. -->
   <!-- W-05 (01.08.2026): komunikat Marka — ukryty gdy brak treści. -->
   <!-- F-71/E-37: pasek „komunikat Marka" usunięty — komunikat przychodzi
        teraz wysuwanym arkuszem, patrz sprawdzKomunikatMarka_. -->
@@ -2105,6 +2112,8 @@ var PALETY_APKA = {
 
   <!-- DASHBOARD (start) -->
   <div id="widokStart" class="ukryte">
+    <!-- W-46 / W-52: „masz zgłoszone…" — rysuje rysujZgloszone_. Tylko tutaj. -->
+    <div class="karta-zgl ukryte" id="kartaZgloszone"></div>
     <div class="karta">
       <div class="powitanie">
         <div class="avatar-pierscien"><div class="avatar-krag" id="dAwatar">👤</div>
@@ -4471,26 +4480,46 @@ function listaMiesiecyTekst_(nazwy){
    dwie różne treści — bo to dwie różne rzeczy, mimo tego samego przycisku.
    ⚠ Napisy NEUTRALNE PŁCIOWO (Marek 02.09: „mamy i kobiety, i mężczyzn") —
    w polskim płeć zdradza czas przeszły, więc ani jednego „zgłosiłeś". */
+/* W-52 (03.09.2026): karta jest ZWINIĘTA, dopóki ktoś jej nie rozwinie.
+   Stan trzymamy w zmiennej, a nie w klasie na elemencie — każde odświeżenie
+   danych przerysowuje kartę od zera i klasa by przepadła. */
+var ZGL_ROZWINIETE = false;
+var ZGL_OSTATNIE = null;
+function przelaczZgloszone_(){
+  ZGL_ROZWINIETE = !ZGL_ROZWINIETE;
+  rysujZgloszone_(ZGL_OSTATNIE || []);
+}
 function rysujZgloszone_(lista){
   var karta = el('kartaZgloszone');
   if (!karta) return;
+  ZGL_OSTATNIE = lista;
   var zgl = lista || [];
-  if (!zgl.length){ schowaj('kartaZgloszone'); karta.innerHTML = ''; return; }
+  if (!zgl.length){
+    schowaj('kartaZgloszone'); karta.innerHTML = ''; ZGL_ROZWINIETE = false; return;
+  }
   var nazwy = zgl.map(function(m){
     return MIESIACE_PL[parseInt(m.substring(5), 10) - 1] + ' ' + m.substring(0, 4);
   });
   var jeden = nazwy.length === 1;
-  karta.innerHTML =
-    '<span class="plakietka-mies">\u2713 zgłoszone</span>' +
+
+  /* Plakietka zostaje NA ZWINIĘTEJ linijce (decyzja Marka 03.09) — po niej
+     poznaje się stan jednym rzutem oka, bez rozwijania. */
+  var h = '<span class="plakietka-mies">\u2713 zgłoszone</span>' +
     '<p class="zgl-tyt">' + (jeden ? 'Masz zgłoszony ' : 'Masz zgłoszone: ') +
-      bezpiecznyTekst(listaMiesiecyTekst_(nazwy)) + '</p>' +
-    '<p class="zgl-pod">Jeśli trzeba coś poprawić albo dopisać — zrób to, ' +
+      bezpiecznyTekst(listaMiesiecyTekst_(nazwy)) + '</p>';
+
+  if (ZGL_ROZWINIETE){
+    h += '<p class="zgl-pod">Jeśli trzeba coś poprawić albo dopisać — zrób to, ' +
       'a potem zgłoś miesiąc ponownie.</p>' +
-    '<p class="zgl-pod">' + (jeden ? 'Zniknie' : 'Znikną') +
-      ' stąd, gdy Marek ' + (jeden ? 'go' : 'je') + ' zamknie i zarchiwizuje.</p>';
+      '<p class="zgl-pod">Komunikat zniknie, gdy Marek zarchiwizuje miesiąc.</p>';
+  }
+  h += '<button type="button" class="zgl-wiecej" id="zglWiecej">' +
+       (ZGL_ROZWINIETE ? 'zwiń' : 'rozwiń') + '</button>';
+
+  karta.innerHTML = h;
+  var b = el('zglWiecej'); if (b) b.onclick = przelaczZgloszone_;
   pokaz('kartaZgloszone');
 }
-
 /* F-71/E-37: komunikat Marka wysuwanym arkuszem. Raz dziennie, dopóki
    Marek nie wyłączy komunikatu w arkuszu — ale klucz niesie też TREŚĆ:
    nowy/zmieniony komunikat tego samego dnia pokazuje się od razu, bez
