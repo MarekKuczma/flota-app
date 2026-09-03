@@ -728,11 +728,13 @@ var PALETY_APKA = {
      we wszystkich 16 kombinacjach palety i motywu.
      ⚠ Te same nazwy klas co w Ewidencji — appki mają wyglądać tak samo,
      bo dla kierowcy to jedna i ta sama sprawa. */
-  .plakietka-mies{display:inline-block; font-size:12.5px; font-weight:700;
-    padding:3px 10px; border-radius:999px; margin:0 0 8px;
-    background:var(--bg-ok); border:1px solid var(--ok); color:var(--tekst-ok);}
+  /* .plakietka-mies USUNIĘTA w W-52b (03.09.2026) — pastylkę zastąpił zielony
+     ptaszek przy tytule; nic jej już nie rysowało. */
+  /* W-52b: ramka ZIELONA — kolor „Popraw" (Z-91), ten sam w obu appkach.
+     ⚠ Zieleń musi siedzieć w TEJ regule, nie w osobnej niżej: w Ewidencji ten
+     blok stoi PO bloku W-52b i skrót `border:` kasował samo `border-color`. */
   .karta-zgl{border-radius:12px; padding:14px; margin:12px 0;
-    background:var(--karta); border:1px solid var(--linia);}
+    background:var(--karta); border:1.5px solid #16a34a;}
   .karta-zgl .zgl-tyt{font-weight:700; font-size:16px; margin:0 0 4px;}
   .karta-zgl .zgl-pod{font-size:14px; color:var(--szary); margin:0;}
   .karta-zgl .zgl-pod + .zgl-pod{margin-top:6px;}
@@ -862,12 +864,25 @@ var PALETY_APKA = {
     border:1.5px solid var(--linia); font-family:inherit; font-size:15px;
     font-weight:600; border-radius:12px; padding:11px; min-height:46px; margin-top:8px;}
   .przycisk-trzeci:active{background:var(--bg-akcentjasny);}
-  /* W-52 (Marek, 03.09.2026): karta „masz zgłoszone" ma być na co dzień JEDNĄ
-     linijką — plakietka + tytuł + „rozwiń". Reszta tekstu dopiero po dotknięciu.
-     Trzeci poziom hierarchii rodziny (W-36): sam tekst w akcencie, bez ramki. */
-  .zgl-wiecej{display:inline-flex; align-items:center; min-height:44px; padding:0 2px;
-    background:none; border:0; font-family:inherit; font-size:13px; font-weight:700;
-    color:var(--akcent); cursor:pointer;}
+  /* W-52b (Marek, 03.09.2026): karta dostaje ZIELONĄ RAMKĘ i zielony ptaszek
+     przed tytułem, a pastylka „zgłoszone" znika — mówiła dokładnie to samo
+     drugi raz. Zieleń wzięta 1:1 z „Popraw" na liście wpisów (Z-91): to kolor
+     SPOZA palet, więc wygląda tak samo we wszystkich ośmiu.
+     „szczegóły ▾" to ten sam element co przy wpisie (.wpis-strzalka) — ta sama
+     pigułka i ten sam napis, żeby rozwijanie znaczyło w appce zawsze to samo.
+     ⚠ Pigułka ma 22 px, więc klikalny jest owijający ją .zgl-cel (44 px):
+     wygląd bez zmian, trafienie kciukiem pewne. */
+  [data-motyw="ciemny"] .karta-zgl{border-color:#86efac;}
+  .zgl-linia{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .karta-zgl .zgl-linia .zgl-tyt{margin:0;}
+  .zgl-ptaszek{color:#16a34a; font-weight:900; margin-right:7px;}
+  [data-motyw="ciemny"] .zgl-ptaszek{color:#86efac;}
+  .zgl-cel{display:inline-flex; align-items:center; min-height:44px; flex:none;
+    background:none; border:0; padding:0; cursor:pointer;}
+  .zgl-pigulka{display:inline-flex; align-items:center; justify-content:center;
+    height:22px; padding:0 9px; border-radius:999px; background:var(--bg-turkus);
+    color:var(--tekst-turkus); font-family:inherit; font-size:11.5px;
+    font-weight:700; letter-spacing:.01em; white-space:nowrap;}
   .przycisk-link{display:flex; align-items:center; justify-content:center; gap:7px;
     width:100%; background:none; border:0; font-family:inherit; font-size:13.5px;
     font-weight:600; padding:11px; margin-top:6px; min-height:44px;
@@ -4504,18 +4519,18 @@ function rysujZgloszone_(lista){
 
   /* Plakietka zostaje NA ZWINIĘTEJ linijce (decyzja Marka 03.09) — po niej
      poznaje się stan jednym rzutem oka, bez rozwijania. */
-  var h = '<span class="plakietka-mies">\u2713 zgłoszone</span>' +
-    '<p class="zgl-tyt">' + (jeden ? 'Masz zgłoszony ' : 'Masz zgłoszone: ') +
-      bezpiecznyTekst(listaMiesiecyTekst_(nazwy)) + '</p>';
+  var h = '<div class="zgl-linia"><p class="zgl-tyt">' +
+    '<span class="zgl-ptaszek">\u2713</span>' +
+    (jeden ? 'Masz zgłoszony ' : 'Masz zgłoszone: ') +
+    bezpiecznyTekst(listaMiesiecyTekst_(nazwy)) + '</p>' +
+    '<button type="button" class="zgl-cel" id="zglWiecej"><span class="zgl-pigulka">' +
+    (ZGL_ROZWINIETE ? 'zwiń \u25b4' : 'szczegóły \u25be') + '</span></button></div>';
 
   if (ZGL_ROZWINIETE){
     h += '<p class="zgl-pod">Jeśli trzeba coś poprawić albo dopisać — zrób to, ' +
       'a potem zgłoś miesiąc ponownie.</p>' +
       '<p class="zgl-pod">Komunikat zniknie, gdy Marek zarchiwizuje miesiąc.</p>';
   }
-  h += '<button type="button" class="zgl-wiecej" id="zglWiecej">' +
-       (ZGL_ROZWINIETE ? 'zwiń' : 'rozwiń') + '</button>';
-
   karta.innerHTML = h;
   var b = el('zglWiecej'); if (b) b.onclick = przelaczZgloszone_;
   pokaz('kartaZgloszone');
