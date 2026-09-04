@@ -1,112 +1,40 @@
-/**
- * ROZLICZENIE FLOTY RINKON — service-worker.js
- *
- * W-02 (01.08.2026): wzorzec ujednolicony z aplikacją ewidencja — obie
- * appki miały tylko połowę tego samego rozwiązania. Strategia (teraz
- * wspólna dla obu):
- *  - Instalacja PO JEDNYM pliku, nie `cache.addAll()` (które jest
- *    „wszystko albo nic" — jeden brakujący/przeliterowany plik wywalał
- *    całą instalację i appka zostawała BEZ trybu offline, bez żadnego
- *    komunikatu). Przeniesione z ewidencji.
- *  - App shell (index.html, config.js, manifest, ikony): cache-first
- *    z cichym odswiezaniem w tle (stale-while-revalidate), zeby
- *    aplikacja startowala offline, a poprawki i zmiany config.js
- *    docieraly przy nastepnym uruchomieniu z siecia. Przy braku i cache,
- *    i sieci — fallback na `index.html` (nawigacja nie wywala się do
- *    pustego ekranu błędu).
- *  - API (inna domena — script.google.com): network-only, nic nie
- *    cache'ujemy; kolejka offline zyje w localStorage aplikacji.
- *
- * Po zmianie plikow aplikacji podbij numer wersji ponizej.
- */
-
-var WERSJA_CACHE = 'flota-shell-v132';  // 03.09.2026 W-52b: zielona ramka + zielony ptaszek zamiast pastylki; rozwijanie pigulka 'szczegoly' jak przy wpisach.  // 03.09.2026: W-52 — karta „masz zgłoszone" zwinięta do jednej linijki i PRZENIESIONA do pulpitu (stała w <main>, więc wisiała też nad „Nowym wpisem" i „Moimi wpisami").  // 02.09.2026: W-46/W-47 — pulpit mówi, co już zgłoszone („Masz zgłoszone: lipiec i sierpień”), a w ewidencji także KTO zgłosił i czy maszyna ma opiekuna. Wymaga API v18.
-
-// Przekaźnik kodu kierowcy między kartą Safari a zainstalowaną ikonką
-// (FEEDBACK-BETA-TESTY.md pkt 8, patrz też pwa/index.html — NAZWA_RELAY_KODU).
-// NIE kasować przy sprzątaniu starych cache — to jedyne miejsce, w którym
-// kod "przeżywa" między kontekstami na iOS; musi zostać dokładnie ta sama
-// nazwa co w index.html.
-var NAZWA_RELAY_KODU = 'flota-kod-relay';
-
-var PLIKI_SHELL = [
-  './',
-  './index.html',
-  './config.js',
-  './manifest.json',
-  './ikona-192.png',
-  './ikona-512.png',
-  './ikona-192-maskable.png',
-  './ikona-512-maskable.png'
+/* ASYSTENT FLOTY — service worker (wzorzec rodziny: shell cache-first).
+   Konwencja nazwy cache: asystent-vNN — NUMER podbijać przy KAŻDEJ zmianie
+   plików aplikacji (inaczej przeglądarki podadzą stare pliki z cache).
+   Stopka w aplikacji pokazuje 'asystent-vNN' — patrz obsługa message. */
+var WERSJA_CACHE = 'asystent-v23';  /* v23 (03.09.2026, A-17): Skrzynka da sie porzadkowac z aplikacji — tryb „Porzadkuj" (wariant C z makiety), odrzucanie wpisu z powodem, zwinieta lista odrzuconych z „Wroc do kolejki" i „Wyczysc odrzucone". Backend API v5: akcja `oznacz` + AUTOMAT ustawiajacy Stan=przetworzone dla wpisow, ktore trafily do bazy (koniec recznego odznaczania w arkuszu). */
+var SHELL = [
+  './', './index.html', './config.js', './manifest.json',
+  './ikona-192.png', './ikona-512.png',
+  './ikona-192-maskable.png', './ikona-512-maskable.png'
 ];
 
-self.addEventListener('install', function (event) {
-  event.waitUntil(
-    caches.open(WERSJA_CACHE).then(function (cache) {
-      return Promise.all(PLIKI_SHELL.map(function (plik) {
-        return cache.add(plik).catch(function (err) {
-          console.warn('[SW] Nie udało się zapisać w cache:', plik, err);
-        });
-      }));
-    }).then(function () {
-      return self.skipWaiting();
+self.addEventListener('install', function (e) {
+  e.waitUntil(caches.open(WERSJA_CACHE).then(function (c) { return c.addAll(SHELL); })
+    .then(function () { return self.skipWaiting(); }));
+});
+
+self.addEventListener('activate', function (e) {
+  e.waitUntil(caches.keys().then(function (klucze) {
+    return Promise.all(klucze.map(function (k) {
+      if (k !== WERSJA_CACHE) return caches.delete(k);
+    }));
+  }).then(function () { return self.clients.claim(); }));
+});
+
+self.addEventListener('fetch', function (e) {
+  if (e.request.method !== 'GET') return;              /* API (POST) zawsze z sieci */
+  var url = new URL(e.request.url);
+  if (url.origin !== location.origin) return;          /* obce hosty: nie ruszamy */
+  e.respondWith(
+    caches.match(e.request, { ignoreSearch: true }).then(function (r) {
+      return r || fetch(e.request);
     })
   );
 });
 
-self.addEventListener('activate', function (event) {
-  event.waitUntil(
-    caches.keys().then(function (klucze) {
-      return Promise.all(klucze.map(function (klucz) {
-        if (klucz !== WERSJA_CACHE && klucz !== NAZWA_RELAY_KODU) return caches.delete(klucz);
-      }));
-    }).then(function () {
-      return self.clients.claim();
-    })
-  );
-});
-
-self.addEventListener('fetch', function (event) {
-  var zadanie = event.request;
-
-  // API i wszystko spoza naszej domeny: tylko siec (network-only).
-  if (zadanie.method !== 'GET' ||
-      new URL(zadanie.url).origin !== self.location.origin) {
-    return; // przegladarka obsluguje normalnie, bez cache
-  }
-
-  // App shell: cache-first + odswiezenie kopii w tle.
-  event.respondWith(
-    caches.match(zadanie, { ignoreSearch: true }).then(function (zCache) {
-      var zSieci = fetch(zadanie).then(function (odpowiedz) {
-        if (odpowiedz && odpowiedz.ok) {
-          var kopia = odpowiedz.clone();
-          caches.open(WERSJA_CACHE).then(function (cache) {
-            cache.put(zadanie, kopia);
-          });
-        }
-        return odpowiedz;
-      }).catch(function () {
-        // Brak sieci — zostaje wersja z cache, a jak i tej nie ma
-        // (np. nowa podstrona nigdy nie zapisana), fallback na index.html.
-        return zCache || caches.match('./index.html');
-      });
-      return zCache || zSieci;
-    })
-  );
-});
-
-/* W-22 (20.08.2026): aplikacja pyta workera o jego wersję.
-   POWÓD: 20.08 nie dało się rozstrzygnąć, czy zgłoszony błąd to wada kodu,
-   czy telefon uruchamia starą wersję z cache — appka nigdzie nie pokazywała,
-   co właściwie wykonuje. Wersję MUSI podawać sam worker: stała odczytana we
-   froncie mówiłaby o kodzie, który właśnie działa, a nie o tym, który siedzi
-   w cache — czyli mijałaby się z celem dokładnie w sytuacji, dla której to
-   robimy. `caches.keys()` też nie wystarcza: przy aktualizacji potrafią
-   istnieć obok siebie dwa cache i nie widać, który jest czynny. */
+/* stopka wersji pyta workera o nazwę cache (wzorzec W-22 z Floty) */
 self.addEventListener('message', function (e) {
-  if (!e.data || e.data.typ !== 'wersja') return;
-  var odp = { typ: 'wersja', wersja: WERSJA_CACHE };
-  if (e.ports && e.ports[0]) e.ports[0].postMessage(odp);
-  else if (e.source) e.source.postMessage(odp);
+  if (e.data && e.data.typ === 'wersja' && e.ports && e.ports[0])
+    e.ports[0].postMessage({ wersja: WERSJA_CACHE });
 });
