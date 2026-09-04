@@ -4098,7 +4098,16 @@ function wyslijNowy(d, potwierdzenie, klucz) {
     if (odp.ok) {
       pokazSukces('Wpis dodany', 'Numer wpisu: ' + odp.id, odp.ostrzezenia);
       odswiezWpisyCache();
-      pobierzStatus();   // W-54 — patrz komentarz przy pobierzStatus()
+      /* W-56: backend v19 oddaje nowy stan miesięcy RAZEM z odpowiedzią na
+         zapis — stosujemy go natychmiast, bez drugiego żądania. Starszy
+         backend (v18) `stanPo` nie przyśle; wtedy zostaje droga z W-54, czyli
+         `pobierzStatus()`. Appka nie zgaduje za serwer w żadnym z tych dwóch
+         wariantów — po prostu jeden jest szybszy. */
+      if (odp.stanPo) {
+        zastosujStanMiesiecy_(odp.stanPo.zgloszoneMiesiace, odp.stanPo.zalegleMiesiace);
+      } else {
+        pobierzStatus();   // W-54 — patrz komentarz przy pobierzStatus()
+      }
     } else if (!potwierdzenie && (odp.bledy || []).join(' ').indexOf('E008') !== -1) {
       /* F-71/E-39: dawny confirm() → arkusz-pytanie. ⚠ TO JEDYNE pytanie
          w obu appkach o ODWROTNEJ polaryzacji: bezpieczne jest NIE dodawać
@@ -4527,14 +4536,7 @@ function pobierzStatus() {
       el('kto').textContent = liniaFirmy_(d.kierowca);   // W-49
       rysujDashboard();
     }
-    rysujZgloszone_(d.zgloszoneMiesiace);   // W-46
-    if (d.zalegleMiesiace && d.zalegleMiesiace.length) {
-      var m = d.zalegleMiesiace[0];
-      var nazwa = MIESIACE_PL[parseInt(m.substring(5), 10) - 1] + ' ' + m.substring(0, 4);
-      el('baner').innerHTML = '<b>Skończył się ' + nazwa + '</b>' +
-        'Masz wpisy za ten miesiąc — jeśli to już wszystkie, kliknij „Zamykam miesiąc".';
-      pokaz('baner');
-    } else schowaj('baner');
+    zastosujStanMiesiecy_(d.zgloszoneMiesiace, d.zalegleMiesiace);   // W-46 / W-56
     // W-05 → F-71/E-37 (19.08.2026): komunikat/y Marka nie są już paskiem
     // na dashboardzie, tylko wysuwanym arkuszem (raz dziennie per treść).
     // Wołane TYLKO tutaj — na świeżej odpowiedzi serwera, nie z pamięci:
@@ -4542,6 +4544,23 @@ function pobierzStatus() {
     KOMUNIKATY_MARKA = d.komunikaty || [];
     sprawdzKomunikatMarka_();
   }).catch(function () {});
+}
+
+/* W-56 (04.09.2026, zgłoszenie Marka: „w ewidencji widać od razu, we flocie
+   się «ładuje»"). Karta i baner rysowały się WYŁĄCZNIE w `pobierzStatus`, więc
+   po zapisie wpisu kierowca wracał na pulpit ze STARĄ kartą i dopiero po chwili
+   ona znikała. Backend v19 oddaje teraz `stanPo` razem z odpowiedzią na zapis,
+   a rysowanie siedzi w JEDNYM miejscu — tu — żeby obie drogi (świeży `status`
+   i `stanPo` po zapisie) dawały dokładnie ten sam wynik. */
+function zastosujStanMiesiecy_(zgloszone, zalegle){
+  rysujZgloszone_(zgloszone || []);
+  if (zalegle && zalegle.length){
+    var m = zalegle[0];
+    var nazwa = MIESIACE_PL[parseInt(m.substring(5), 10) - 1] + ' ' + m.substring(0, 4);
+    el('baner').innerHTML = '<b>Skończył się ' + nazwa + '</b>' +
+      'Masz wpisy za ten miesiąc — jeśli to już wszystkie, kliknij „Zamykam miesiąc".';
+    pokaz('baner');
+  } else schowaj('baner');
 }
 
 /* W-46 (02.09.2026): „lipiec i sierpień 2026" zamiast wyliczanki z przecinkami.
@@ -4617,13 +4636,14 @@ function rysujZgloszone_(lista){
     (ZGL_ROZWINIETE ? 'zwiń \u25b4' : 'szczegóły \u25be') + '</span></button></div>';
 
   if (ZGL_ROZWINIETE){
-    /* W-53: rozwinięcie mówi wprost, CO SIĘ STANIE po dopisaniu — dotąd
-       brzmiało „zrób to, a potem zgłoś ponownie", czyli jak prośba, choć
-       zgłoszenie cofa się SAMO (API.gs, cofnijDeklaracje_ przy nowym wpisie).
-       ⚠ Mowa tylko o dopisaniu: poprawka istniejącego wpisu deklaracji NIE
-       cofa i tak jest celowo od E-08 („korekta literówki tego nie zmienia"). */
-    h += '<p class="zgl-pod">Jeśli dopiszesz coś w tym miesiącu, zgłoszenie ' +
-      'się cofnie — kliknij wtedy „Zamykam miesiąc" jeszcze raz.</p>' +
+    /* W-53: rozwinięcie mówi wprost, CO SIĘ STANIE — zgłoszenie cofa się SAMO.
+       W-55 (04.09): wraca „albo poprawisz", bo od API v20 poprawka i
+       anulowanie też cofają deklarację. Do v19 zdanie było krótsze właśnie
+       dlatego, że kod tego nie robił — obietnica interfejsu i zachowanie
+       kodu mają być jednym zdaniem. */
+    h += '<p class="zgl-pod">Jeśli coś dopiszesz albo poprawisz w tym ' +
+      'miesiącu, zgłoszenie się cofnie — kliknij wtedy „Zamykam miesiąc" ' +
+      'jeszcze raz.</p>' +
       '<p class="zgl-pod">Komunikat zniknie, gdy Marek zarchiwizuje miesiąc.</p>';
   }
   karta.innerHTML = h;
@@ -4858,8 +4878,9 @@ function otworzDialogMiesiaca() {
          na pulpicie — albo wcale (zgłoszenie Marka: Łukasz dopisał do sierpnia
          i nie wiedział, że trzeba kliknąć jeszcze raz). */
       wstep: 'Dajesz znać Markowi, że to koniec wpisów na ten miesiąc. ' +
-        'Jeśli potem coś dopiszesz, zgłoszenie się cofnie i trzeba będzie ' +
-        'kliknąć jeszcze raz. W razie wątpliwości skontaktuj się z Markiem.',
+        'Jeśli potem coś dopiszesz albo poprawisz, zgłoszenie się cofnie ' +
+        'i trzeba będzie kliknąć jeszcze raz. W razie wątpliwości ' +
+        'skontaktuj się z Markiem.',
       pole: { etykieta: 'Który miesiąc masz skończony?', ikona: 'ic-cal', opcje: opcjeMiesiecy },
       dwa: { zostaw: 'Jeszcze nie', akcja: 'Zgłaszam', stozek: '', poAkcji: zglosMiesiac_ }
     });
@@ -5262,6 +5283,14 @@ function anulujWpis(w) {
         if (odp.ok) {
           wczytajWpisy();
           odswiezWpisyCache();
+          /* W-55: anulowanie zmienia zawartość miesiąca, więc cofa zgłoszenie
+             (API v20). Stan wraca w odpowiedzi; przy starszym backendzie
+             pytamy osobno, żeby pulpit nie został z nieprawdą. */
+          if (odp.stanPo) {
+            zastosujStanMiesiecy_(odp.stanPo.zgloszoneMiesiace, odp.stanPo.zalegleMiesiace);
+          } else {
+            pobierzStatus();
+          }
         } else pokazInfo_('Nie udało się usunąć wpisu', (odp.bledy || []).map(bezKodu_).join('<br>'), 'ic-warn');
       }).catch(function () {
         koniecZapisu_();
@@ -5383,7 +5412,14 @@ function wyslijEdycje(d) {
       zakonczEdycje();
       pokazSukces('Wpis poprawiony', 'Numer wpisu: ' + odp.id, odp.ostrzezenia, true);
       odswiezWpisyCache();
-      pobierzStatus();   // W-54 — kwoty na pulpicie też się właśnie zmieniły
+      /* W-55/W-56: poprawka też cofa zgłoszenie (API v20), a stan wraca razem
+         z odpowiedzią. Starszy backend `stanPo` nie przyśle — wtedy zostaje
+         droga z W-54. */
+      if (odp.stanPo) {
+        zastosujStanMiesiecy_(odp.stanPo.zgloszoneMiesiace, odp.stanPo.zalegleMiesiace);
+      } else {
+        pobierzStatus();
+      }
     } else pokazBladBackendu(odp.bledy);
   }).catch(function () {
     koniecZapisu_();
