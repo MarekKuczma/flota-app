@@ -2395,6 +2395,28 @@ var SLOWNIKI_WAZNOSC_MS = 24 * 60 * 60 * 1000;
 function nazwaMiesiaca_(m) {
   return MIESIACE_PL[parseInt(m.substring(5), 10) - 1] + ' ' + m.substring(0, 4);
 }
+/* ── W-45 (13.09.2026, wariant A z makiety) ───────────────────────────────
+   NAZWA MIESIĄCA W NAGŁÓWKU LISTY — rok TYLKO wtedy, gdy inny niż bieżący.
+
+   Powód zmierzony, nie estetyczny. Nagłówek zamkniętego miesiąca (nazwa +
+   „zamknięty" + „szczegóły") ma na telefonie 390 px do dyspozycji 328 px:
+     „PAŹDZIERNIK 2026"  353 px  → brakuje 25 px, „szczegóły" spada niżej
+     „WRZESIEŃ 2026"     331 px  → brakuje 3 px (dzieje się JUŻ DZIŚ)
+     „PAŹDZIERNIK"       310 px  → mieści się z 18 px zapasu
+   Pomiar: `Makiety/2026-09-13 W-45 naglowek miesiaca/` (skrypty + zrzuty).
+
+   Rok znika WYŁĄCZNIE dla bieżącego roku — „GRUDZIEŃ 2025" nadal go ma, więc
+   przy starszych miesiącach nic nie ginie.
+   ⚠ Tylko nagłówek listy. Podsumowanie i wybierak miesiąca dalej wołają
+   `nazwaMiesiaca_` Z ROKIEM: tam nie ma ciasnoty, a w wybieraku rok bywa
+   jedyną wskazówką, o który miesiąc chodzi.
+   ⚠ Blok jest IDENTYCZNY w OBU appkach rodziny — pilnuje tego `testy_w45.js`. */
+function nazwaMiesiacaNaglowek_(m) {
+  var nr = parseInt(String(m).substring(5), 10);
+  var rok = String(m).substring(0, 4);
+  return (MIESIACE_PL[nr - 1] || m) +
+         (rok === String(new Date().getFullYear()) ? '' : ' ' + rok);
+}
 function biezacyMiesiac_() {
   var t = new Date();
   return t.getFullYear() + '-' + ('0' + (t.getMonth() + 1)).slice(-2);
@@ -5190,7 +5212,7 @@ function renderujListeWpisow() {
       // miała warunek `miesiac !== biezacy`, więc miesiąc zamknięty w trakcie
       // wyglądał jak otwarty — a ewidencja pokazywała go poprawnie. Równamy
       // do ewidencji. „Zaległy" nadal tylko dla miesięcy, które się skończyły.
-      naglowek.innerHTML = nazwaMiesiaca_(grupa.miesiac) +
+      naglowek.innerHTML = nazwaMiesiacaNaglowek_(grupa.miesiac) +   /* W-45 */
         (grupa.zwiniety ? ' <span class="plakietka">zamknięty</span>' +
             ' <span class="naglowek-strzalka">▸</span><span class="naglowek-dopisek">Miesiąc zgłoszony — możesz tylko przeglądać wpisy.</span>'
           : (grupa.miesiac === biezacy ? ''
