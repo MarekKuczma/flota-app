@@ -86,6 +86,8 @@ var PALETY_APKA = {
    definicje wszystkich 12 są wszędzie (włączenie palety = 1 linijka).
    ⚠ Ciemne bloki specjalnych przebarwiają też tło/karty/linie/inputy —
    to celowe (klimat palety), wartości wspólne całej rodziny.
+   ⚠ KOSMOS (W-85) NIE MA tu definicji — ma WŁASNY blok kanonu, który stoi
+   w appce PO jej ogólnym bloku ciemnym (powód opisany w tamtym bloku).
    ================================================================ */
 /* ---- Pomarańcz ---- */
 [data-paleta="pomaranczowa"]{
@@ -702,81 +704,99 @@ var PALETY_APKA = {
     filter:drop-shadow(0 0 8px rgba(37,99,235,.45)); }
   [data-motyw="ciemny"][data-paleta="heros"] .metryka .m-w{
     background-image:linear-gradient(120deg,#fca5a5 0%, #fecdd3 45%, #bfdbfe 100%); }
-  /* ===== WYJĄTEK W-50 (Flota, 21.09.2026): paleta specjalna „KOSMOS" =====
-     Decyzja Marka: „ma to być paleta specjalna… na razie tylko flota" — po pomiarze
-     na telefonie (strona próbna z 21.09: wariant D „przeświecający" — PŁYNNIE).
-     To DRUGI nazwany wyjątek Floty od kanonu palet (pierwszy: turkusowe ikony
-     Pomarańczu wyżej). Łamie kanon w trzech miejscach, świadomie:
-       1. paleta jednej appki — kanon zna tylko palety wspólne (rejestr JS
-          i blok CSS identyczne w trzech plikach). Kosmos NIE wchodzi do
-          wspólnego bloku; dopisuje się do rejestru PO nim (patrz JS, „WYJĄTEK W-50").
-       2. nie tylko tokeny — pod appką leży warstwa nieba (#niebo, gwiazdy +
-          mgławice), a karty przeświecają (backdrop-filter). To nowa struktura,
-          nie kolory. Z tego powodu nigdy nie kopiować tego bloku do Ewidencji
-          ani Asystenta „bo pasuje" — tam nie było pomiaru.
-       3. Kosmos jest ZAWSZE nocą: jeden blok ustawia i tokeny palety, i chrom
-          (tło, karty, teksty) w OBU trybach jasny/ciemny. Reguła kanonu nr 4
-          („każda paleta ma blok ciemny") nie ma tu zastosowania — jasny Kosmos
-          nie istnieje, a przełącznik trybu w Ustawieniach zostaje bez skutku.
-     ⚠ Kolejność: blok stoi PO [data-motyw="ciemny"] (ta sama swoistość —
-     późniejszy wygrywa), więc chrom Kosmosu nadpisuje ciemny chrom appki.
-     ⚠ Wydajność: jedyny koszt to `backdrop-filter` na kartach i pasku nawigacji
-     — zmierzony 21.09 na telefonie Marka jako płynny. Warstwa nieba to JEDEN
-     element `position:fixed` (NIE `background-attachment:fixed` — na Androidzie
-     to bywa ignorowane albo samo tnie), malowany raz. Dla kierowców bez tej
-     palety element jest `display:none` — zero pracy przeglądarki. */
-  [data-paleta="kosmos"]{
-    --akcent:#c4a2ff;
-    --akcent-moc:#e0ccff;
-    --on-akcent:#fff;
-    --gradient:linear-gradient(115deg,#05060f 0%,#241056 34%,#6d28d9 58%,#c026d3 80%,#22d3ee 100%);
-    --grad-maly:linear-gradient(135deg,#6d28d9,#c026d3);
-    --ikona-grad:linear-gradient(135deg,#241056,#6d28d9 55%,#22d3ee);
-    --przycisk-cien:rgba(124,58,237,.45);
-    --bg-akcentjasny:#241a4d;
-    --tekst-akcentjasny:#d7c4ff;
-    --metryka-grad:linear-gradient(135deg,#141033 0%,#1d1240 100%);
-    --stozek:#67e8f9,#c4a2ff,#f0abfc,#6d28d9,#241056,#6d28d9,#f0abfc,#c4a2ff,#67e8f9;
-    --wskaznik-grad:linear-gradient(90deg,#6d28d9,#c4a2ff,#22d3ee,#c4a2ff,#6d28d9);
-    --luk:#67e8f9 0deg, #c4a2ff 46deg, #f0abfc 86deg;
-    --luk-glow:#c026d3;
-    --glow-krycie:.85;
-    --turkus:#67e8f9;
-    --bg-turkus:#0d3345;
-    --tekst-turkus:#a5f3fc;
-    --beta-poswiata:rgba(192,38,211,.6);
-    /* chrom nocy — w obu trybach (wartości z ciemnego chromu appki, przebarwione na granat) */
-    --tlo:#04030c; --karta:#0f0f2a; --input-tlo:#181739; --input-brzeg:#332f5e;
-    --podpowiedz:#6f6a99; --tekst:#f0f1f3; --szary:#b1afd0; --linia:#2a2456; --blad:#f87171;
-    --bg-uwaga:#453615; --brzeg-uwaga:#8a5a12; --tekst-uwaga:#fcd34d;
-    --bg-ok:#123522; --tekst-ok:#86efac;
-    --bg-blad:#451a17; --tekst-blad:#fca5a5;
-    --sz-baza:#1e1b40; --sz-polysk:rgba(255,255,255,.10); --wcisk:#181739;
-  }
-  /* Niebo: element pod całą appką. Gwiazdy i mgławice wpisuje JS (rysujNiebo_)
-     — 230 gradientów w CSS-ie zajęłoby ~22 KB pliku, a liczy się je w milisekundę. */
-  #niebo{display:none; position:fixed; inset:0; z-index:-1; pointer-events:none;
-    background-color:#04030c;}
-  [data-paleta="kosmos"] #niebo{display:block;}
-  [data-paleta="kosmos"] body{background:transparent;}
-  /* Karty przeświecają: 40% krycia + rozmycie tego, co pod nimi. `background`
-     skrótem — kasuje też --metryka-grad kafelków. */
-  [data-paleta="kosmos"] .karta, [data-paleta="kosmos"] .metryka,
-  [data-paleta="kosmos"] .powitanie, [data-paleta="kosmos"] .mini-wpis{
-    background:rgba(16,11,44,.40);
-    -webkit-backdrop-filter:blur(10px) saturate(1.3); backdrop-filter:blur(10px) saturate(1.3);
-    border:1px solid rgba(170,150,255,.22);}
-  /* mini-wpis ma w bazie tylko dolną kreskę; z pełną ramką tekst dotykał
-     krawędzi — stąd wewnętrzny margines i zaokrąglenie (jedyne odejście od makiety). */
-  [data-paleta="kosmos"] .mini-wpis{padding:8px 10px; border-radius:10px; margin-bottom:6px;}
-  [data-paleta="kosmos"] nav{background:rgba(9,7,26,.78);
-    -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);}
-  [data-paleta="kosmos"] .przycisk-trzeci{background:rgba(255,255,255,.05);}
-  /* Cyfry metryk: własny jasny gradient (ten sam wzorzec, co Gamma/Heros wyżej)
-     — --gradient Kosmosu zaczyna się od czerni i zjadałby początek liczby. */
-  [data-paleta="kosmos"] .metryka .m-w{
-    background-image:linear-gradient(120deg,#c4a2ff 0%,#f0abfc 45%,#67e8f9 100%);}
-  /* ===== koniec wyjątku W-50 ===== */
+/* ================================================================
+   KANON PALET RODZINY — KOSMOS (W-85, 23.09.2026) — CSS.
+   TEN BLOK JEST IDENTYCZNY CO DO ZNAKU w trzech aplikacjach (wzorzec:
+   Testy/kanon/kanon-kosmos.css, generator: Dokumentacja/kanon-generator/).
+   Paleta specjalna z nocnym niebem pod appką — powstała we Flocie jako
+   wyjątek W-50 (21.09), do rodziny weszła decyzją Marka 23.09.
+   Dlaczego OSOBNY blok, a nie w bloku wspólnym:
+     1. to nie same tokeny — pod appką leży niebo (#niebo, gwiazdy
+        i mgławice rysuje rysujNiebo_() w JS kanonu), a karty są szklane;
+     2. Kosmos jest ZAWSZE NOCĄ: ten sam zestaw ustawia i tokeny palety,
+        i chrom (tło, karty, teksty) w obu trybach. Musi więc stać PO
+        ogólnym bloku ciemnym appki (ta sama swoistość — późniejszy
+        wygrywa). W bloku wspólnym przegrałby: w Asystencie jasny :root
+        stoi dopiero PO bloku wspólnym. Przełącznik Jasny/Ciemny w tej
+        palecie nie zmienia nic — to świadome.
+   Tu są TYLKO powierzchnie wspólne (.karta, nav, .przycisk-trzeci).
+   Szklane elementy jednej appki (kafelki, wpisy, statystyki…) i jej
+   własne poprawki stoją po stronie appki, ZARAZ POD tym blokiem.
+   ⚠ Wydajność: jedyny koszt to backdrop-filter — zmierzony 21.09 na
+   telefonie Marka jako płynny. Niebo to JEDEN element position:fixed
+   (NIE background-attachment:fixed — na Androidzie bywa ignorowane albo
+   tnie), malowany raz; w innych paletach display:none — zero pracy.
+   ================================================================ */
+[data-paleta="kosmos"]{
+  --akcent:#c4a2ff;
+  --akcent-moc:#e0ccff;
+  --on-akcent:#fff;
+  --gradient:linear-gradient(115deg,#05060f 0%,#241056 34%,#6d28d9 58%,#c026d3 80%,#22d3ee 100%);
+  --grad-maly:linear-gradient(135deg,#6d28d9,#c026d3);
+  --ikona-grad:linear-gradient(135deg,#241056,#6d28d9 55%,#22d3ee);
+  --przycisk-cien:rgba(124,58,237,.45);
+  --bg-akcentjasny:#241a4d;
+  --tekst-akcentjasny:#d7c4ff;
+  --metryka-grad:linear-gradient(135deg,#141033 0%,#1d1240 100%);
+  --stozek:#67e8f9,#c4a2ff,#f0abfc,#6d28d9,#241056,#6d28d9,#f0abfc,#c4a2ff,#67e8f9;
+  --wskaznik-grad:linear-gradient(90deg,#6d28d9,#c4a2ff,#22d3ee,#c4a2ff,#6d28d9);
+  --luk:#67e8f9 0deg, #c4a2ff 46deg, #f0abfc 86deg;
+  --luk-glow:#c026d3;
+  --glow-krycie:.85;
+  --turkus:#67e8f9;
+  --bg-turkus:#0d3345;
+  --tekst-turkus:#a5f3fc;
+  --beta-poswiata:rgba(192,38,211,.6);
+  --tlo:#04030c;
+  --karta:#0f0f2a;
+  --input-tlo:#181739;
+  --input-brzeg:#332f5e;
+  --podpowiedz:#6f6a99;
+  --tekst:#f0f1f3;
+  --szary:#b1afd0;
+  --linia:#2a2456;
+  --blad:#f87171;
+  --bg-uwaga:#453615;
+  --brzeg-uwaga:#8a5a12;
+  --tekst-uwaga:#fcd34d;
+  --bg-ok:#123522;
+  --tekst-ok:#86efac;
+  --bg-blad:#451a17;
+  --tekst-blad:#fca5a5;
+  --sz-baza:#1e1b40;
+  --sz-polysk:rgba(255,255,255,.10);
+  --wcisk:#181739;
+}
+#niebo{display:none; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background-color:#04030c;}
+[data-paleta="kosmos"] #niebo{display:block;}
+[data-paleta="kosmos"] body{background:transparent;}
+/* Karty przeświecają: 40% krycia + rozmycie tego, co pod nimi. */
+[data-paleta="kosmos"] .karta{
+  background:rgba(16,11,44,.40);
+  -webkit-backdrop-filter:blur(10px) saturate(1.3); backdrop-filter:blur(10px) saturate(1.3);
+  border:1px solid rgba(170,150,255,.22);}
+[data-paleta="kosmos"] nav{background:rgba(9,7,26,.78);
+  -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);}
+[data-paleta="kosmos"] .przycisk-trzeci{background:rgba(255,255,255,.05);}
+/* ============== KONIEC BLOKU KANONU — KOSMOS (CSS) ============== */
+/* ---- Kosmos — część FLOTY (W-85; wcześniej wyjątek W-50) ----
+   Szklane elementy, których inne appki nie mają (albo mają, ale tam zostają
+   pełne), i ozdoba cyfr metryk. Stoi ZARAZ POD blokiem kanonu — kolejność
+   i swoistość jak w W-50, więc Flota wygląda co do piksela tak samo. */
+[data-paleta="kosmos"] .metryka, [data-paleta="kosmos"] .powitanie, [data-paleta="kosmos"] .mini-wpis{
+  background:rgba(16,11,44,.40);
+  -webkit-backdrop-filter:blur(10px) saturate(1.3); backdrop-filter:blur(10px) saturate(1.3);
+  border:1px solid rgba(170,150,255,.22);}
+/* mini-wpis ma w bazie tylko dolną kreskę; z pełną ramką tekst dotykał
+   krawędzi — stąd wewnętrzny margines i zaokrąglenie (jedyne odejście od makiety). */
+[data-paleta="kosmos"] .mini-wpis{padding:8px 10px; border-radius:10px; margin-bottom:6px;}
+/* Cyfry metryk: własny jasny gradient (ten sam wzorzec co Gamma/Heros wyżej) —
+   --gradient Kosmosu zaczyna się od czerni i zjadałby początek liczby.
+   Tylko Flota: w Ewidencji cyfry metryk nie mają gradientu w żadnej palecie. */
+[data-paleta="kosmos"] .metryka .m-w{
+  background-image:linear-gradient(120deg,#c4a2ff 0%,#f0abfc 45%,#67e8f9 100%);}
+/* ---- koniec części Floty ---- */
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0; background:var(--tlo); color:var(--tekst);
     font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:17px;}
@@ -2140,7 +2160,7 @@ var PALETY_APKA = {
 </style>
 </head>
 <body>
-<!-- W-50: niebo pod appką dla palety „Kosmos" (patrz CSS „WYJĄTEK W-50"). Ukryte w każdej innej palecie. -->
+<!-- W-85: niebo pod appką dla palety „Kosmos" (blok kanonu KOSMOS w CSS, rysujNiebo_() w JS kanonu). Ukryte w każdej innej palecie. -->
 <div id="niebo" aria-hidden="true"></div>
 <!-- ===== Z-82: sprite ikon (ikony/ikony-sprite.svg) — wspólny dla obu appek.
      Zasady: 24x24, kontur 1.75, currentColor; <symbol> BEZ atrybutów
@@ -2787,21 +2807,6 @@ function bezpiecznyTekst(s){
     .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-/* ===== WYJĄTEK W-50 (Flota, 21.09.2026) — paleta specjalna „Kosmos", CZĘŚĆ 1 z 2 =====
-   Decyzja Marka: „ma to być paleta specjalna… na razie tylko flota". Kanon palet (W-41)
-   nie zna palet jednej appki: rejestr i blok CSS są identyczne w trzech plikach, a palety
-   specjalne są wspólne. Dlatego Kosmos NIE wchodzi do wspólnego bloku (ani znaku w nim nie
-   ruszamy) — dopisuje się do rejestru tuż PO nim (część 2). Cena: pierwsze `wczytajWyglad()`
-   w bloku kanonu jeszcze Kosmosu nie zna i cofnęłoby zapamiętany wybór na paletę domyślną.
-   Więc zapamiętujemy wybór TUTAJ, zanim blok ruszy, i przywracamy w części 2 (wszystko
-   w jednym przebiegu skryptu — przeglądarka nic pomiędzy nie rysuje; pre-paint w <head>
-   i tak ustawił już „kosmos" na <html>).
-   Właściwe miejsce na taki haczyk to `PALETY_APKA.dodatkowe` czytane przez blok kanonu —
-   do zrobienia przy najbliższej zmianie kanonu we WSZYSTKICH trzech appkach (w planie). */
-var KOSMOS_ID = 'kosmos';
-var kosmosZapamietany_ = false;
-try { kosmosZapamietany_ = localStorage.getItem(PALETY_APKA.prefiks + '_paleta') === KOSMOS_ID; } catch (e) {}
-
 /* ================================================================
    KANON PALET RODZINY (W-41 "paczka wyglądu", 30.08.2026) — JS.
    TEN BLOK JEST IDENTYCZNY CO DO ZNAKU w trzech aplikacjach.
@@ -2809,7 +2814,8 @@ try { kosmosZapamietany_ = localStorage.getItem(PALETY_APKA.prefiks + '_paleta')
    danej appki): prefiks kluczy localStorage, paleta domyślna, lista i
    kolejność palet podstawowych, mapa migracji starych id, id ekranu
    i karty ustawień. Wymaga: el(), ikonaHTML_() i sprite'u ikon
-   (ic-sun/ic-moon/ic-phone/ic-check/ic-lock/ic-user) po stronie appki.
+   (ic-sun/ic-moon/ic-phone/ic-check/ic-lock/ic-user) po stronie appki,
+   a od W-85 także elementu <div id="niebo"> tuż po <body> (niebo Kosmosu).
    ================================================================ */
 var KLUCZ_PALETA      = PALETY_APKA.prefiks + '_paleta';
 var KLUCZ_MOTYW       = PALETY_APKA.prefiks + '_motyw';
@@ -2820,7 +2826,9 @@ var KLUCZ_PALETY_SPEC = PALETY_APKA.prefiks + '_palety_specjalne';
    w kolejności appki) + bramka specjalnych. `pasek` -> <meta theme-color>
    (najciemniejszy odcień nagłówka; wyjątek aurora #4D96FF — świadoma
    decyzja Marka 30.08.2026). Opis "domyślna" dokleja się w locie tej
-   palecie, która jest domyślna w danej appce. */
+   palecie, która jest domyślna w danej appce.
+   ⚠ Kosmos (W-85, 23.09.2026): w rejestrze zwykła specjalna, ale jego CSS
+   żyje w osobnym bloku kanonu (niebo + szklane karty) — patrz tam. */
 var PALETY_REJESTR = [
   { id:'pomaranczowa', nazwa:'Pomarańcz', opis:'energiczna', pasek:'#f97316',
     probka:'linear-gradient(135deg,#fbbf24,#f97316 55%,#dc2626)' },
@@ -2845,7 +2853,9 @@ var PALETY_REJESTR = [
   { id:'gamma', nazwa:'Gamma', opis:'zieleń i fiolet', pasek:'#14532d',
     probka:'linear-gradient(135deg,#14532d,#22c55e 45%,#9333ea)', specjalna:true },
   { id:'heros', nazwa:'Heros', opis:'czerwień i błękit', pasek:'#7f1d1d',
-    probka:'linear-gradient(135deg,#7f1d1d,#dc2626 45%,#2563eb)', specjalna:true }
+    probka:'linear-gradient(135deg,#7f1d1d,#dc2626 45%,#2563eb)', specjalna:true },
+  { id:'kosmos', nazwa:'Kosmos', opis:'gwiazdy i mgławice', pasek:'#05060f',
+    probka:'linear-gradient(115deg,#05060f,#241056 34%,#6d28d9 58%,#c026d3 80%,#22d3ee)', specjalna:true }
 ];
 function paletaDomyslna_(){
   return (typeof KONFIG !== 'undefined' && KONFIG && KONFIG.PALETA_DOMYSLNA)
@@ -2973,21 +2983,10 @@ function rysujUstawienia_(){
     };
   });
 }
-wczytajWyglad();
-/* ============== KONIEC WSPÓLNEGO BLOKU KANONU (JS) ============== */
-
-/* ===== WYJĄTEK W-50 — paleta „Kosmos", CZĘŚĆ 2 z 2 (część 1 stoi PRZED blokiem kanonu) =====
-   Specjalna, więc widzi ją tylko kierowca z „Paleta specjalna = TAK" w arkuszu — tak samo
-   jak Aurorę, Full RGB, Gammę i Herosa. `pasek` = najciemniejszy odcień nagłówka (reguła
-   rodziny nr 3). Bez animacji nagłówka (specjalne „płyną") — Kosmos ma za to niebo. */
-var PALETA_KOSMOS = { id:KOSMOS_ID, nazwa:'Kosmos', opis:'gwiazdy i mgławice', pasek:'#05060f',
-  probka:'linear-gradient(115deg,#05060f,#241056 34%,#6d28d9 58%,#c026d3 80%,#22d3ee)', specjalna:true };
-PALETY_REJESTR.push(PALETA_KOSMOS);
-PALETY.push(PALETA_KOSMOS);
-/* Niebo pod appką: 230 gwiazd (kafelek 270 px) + 4 mgławice + poświata u góry, liczone RAZ
-   przy starcie z ziarna na sztywno (każdy telefon dostaje identyczne niebo). Wartości 1:1
-   z zatwierdzonej makiety D z 01.09 (podglad_kosmos_C_D.js). Element jest ukryty, dopóki
-   paleta nie jest Kosmosem, więc dla pozostałych kierowców to zero pracy przeglądarki. */
+/* Niebo Kosmosu (W-85; z W-50 Floty 1:1): 230 gwiazd (kafelek 270 px)
+   + 4 mgławice + poświata u góry, liczone RAZ przy starcie z ziarna na sztywno —
+   każdy telefon widzi to samo niebo. Element jest `display:none` w każdej innej
+   palecie, więc dla reszty to zero pracy przeglądarki. */
 function rysujNiebo_(){
   var n = el('niebo'); if (!n) return;
   var s = 11, los = function(){ s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; };
@@ -3010,11 +3009,12 @@ function rysujNiebo_(){
   n.style.backgroundRepeat = powtorki.join(',');
 }
 rysujNiebo_();
-/* Przywrócenie wyboru cofniętego przez pierwsze wczytajWyglad() (patrz część 1); bramka
-   specjalnych działa dalej — bez uprawnienia drugie wołanie i tak cofnie na domyślną. */
-if (kosmosZapamietany_) { try { localStorage.setItem(KLUCZ_PALETA, KOSMOS_ID); } catch (e) {} }
 wczytajWyglad();
-/* ===== koniec wyjątku W-50 (JS) ===== */
+/* ============== KONIEC WSPÓLNEGO BLOKU KANONU (JS) ============== */
+
+/* W-85 (23.09.2026): tu stał wyjątek W-50 (Kosmos dopisywany do rejestru PO bloku kanonu,
+   z zapamiętaniem wyboru przed nim). Kosmos jest teraz w rejestrze kanonu, a niebo rysuje
+   rysujNiebo_() z bloku kanonu — obejście niepotrzebne. */
 
 /* Zębatka jako PRZEŁĄCZNIK: drugie kliknięcie wraca na ekran, z którego
    przyszedłeś (wzorzec z „Asystenta Floty"). */
