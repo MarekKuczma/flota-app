@@ -1977,8 +1977,6 @@ var PALETY_APKA = {
 .wpis .linia1 > span:first-child { min-width:0; }
 
 /* ── licznik / kwota: cicha etykieta, mocna liczba ─────────────────── */
-.wpis .licznik-rog { font-size:12px; color:var(--szary); }
-.wpis .licznik-rog b { font-size:15px; }
 
 .wpis .linia2 { margin-top:2px; }
 .wpis .plakietka-id { background:transparent; padding:0; font-size:11px; opacity:.6; }
@@ -2030,8 +2028,6 @@ var PALETY_APKA = {
   #listaWpisow:not(:has(.wpisy-grupa-miesiaca))::before { left:6px; }
   .wpis::before { left:-19px; }
   .wpis .linia1 { font-size:15px; }
-  .wpis .licznik-rog { font-size:11px; }
-  .wpis .licznik-rog b { font-size:13.5px; }
   .wpis .wpis-strzalka { padding:0 7px; }
   .wpis .wpis-strzalka::before { font-size:11px; }
 }
@@ -2043,7 +2039,6 @@ var PALETY_APKA = {
 @media (max-width: 340px) {
   .wpis .linia1 { flex-wrap:wrap; }
   .wpis .linia1 > span:first-child { flex:1 0 100%; }
-  .wpis .licznik-rog { flex:1 0 100%; text-align:right; margin-top:1px; }
 }
 
 /* ── FLOTA, wiersz stopki karty (data · numer · „szczegóły") ────────────
@@ -3531,11 +3526,8 @@ function sparsujPary_(tekst) {
 // przebiegu poza aplikacją. Format lustrzany do tekstZPar(), np.
 // "184632km Hidromek + 91234mth JCB 4CX". Stare wpisy sprzed tej zmiany mają
 // tu pustą wartość — nic nie domyślamy wstecz.
-function formatLicznikPary_(l) {
-  var r = Math.round(l * 10) / 10;
-  var s = String(r);
-  return s.indexOf('.') === -1 ? s : s.replace('.', ',');
-}
+/* W-87b: to samo co `formatLitry_` (1 miejsce, przecinek) — jedna definicja. */
+function formatLicznikPary_(l) { return formatLitry_(l); }
 function tekstLicznikowZPar_() {
   var czesci = [];
   paryStan.forEach(function (p) {
@@ -4258,7 +4250,7 @@ function czyCofnieZgloszenie_(d){
   var m = String((d && d.dataZakupu) || '').substring(0, 7);
   if (!m || !ZGL_OSTATNIE || !ZGL_OSTATNIE.length) return null;
   return ZGL_OSTATNIE.indexOf(m) === -1 ? null
-    : MIESIACE_PL[parseInt(m.substring(5), 10) - 1] + ' ' + m.substring(0, 4);
+    : nazwaMiesiaca_(m);   // W-87b
 }
 function wyslijNowy(d, potwierdzenie, klucz) {
   klucz = klucz || kluczKlienta_();
@@ -4685,8 +4677,8 @@ function pokazWersje_(){
    przy starcie appki i po zgłoszeniu miesiąca, więc karta na pulpicie niosła
    stan sprzed zapisu aż do następnego otwarcia. Stąd wołanie po zapisie,
    po poprawce i po opróżnieniu kolejki offline.
-   ⚠ Flota nie ma odpowiednika ewidencyjnego `stanPo` przy akcji `nowy`, więc
-   tu naprawdę potrzebne jest drugie żądanie. Idzie PO `pokazSukces`, czyli
+   ⚠ Od W-56 `nowy` oddaje `stanPo` (miesiące); `status` niesie jeszcze `beta`,
+   `paletySpecjalne` i komunikaty, dlatego drugie żądanie zostaje. Idzie PO `pokazSukces`, czyli
    w tle — kierowca ma już swój ekran, nic na nie nie czeka. */
 function pobierzStatus() {
   apiGet('status').then(function (d) {
@@ -4731,7 +4723,7 @@ function zastosujStanMiesiecy_(zgloszone, zalegle){
   rysujZgloszone_(zgloszone || []);
   if (zalegle && zalegle.length){
     var m = zalegle[0];
-    var nazwa = MIESIACE_PL[parseInt(m.substring(5), 10) - 1] + ' ' + m.substring(0, 4);
+    var nazwa = nazwaMiesiaca_(m);   // W-87b
     el('baner').innerHTML = '<b>Skończył się ' + nazwa + '</b>' +
       'Masz wpisy za ten miesiąc — jeśli to już wszystkie, kliknij „Zamykam miesiąc".';
     pokaz('baner');
@@ -4789,7 +4781,7 @@ function rysujZgloszone_(lista){
     schowaj('kartaZgloszone'); karta.innerHTML = ''; ZGL_ROZWINIETE = false; return;
   }
   var nazwy = zgl.map(function(m){
-    return MIESIACE_PL[parseInt(m.substring(5), 10) - 1] + ' ' + m.substring(0, 4);
+    return nazwaMiesiaca_(m);   // W-87b
   });
   var jeden = nazwy.length === 1;
 
@@ -4941,7 +4933,7 @@ function rysujDashboard() {
       '<div class="ikona-krag">' + ikonaWpisu_(w) + '</div>' +
       '<div class="m-tresc"><div class="m-linia1">' + nazwaSprzetuWpisu_(w) + '</div>' +
       '<div class="m-linia2">' + w.dataZakupu.substring(5).split('-').reverse().join('.') +
-      ' · ' + w.opis + ' ' + formatIlosc_(w.ilosc, w.opis) +
+      ' · ' + bezpiecznyTekst_(w.opis) + ' ' + formatIlosc_(w.ilosc, w.opis) +   /* W-87b: Z-78 */
       (jednostkaOpisu(w.opis) ? ' ' + jednostkaOpisu(w.opis) : '') + '</div></div>' +
       '<div class="m-wartosc">' + kwotaPL_(w.wartosc) + ' zł</div>';
     lista.appendChild(div);
@@ -5291,11 +5283,11 @@ function wierszSzczegol_(etykieta, wartosc) {
 function szczegolyWpisuHtml_(w, mix) {
   var wiersze =
     wierszSzczegol_('Data zakupu', dataPL_(w.dataZakupu)) +
-    wierszSzczegol_('Co kupiono', w.opis) +
+    wierszSzczegol_('Co kupiono', bezpiecznyTekst_(w.opis)) +   /* W-87b */
     wierszSzczegol_('Ilość', formatIlosc_(w.ilosc, w.opis) +
       (jednostkaOpisu(w.opis) ? ' ' + jednostkaOpisu(w.opis) : '')) +
     wierszSzczegol_('Wartość', kwotaPL_(w.wartosc) + ' zł') +
-    wierszSzczegol_('Budowa', w.budowa) +
+    wierszSzczegol_('Budowa', bezpiecznyTekst_(w.budowa)) +   /* W-87b */
     wierszSzczegol_('Nr wpisu', w.id);
   if (w.licznik !== '' && !mix) {
     wiersze += wierszSzczegol_('Stan licznika', formatLicznik_(w.licznik) +
@@ -5412,9 +5404,9 @@ function renderujWpis_(kontenerMiesiaca, w) {
       '<div class="linia1"><span>' + nazwaZModelemHtml_(w) + '</span>' +
       '<span>' + kwotaPL_(w.wartosc) + ' zł</span></div>' +
       (plakietki ? '<div>' + plakietki + '</div>' : '') +
-      '<div class="linia2">' + w.opis + ' · ' + formatIlosc_(w.ilosc, w.opis) +
+      '<div class="linia2">' + bezpiecznyTekst_(w.opis) + ' · ' + formatIlosc_(w.ilosc, w.opis) +   /* W-87b */
       (jednostkaOpisu(w.opis) ? ' ' + jednostkaOpisu(w.opis) : '') +
-      ' · ' + w.budowa + (w.dodatkoweInfo ? ' · ' + bezpiecznyTekst_(w.dodatkoweInfo) : '') + '</div>' +
+      ' · ' + bezpiecznyTekst_(w.budowa) + (w.dodatkoweInfo ? ' · ' + bezpiecznyTekst_(w.dodatkoweInfo) : '') + '</div>' +
       (w.licznik !== '' ? '<div class="linia2">' + ikonaHTML_('ic-gauge') + ' ' + formatLicznik_(w.licznik) +
         (jednostkaLicznika_(w.typSprzetu) ? ' ' + jednostkaLicznika_(w.typSprzetu) : '') +
         '</div>' : '') +
