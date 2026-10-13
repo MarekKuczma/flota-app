@@ -1292,6 +1292,56 @@ var PALETY_APKA = {
   /* Ekran sukcesu nie należy do żadnej zakładki — wtedy kreska znika,
      zamiast stać pod przypadkową pozycją. */
   nav .wskaznik.bez-zakladki{opacity:0;}
+
+  /* ===== W-92 (13.10.2026): zakładka „Admin” — podgląd Panelu (wybór Marka 12.10:
+     B1 kafelki · K3 kropki · R3 ramki · S1 pełne karty · P2 zwijane sekcje · O1 kolejność
+     jak w arkuszu · F2 kierowcy w grupach). Kolory kropek są STAŁE (nie z palety) —
+     to sygnał stanu, tak jak czerwień alarmu (zasada kolorów rodziny). ===== */
+  .adm-nag{display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:8px;}
+  .adm-nag h2{margin:0; font-size:17px; line-height:1.25;}
+  .adm-mal{font-size:12px; color:var(--szary); margin-top:2px;}
+  .adm-odsw{flex:none; min-height:44px; padding:0 14px; border-radius:12px; font-weight:700; font-size:14px;
+    background:var(--karta); color:var(--akcent); border:1.5px solid var(--akcent); cursor:pointer;}
+  .adm-odsw[disabled]{opacity:.55; cursor:default;}
+  .adm-linie{font-size:13px; color:var(--szary); margin:0 0 8px; line-height:1.45;}
+  .adm-pasek{display:flex; gap:6px; margin:0 0 10px;}
+  .adm-pasek .k{flex:1; border-radius:10px; padding:6px 4px; text-align:center; font-size:12px; line-height:1.3;}
+  .adm-pasek .k.ok{background:#e6f4ea; color:#137333;}
+  .adm-pasek .k.al{background:#fce8e6; color:#a50e0e;}
+  .adm-pasek .k.ne{background:#f3f4f6; color:#4b5563;}
+  .adm-kr{display:inline-block; width:14px; height:14px; border-radius:50%; vertical-align:middle; flex:none;}
+  .adm-kr.mala{width:10px; height:10px; margin-right:4px;}
+  .adm-kr.ok{background:#22c55e; box-shadow:0 0 6px #22c55eaa;}
+  .adm-kr.uw{background:#f59e0b; box-shadow:0 0 6px #f59e0baa;}
+  .adm-kr.al{background:#ef4444; box-shadow:0 0 6px #ef4444aa;}
+  .adm-kr.ne{background:#9ca3af; box-shadow:0 0 6px #9ca3afaa;}
+  .adm-kr.ka{background:#3b82f6; box-shadow:0 0 6px #3b82f6aa;}
+  .adm-licz{display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; font-size:13px; margin:2px 2px 8px;}
+  .adm-licz span{display:inline-flex; align-items:center; gap:5px;}
+  .adm-leg{font-size:12px; color:var(--szary); background:var(--karta); border:1px solid var(--linia);
+    border-radius:10px; padding:6px 9px; margin:0 0 8px; line-height:1.9;}
+  .adm-leg .adm-kr{width:10px; height:10px; margin:0 3px 0 6px;}
+  .adm-sekc{border:2px solid var(--linia); border-radius:14px; padding:6px 6px 2px; margin:10px 0;}
+  .adm-sekc > summary{list-style:none; display:flex; justify-content:space-between; align-items:center; gap:8px;
+    font-weight:700; padding:6px 4px 8px; cursor:pointer; min-height:28px;}
+  .adm-sekc > summary::-webkit-details-marker{display:none;}
+  .adm-sekc > summary .str{display:inline-block; transition:transform .15s; margin-right:6px;}
+  .adm-sekc[open] > summary .str{transform:rotate(90deg);}
+  .adm-sekc > summary .ile{display:inline-flex; align-items:center; gap:5px; font-size:13px; flex:none;}
+  .adm-sekc > summary .ile .adm-kr{width:11px; height:11px;}
+  .adm-pusto{font-size:13px; color:var(--szary); padding:0 4px 8px;}
+  .adm-grupa{border:2px solid; border-radius:14px; padding:6px 6px 0; margin:8px 0;}
+  .adm-grupa .gn{font-weight:700; margin:0 2px 6px;}
+  .adm-kafel{background:var(--karta); border:1px solid var(--linia); border-radius:10px; padding:8px 10px; margin-bottom:6px;}
+  .adm-kafel .r1{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .adm-kafel .r1 b{word-break:break-word;}
+  .adm-kafel .r1 .adm-kr{margin-top:3px;}
+  .adm-kafel .r2{color:var(--szary); font-size:13px; margin-top:3px;}
+  .adm-kafel .dn{white-space:nowrap;}
+  .adm-sz{display:grid; grid-template-columns:auto 1fr; gap:2px 10px; font-size:13px; margin-top:5px;}
+  .adm-sz span:nth-child(odd){color:var(--szary);}
+  .adm-sz span:nth-child(even){word-break:break-word;}
+  .adm-stan{text-align:center; color:var(--szary); padding:24px 8px; font-size:14px;}
   @keyframes wejscieEkranu{ from{opacity:0;} to{opacity:1;} }
   .wchodzi{animation:wejscieEkranu .22s ease-out;}
   nav button .i{display:block; font-size:22px; line-height:1.1;}
@@ -2435,6 +2485,12 @@ var PALETY_APKA = {
   <div id="widokUstawienia" class="ukryte">
     <div class="karta" id="ustawieniaKarta"></div>
   </div>
+
+  <!-- W-92 (13.10.2026): zakładka „Admin” — podgląd Panelu z arkusza, tylko dla kodu
+       z „Admin = TAK”. Wnętrze rysuje adminRysuj_() z komórek Panelu. -->
+  <div id="widokAdmin" class="ukryte">
+    <div id="adminTresc"></div>
+  </div>
 </main>
 
 <nav id="nawigacja" class="ukryte">
@@ -2442,6 +2498,7 @@ var PALETY_APKA = {
   <button id="nawStart" class="aktywna"><span class="i"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-home"></use></svg></span>Start</button>
   <button id="nawNowy"><span class="i"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-fuel"></use></svg></span>Nowy wpis</button>
   <button id="nawWpisy"><span class="i"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-clip"></use></svg></span>Moje wpisy</button>
+  <button id="nawAdmin" class="ukryte"><span class="i"><svg class="ikona" viewBox="0 0 24 24" aria-hidden="true"><use href="#ic-chart"></use></svg></span>Admin</button>   <!-- W-92 -->
 </nav>
 
 <div class="overlay-zapis ukryte" id="overlayZapis">
@@ -3081,6 +3138,7 @@ function odczytajKodZRelay_() {
 // ---------- start ----------
 function uruchomAplikacje_() {
   pokaz('nawigacja');
+  pokazZakladkeAdmina_();   // W-92 — z flagi z ostatniego razu
   el('kto').textContent = liniaFirmy_(localStorage.getItem('flota_kierowca'));   // W-49
   el('f-data').value = dzisiaj();
   odswiezKolejkeInfo();
@@ -4696,6 +4754,7 @@ function pobierzStatus() {
       // odpowiedź `mojeWpisy` go nie ma. Bezwarunkowy zapis robił z `undefined`
       // NIE i każde odświeżenie listy w tle cofało paletę do domyślnej.
       // Flagę wolno nadpisać wyłącznie, gdy serwer faktycznie ją przysłał.
+      if (typeof d.admin !== 'undefined') ustawAdmina_(d.admin);   // W-92 — ta sama zasada co przy paletach
       if (typeof d.paletySpecjalne !== 'undefined') {
         localStorage.setItem('flota_palety_specjalne', d.paletySpecjalne ? 'TAK' : 'NIE');
         wczytajWyglad();
@@ -4871,7 +4930,8 @@ function odswiezWpisyCache() {
         localStorage.setItem('flota_kierowca', d.kierowca);
         localStorage.setItem('flota_beta', d.beta ? 'TAK' : 'NIE');
         // Z-83 poprawka: patrz komentarz przy bliźniaczym zapisie wyżej.
-        if (typeof d.paletySpecjalne !== 'undefined') {
+        if (typeof d.admin !== 'undefined') ustawAdmina_(d.admin);   // W-92 — ta sama zasada co przy paletach
+      if (typeof d.paletySpecjalne !== 'undefined') {
           localStorage.setItem('flota_palety_specjalne', d.paletySpecjalne ? 'TAK' : 'NIE');
           wczytajWyglad();
         }
@@ -5077,20 +5137,310 @@ function zglosMiesiac_(m) {
   });
 }
 
+
+/* ===================== W-92 (13.10.2026): ZAKŁADKA „ADMIN” =====================
+   Podgląd zakładki „Panel” z arkusza, czytelny na telefonie. Decyzja Marka 12.10:
+   „widok tylko tego panelu, będzie czytelniejszy niż Excel na smartfonie”.
+   ⚠ Appka NICZEGO tu nie liczy: serwer oddaje komórki Panelu (tekst, tło, pogrubienie)
+   tak, jak stoją w arkuszu, a ta część tylko je rozpoznaje i rysuje. Dzięki temu Panel
+   w arkuszu i w appce nie mogą powiedzieć dwóch różnych rzeczy.
+   Zakładka jest widoczna tylko dla kodu z „Admin = TAK” w zakładce Kierowcy — serwer
+   sprawdza to przy KAŻDYM żądaniu, flaga w telefonie decyduje tylko o guziku.
+   Wygląd (wybór Marka 12.10, makiety W-92 cz. 1 i 2): B1 kafelki w kategoriach,
+   K3 kropki, R3 ramki z podbarwieniem, S1 pełne karty, P2 zwijane sekcje,
+   O1 kolejność jak w arkuszu, F2 kierowcy Floty w grupach wg statusu. */
+var ADMIN_KROPKI = 'K3';   // Marek 12.10: „k3 (z łatwą możliwością przejścia do k1)” — 'K1' = dni bez kropki
+var ADMIN_TLO_NA_STAN = { '#e6f4ea':'ok', '#fef3c7':'uw', '#fce8e6':'al', '#f3f4f6':'ne', '#e3f2fd':'ka' };
+var ADMIN_RAMKA = { ok:'#22c55e', uw:'#f59e0b', al:'#ef4444', ne:'#9ca3af', ka:'#3b82f6', po:'#f97316' };
+var ADMIN_TYTUL_SEKCJI = /^(📋|⚠|🔧|ℹ|👤)/;
+var adminDane_ = null;          // ostatnia odpowiedź serwera: {wiersze, czas}
+var adminLaduje_ = false;
+
+function admEsc_(s){
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function admStan_(tlo){ return ADMIN_TLO_NA_STAN[String(tlo || '').toLowerCase()] || ''; }
+function admKropka_(stan, mala){ return stan ? '<span class="adm-kr ' + stan + (mala ? ' mala' : '') + '"></span>' : ''; }
+function admMa_(t){ return t != null && String(t).trim() !== '' && String(t).trim() !== '—'; }
+
+/* Rozpoznanie układu Panelu. Wejście: wiersze komórek {t, tlo?, b?} (puste z prawej obcięte).
+   Wiersz 1 = tytuł; przed pierwszą sekcją: zwykłe linijki + pasek miesięcy (komórki z „\n”);
+   sekcja zaczyna się od pogrubionej pojedynczej komórki bez tła z ikoną (📋 ⚠ 🔧 ℹ 👤),
+   wiersz pogrubiony na szarym tle (#e8eaed) to nagłówki kolumn, pogrubiona pojedyncza
+   komórka NA KOLOROWYM tle to kategoria (checklista Ewidencji), samotna linijka bez
+   nagłówków to opis pustej sekcji („✓ …”). Wiersz pogrubiony bez szarego tła przed
+   nagłówkami (bloki „Auto | Miesiąc | Teraz”) pomijamy — na telefonie nie ma kolumn. */
+function adminRozbierz_(wiersze){
+  var w = { tytul:'', linie:[], pasek:[], sekcje:[] }, sek = null, grupa = null;
+  (wiersze || []).forEach(function(r, i){
+    r = r || [];
+    var pelne = r.filter(function(c){ return c && String(c.t || '') !== ''; });
+    if (!pelne.length) return;
+    if (i === 0 && !w.tytul) { w.tytul = String(pelne[0].t); return; }
+    var jedna = pelne.length === 1 && r[0] && String(r[0].t || '') !== '';
+    if (!sek && pelne.length >= 2 && pelne.every(function(c){ return String(c.t).indexOf('\n') >= 0; })) {
+      w.pasek = pelne.map(function(c){ return { linie: String(c.t).split('\n'), stan: admStan_(c.tlo) || 'ne' }; });
+      return;
+    }
+    var pogrubiony = pelne.every(function(c){ return c.b; });
+    var naglowkowy = pogrubiony && pelne.every(function(c){ return String(c.tlo || '').toLowerCase() === '#e8eaed'; });
+    if (jedna && r[0].b && !r[0].tlo && (ADMIN_TYTUL_SEKCJI.test(String(r[0].t)) || sek)) {
+      sek = { tytul: String(r[0].t), naglowki: null, grupy: [], pusto: '' }; grupa = null;
+      w.sekcje.push(sek); return;
+    }
+    if (!sek && naglowkowy) {   // Flota: tabela kierowców stoi bez tytułu, zaraz pod paskiem
+      sek = { tytul: '👤 Kierowcy', naglowki: null, grupy: [], pusto: '' }; grupa = null;
+      w.sekcje.push(sek);
+    }
+    if (!sek) { w.linie.push(pelne.map(function(c){ return c.t; }).join(' ')); return; }
+    if (jedna && r[0].b && r[0].tlo && sek.naglowki) {
+      grupa = { nazwa: String(r[0].t), kolor: String(r[0].tlo), wiersze: [] }; sek.grupy.push(grupa); return;
+    }
+    if (!sek.naglowki) {
+      if (naglowkowy) { sek.naglowki = r.map(function(c){ return c ? String(c.t || '') : ''; }); return; }
+      if (pogrubiony) return;                         // bloki nad nagłówkiem
+      if (jedna) { sek.pusto = (sek.pusto ? sek.pusto + ' ' : '') + r[0].t; return; }
+    }
+    if (!grupa) { grupa = { nazwa: '', kolor: '', wiersze: [] }; sek.grupy.push(grupa); }
+    grupa.wiersze.push(r.map(function(c){ return c || { t: '' }; }));
+  });
+  return w;
+}
+
+function admKol_(nag, poczatek){
+  for (var i = 0; i < (nag || []).length; i++) if (String(nag[i]).indexOf(poczatek) === 0) return i;
+  return -1;
+}
+function admKom_(r, k){ return k >= 0 && r[k] ? r[k] : { t: '' }; }
+function admLiczba_(sek){ return sek.grupy.reduce(function(s, g){ return s + g.wiersze.length; }, 0); }
+function admKolorSekcji_(sek){
+  var t = sek.tytul;
+  if (/^⚠/.test(t)) return /cofni/i.test(t) ? 'al' : 'uw';
+  if (/^🔧/.test(t)) return 'ka';
+  if (/^👤/.test(t)) return 'po';
+  return 'ne';
+}
+function admRamka_(kolor, tlo){
+  return 'border-color:' + kolor + ';' + (tlo ? 'background:' + kolor + '1f;' : '');
+}
+function admLegenda_(){
+  return '<div class="adm-leg"><b>Zamknięcie:</b>' + admKropka_('ok') + 'zgłoszone' + admKropka_('uw') + 'czekam' +
+    admKropka_('ne') + 'brak wpisów' + admKropka_('ka') + 'kartka/Excel' +
+    (ADMIN_KROPKI === 'K1' ? '' : '<br><b>Dni bez wpisu:</b>' + admKropka_('ok') + 'w porządku' +
+     admKropka_('uw') + 'cisza' + admKropka_('al') + 'alarm') + '</div>';
+}
+function admLicznik_(stany){
+  var ile = {}; stany.forEach(function(s){ if (s) ile[s] = (ile[s] || 0) + 1; });
+  return '<div class="adm-licz">' + ['ok','uw','al','ne','ka'].filter(function(s){ return ile[s]; }).map(function(s){
+    return '<span>' + admKropka_(s) + '<b>' + ile[s] + '</b></span>';
+  }).join('') + '</div>';
+}
+
+/* B1 + K3: kafelek jednostki z checklisty Ewidencji. */
+function admKafelJednostki_(r, nag){
+  var kJ = admKol_(nag, 'Jednostka'), kK = admKol_(nag, 'Kierowca'), kW = admKol_(nag, 'Wpisów'),
+      kZ = admKol_(nag, 'Zamknięcie'), kKto = admKol_(nag, 'Kto i kiedy'), kO = admKol_(nag, 'Ostatni'),
+      kD = admKol_(nag, 'Dni bez');
+  var zam = admKom_(r, kZ), dni = admKom_(r, kD), ost = admKom_(r, kO).t;
+  var czesci = [];
+  if (admMa_(admKom_(r, kK).t)) czesci.push(admEsc_(admKom_(r, kK).t));
+  czesci.push('wpisów ' + admEsc_(admMa_(admKom_(r, kW).t) ? admKom_(r, kW).t : '—'));
+  if (admMa_(ost)) czesci.push('ost. ' + admEsc_(String(ost).split(' · ')[0]));
+  if (admMa_(admKom_(r, kKto).t)) czesci.push(admEsc_(admKom_(r, kKto).t));
+  var dt = String(dni.t || '');
+  if (admMa_(dt)) {
+    var opis = /^\d+([.,]0+)?$/.test(dt) ? parseInt(dt, 10) + ' d' : dt;
+    czesci.push('<span class="dn">' + (ADMIN_KROPKI === 'K1' ? '' : admKropka_(admStan_(dni.tlo), true)) + admEsc_(opis) + '</span>');
+  }
+  return '<div class="adm-kafel"><div class="r1"><b>' + admEsc_(admKom_(r, kJ).t || r[0].t) + '</b>' +
+    admKropka_(admStan_(zam.tlo) || 'ne') + '</div><div class="r2" title="' + admEsc_(zam.t) + '">' +
+    czesci.join(' · ') + '</div></div>';
+}
+/* F2: kafelek kierowcy Floty. */
+function admKafelKierowcy_(r, nag){
+  var kS = admKol_(nag, 'Status'), czesci = [admEsc_(admKom_(r, kS).t)];
+  nag.forEach(function(n, k){
+    if (k === 0 || k === kS || !admMa_(admKom_(r, k).t)) return;
+    czesci.push(admEsc_(n.toLowerCase()) + ' ' + admEsc_(admKom_(r, k).t));
+  });
+  return '<div class="adm-kafel"><div class="r1"><b>' + admEsc_(r[0].t) + '</b>' +
+    admKropka_(admStan_(admKom_(r, kS).tlo) || 'ne') + '</div><div class="r2">' + czesci.join(' · ') + '</div></div>';
+}
+/* S1: pełna karta dowolnego wiersza (etykieta: wartość). */
+function admKarta_(r, nag, domyslnyStan){
+  var stan = '';
+  r.forEach(function(c){ if (!stan && c && admStan_(c.tlo)) stan = admStan_(c.tlo); });
+  if (!stan) stan = r.some(function(c){ return /PO TERMINIE|PRZEKROCZ/i.test(String(c && c.t || '')); }) ? 'al' : domyslnyStan;
+  var pola = '';
+  (nag || []).forEach(function(n, k){
+    if (k === 0 || !admMa_(admKom_(r, k).t)) return;
+    pola += '<span>' + admEsc_(n) + '</span><span>' + admEsc_(admKom_(r, k).t) + '</span>';
+  });
+  return '<div class="adm-kafel"><div class="r1"><b>' + admEsc_(r[0] && r[0].t) + '</b>' + admKropka_(stan) + '</div>' +
+    (pola ? '<div class="adm-sz">' + pola + '</div>' : '') + '</div>';
+}
+
+function admSekcja_(sek){
+  var ile = admLiczba_(sek), nag = sek.naglowki || [];
+  var checklista = sek.grupy.some(function(g){ return g.nazwa; }) && admKol_(nag, 'Zamknięcie') >= 0;
+  var kierowcy = admKol_(nag, 'Status') >= 0 && admKol_(nag, 'Kierowca') === 0;
+  var kolor = ile ? admKolorSekcji_(sek) : 'ok';
+  var stanLicznika = ile ? (kolor === 'po' ? 'ne' : kolor) : 'ok';
+  var tresc = '';
+  if (!ile) {
+    tresc = '<div class="adm-pusto">' + admEsc_(sek.pusto || 'Brak pozycji.') + '</div>';
+  } else if (checklista) {
+    var kZ = admKol_(nag, 'Zamknięcie'), stany = [];
+    sek.grupy.forEach(function(g){ g.wiersze.forEach(function(r){ stany.push(admStan_(admKom_(r, kZ).tlo) || 'ne'); }); });
+    tresc = admLicznik_(stany) + admLegenda_() + sek.grupy.map(function(g){
+      var kol = g.kolor || '#9ca3af';
+      return '<div class="adm-grupa" style="' + admRamka_(kol, true) + '"><div class="gn" style="color:' + admEsc_(kol) + '">' +
+        admEsc_(g.nazwa) + '</div>' + g.wiersze.map(function(r){ return admKafelJednostki_(r, nag); }).join('') + '</div>';
+    }).join('');
+    kolor = 'ne';
+  } else if (kierowcy) {
+    var kS = admKol_(nag, 'Status'), grupy = {}, kolejnosc = [], stanyK = [];
+    sek.grupy.forEach(function(g){ g.wiersze.forEach(function(r){
+      var s = String(admKom_(r, kS).t || '—'), st = admStan_(admKom_(r, kS).tlo) || 'ne';
+      stanyK.push(st);
+      if (!grupy[s]) { grupy[s] = { stan: st, wiersze: [] }; kolejnosc.push(s); }
+      grupy[s].wiersze.push(r);
+    }); });
+    var waga = { uw: 0, ne: 1, ok: 2 };   // najpierw ci, na których czekam
+    kolejnosc.sort(function(a, b){ return (waga[grupy[a].stan] == null ? 1 : waga[grupy[a].stan]) - (waga[grupy[b].stan] == null ? 1 : waga[grupy[b].stan]); });
+    tresc = admLicznik_(stanyK) + kolejnosc.map(function(s){
+      var g = grupy[s], kol = ADMIN_RAMKA[g.stan] || ADMIN_RAMKA.ne;
+      var nazwa = g.stan === 'uw' ? '⏳ ' + s + ' — czekam' : g.stan === 'ok' ? '✓ ' + s : '— ' + s;
+      return '<div class="adm-grupa" style="' + admRamka_(kol, true) + '"><div class="gn" style="color:' + kol + '">' +
+        admEsc_(nazwa) + ' · ' + g.wiersze.length + '</div>' + g.wiersze.map(function(r){ return admKafelKierowcy_(r, nag); }).join('') + '</div>';
+    }).join('');
+    kolor = 'po';
+  } else {
+    var dom = admKolorSekcji_(sek); if (dom === 'po') dom = 'ne';
+    tresc = sek.grupy.map(function(g){ return g.wiersze.map(function(r){ return admKarta_(r, nag, dom); }).join(''); }).join('');
+  }
+  var kolHex = ADMIN_RAMKA[kolor] || ADMIN_RAMKA.ne;
+  // Checklista: tytuł bez dopisku z liczbami (te same liczby stoją niżej jako kropki),
+  // ramka szara, a napis w kolorze tekstu — szary tytuł na szarej ramce był za blady.
+  var tytul = checklista ? String(sek.tytul).split(/\s+·\s+/)[0] : sek.tytul;
+  var kolTekstu = checklista ? 'var(--tekst)' : kolHex;
+  // P2: sekcja z pozycjami rozwinięta, pusta zwinięta (zielona kropka „0”).
+  return '<details class="adm-sekc"' + (ile ? ' open' : '') + ' style="' + admRamka_(kolHex, true) + '">' +
+    '<summary style="color:' + kolTekstu + '"><span><span class="str">▸</span>' + admEsc_(tytul) + '</span>' +
+    '<span class="ile">' + admKropka_(stanLicznika) + ile + '</span></summary>' + tresc + '</details>';
+}
+
+function adminRysuj_(){
+  var cel = el('adminTresc');
+  if (!cel) return;
+  if (!adminDane_) {
+    cel.innerHTML = '<div class="adm-stan">' + (adminLaduje_ ? 'Wczytuję Panel…' : 'Brak danych Panelu.') + '</div>';
+    return;
+  }
+  var p = adminRozbierz_(adminDane_.wiersze);
+  var czesci = String(p.tytul || 'PANEL').split(/\s+·\s+/);
+  var h = '<div class="adm-nag"><div><h2>' + admEsc_(czesci[0]) + '</h2>' +
+    (czesci.length > 1 ? '<div class="adm-mal">' + admEsc_(czesci.slice(1).join(' · ')) + '</div>' : '') +
+    (adminDane_.zPamieci ? '<div class="adm-mal">z pamięci telefonu — ' + (adminLaduje_ ? 'sprawdzam serwer…' : 'serwer nie odpowiedział') + '</div>' : '') +
+    '</div><button type="button" class="adm-odsw" id="adminOdswiez"' + (adminLaduje_ ? ' disabled' : '') + '>↻ Odśwież</button></div>';
+  if (p.linie.length) h += '<p class="adm-linie">' + p.linie.map(admEsc_).join('<br>') + '</p>';
+  if (p.pasek.length) h += '<div class="adm-pasek">' + p.pasek.map(function(k){
+    return '<span class="k ' + k.stan + '">' + k.linie.map(function(l, i){ return i === 1 ? '<b>' + admEsc_(l) + '</b>' : admEsc_(l); }).join('<br>') + '</span>';
+  }).join('') + '</div>';
+  h += p.sekcje.map(admSekcja_).join('');
+  cel.innerHTML = h;
+  // Guzik powstaje w innerHTML — obsługę podpinamy przy KAŻDYM rysowaniu (pułapka z E-67).
+  el('adminOdswiez').onclick = function(){ adminWczytaj_(true); };
+}
+
+/* Wczytanie Panelu. `odswiez` = najpierw przelicz Panel na serwerze (to samo co
+   „Odśwież Panel” w arkuszu, kilkanaście sekund), potem oddaj. */
+function adminWczytaj_(odswiez){
+  if (adminLaduje_) return;
+  if (!adminDane_) {
+    try {
+      var z = JSON.parse(localStorage.getItem(ADMIN_KLUCZ_PAMIECI) || 'null');
+      if (z && z.wiersze) { adminDane_ = z; adminDane_.zPamieci = true; }
+    } catch (e) {}
+  }
+  adminLaduje_ = true;
+  adminRysuj_();
+  if (odswiez) pokazOverlay('Odświeżam Panel… (to trwa kilkanaście sekund)');
+  adminZapytaj_(odswiez).then(function(w){
+    adminLaduje_ = false;
+    if (odswiez) schowajOverlay();
+    if (w.ok) {
+      adminDane_ = { wiersze: w.wiersze || [], czas: Date.now() };
+      try { localStorage.setItem(ADMIN_KLUCZ_PAMIECI, JSON.stringify(adminDane_)); } catch (e) {}
+    } else if (w.brakDostepu) {
+      ustawAdmina_(false);
+      try { localStorage.removeItem(ADMIN_KLUCZ_PAMIECI); } catch (e) {}
+      adminDane_ = null;
+      el('adminTresc').innerHTML = '<div class="adm-stan">' + admEsc_(w.wiadomosc || 'Ten widok jest tylko dla administratora.') + '</div>';
+      return;
+    } else {
+      if (adminDane_) adminDane_.zPamieci = true;
+      pokazInfo_('Nie udało się wczytać Panelu', admEsc_(w.wiadomosc || 'Spróbuj za chwilę.'), 'ic-warn');
+    }
+    adminRysuj_();
+  }).catch(function(){
+    adminLaduje_ = false;
+    if (odswiez) schowajOverlay();
+    if (adminDane_) adminDane_.zPamieci = true;
+    adminRysuj_();
+    pokazInfo_('Serwer chwilowo niedostępny', 'Spróbuj za chwilę.', 'ic-warn');
+  });
+}
+
+/* Flaga „admin” z odpowiedzi `status` — nadpisujemy tylko, gdy serwer pole przysłał
+   (ta sama zasada co przy paletach specjalnych, Z-83). Pokazuje/chowa czwartą zakładkę. */
+function ustawAdmina_(czy){
+  try { localStorage.setItem(ADMIN_KLUCZ_FLAGI, czy ? 'TAK' : 'NIE'); } catch (e) {}
+  pokazZakladkeAdmina_();
+}
+function czyAdmin_(){
+  try { return localStorage.getItem(ADMIN_KLUCZ_FLAGI) === 'TAK'; } catch (e) { return false; }
+}
+function pokazZakladkeAdmina_(){
+  var b = el(ADMIN_ID_ZAKLADKI);
+  if (!b) return;
+  var czy = czyAdmin_();
+  b.classList.toggle('ukryte', !czy);
+  ustawWskaznikNawigacji_();
+}
+
+/* W-92: adapter Floty — akcja GET `panelAdmina`, błąd braku dostępu = E015. */
+var ADMIN_KLUCZ_FLAGI = 'flota_admin';
+var ADMIN_KLUCZ_PAMIECI = 'flota_admin_panel';
+var ADMIN_ID_ZAKLADKI = 'nawAdmin';
+function adminZapytaj_(odswiez) {
+  return apiGet('panelAdmina', odswiez ? '&odswiez=1' : '').then(function (d) {
+    if (d && d.ok) return { ok: true, wiersze: d.wiersze };
+    return { ok: false, brakDostepu: !!(d && bledyMajaKod_(d.bledy, 'E015')),
+      wiadomosc: d && (d.bledy || []).map(bezKodu_).join(' ') };
+  });
+}
+
 // ---------- nawigacja ----------
 el('nawStart').addEventListener('click', function () { przelaczWidok('start'); });
 el('nawNowy').addEventListener('click', function () { zakonczEdycje(); przelaczWidok('nowy'); });
 el('nawWpisy').addEventListener('click', function () { przelaczWidok('wpisy'); });
+el('nawAdmin').addEventListener('click', function () { przelaczWidok('admin'); });   // W-92
 /* Z-86: ustawia wskaźnik pod aktywną zakładką. Czyta klasę `aktywna`
    zamiast dostawać indeks — dzięki temu jest JEDNO źródło prawdy o tym,
    która zakładka jest wybrana (podświetlenie już tam było). */
 function ustawWskaznikNawigacji_() {
   var w = el('wskaznikNawigacji');
   if (!w) return;
-  var zakladki = ['nawStart', 'nawNowy', 'nawWpisy'];
+  // W-92: liczymy WIDOCZNE zakładki (z Adminem są cztery) — jak w Ewidencji od E-20.
+  var zakladki = ['nawStart', 'nawNowy', 'nawWpisy', 'nawAdmin'].filter(function (id) {
+    return el(id).offsetParent !== null;
+  });
   var i = -1;
   zakladki.forEach(function (id, n) { if (el(id).classList.contains('aktywna')) i = n; });
   w.classList.toggle('bez-zakladki', i === -1);
+  if (zakladki.length) w.style.width = (100 / zakladki.length) + '%';   // W-92
   if (i >= 0) w.style.transform = 'translateX(' + (i * 100) + '%)';
 }
 /* Z-86: przenikanie treści (E1). `void offsetWidth` wymusza przeliczenie
@@ -5105,7 +5455,7 @@ function animujWejscie_(idWidoku) {
 }
 var WIDOK_PO_NAZWIE = { start:'widokStart', nowy:'widokFormularz', sukces:'widokSukces',
   podsumowanie:'widokPodsumowanie', wpisy:'widokWpisy',
-  ustawienia:'widokUstawienia' };                               // W-31
+  ustawienia:'widokUstawienia', admin:'widokAdmin' };           // W-31, W-92
 /* W-31: nazwa widoku, na którym jesteśmy — potrzebna zębatce, żeby wiedzieć,
    dokąd wrócić. Czytamy ze stanu DOM, nie z osobnej zmiennej, żeby nie
    powstało drugie źródło prawdy o tym, co jest na ekranie. */
@@ -5122,11 +5472,12 @@ function biezacyWidok_() {
 
 function przelaczWidok(ktory) {
   ['widokStart', 'widokFormularz', 'widokWpisy', 'widokSukces', 'widokPodsumowanie',
-   'widokUstawienia'].forEach(schowaj);                         // W-31
+   'widokUstawienia', 'widokAdmin'].forEach(schowaj);           // W-31, W-92
   // Podsumowanie to "dziecko" Startu (wejście z dashboardu) — podświetlamy Start.
   el('nawStart').classList.toggle('aktywna', ktory === 'start' || ktory === 'podsumowanie');
   el('nawNowy').classList.toggle('aktywna', ktory === 'nowy');
   el('nawWpisy').classList.toggle('aktywna', ktory === 'wpisy');
+  el('nawAdmin').classList.toggle('aktywna', ktory === 'admin');   // W-92
   // W-31: zębatka podświetlona tylko na swoim ekranie.
   el('ustawieniaBtn').classList.toggle('otwarte', ktory === 'ustawienia');
   if (ktory === 'start') { pokaz('widokStart'); rysujDashboard(); }
@@ -5138,6 +5489,7 @@ function przelaczWidok(ktory) {
     if (navigator.onLine) odswiezWpisyCache(); // świeże dane, gdy jest sieć
   }
   else if (ktory === 'ustawienia') pokaz('widokUstawienia');  // W-31
+  else if (ktory === 'admin') { pokaz('widokAdmin'); adminWczytaj_(false); }   // W-92
   else { pokaz('widokWpisy'); wczytajWpisy(); }
   ustawWskaznikNawigacji_();                                  // Z-86
   animujWejscie_(WIDOK_PO_NAZWIE[ktory] || 'widokWpisy');     // Z-86
