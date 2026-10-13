@@ -1341,6 +1341,18 @@ var PALETY_APKA = {
   .adm-sz{display:grid; grid-template-columns:auto 1fr; gap:2px 10px; font-size:13px; margin-top:5px;}
   .adm-sz span:nth-child(odd){color:var(--szary);}
   .adm-sz span:nth-child(even){word-break:break-word;}
+  /* W-92b: ikony ze sprite'u rodziny zamiast emoji z arkusza; szary napis ma osobną zmienną,
+     bo #9ca3af na jasnym podbarwieniu nie trzymał kontrastu (uwaga Marka 13.10). */
+  :root{--adm-szary:#4b5563;}
+  [data-motyw="ciemny"]{--adm-szary:#a3abb5;}
+  /* Kolorowe napisy (tytuł sekcji, nazwa kategorii/grupy) w JASNYM motywie przyciemnione
+     do ~58% koloru — jasna zieleń/bursztyn na podbarwionym tle miały 1,6–2,9:1 (zmierzone,
+     testy_w92). Ramki i kropki zostają w pełnym kolorze; ciemny motyw bez zmian. */
+  .adm-kol{color:var(--k);}
+  :root:not([data-motyw="ciemny"]) .adm-kol{color:color-mix(in srgb, var(--k) 58%, #000);}
+  .adm-ik{width:17px; height:17px; vertical-align:-3px; margin-right:6px;}
+  .adm-pasek .adm-ik{width:13px; height:13px; margin-right:3px; vertical-align:-2px;}
+  .adm-pusto .adm-ik{width:14px; height:14px; margin-right:4px; color:#22c55e;}
   .adm-stan{text-align:center; color:var(--szary); padding:24px 8px; font-size:14px;}
   @keyframes wejscieEkranu{ from{opacity:0;} to{opacity:1;} }
   .wchodzi{animation:wejscieEkranu .22s ease-out;}
@@ -2246,7 +2258,7 @@ var PALETY_APKA = {
      telefon dorysowany w tym samym stylu. Identyczne w ewidencji. -->
 <symbol id="ic-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.1"/><path d="M19.1 13.6a7.6 7.6 0 0 0 0-3.2l1.8-1.4-1.8-3.1-2.1.8a7.6 7.6 0 0 0-2.7-1.6L14 2.8h-4l-.3 2.3a7.6 7.6 0 0 0-2.7 1.6l-2.1-.8-1.8 3.1 1.8 1.4a7.6 7.6 0 0 0 0 3.2l-1.8 1.4 1.8 3.1 2.1-.8a7.6 7.6 0 0 0 2.7 1.6l.3 2.3h4l.3-2.3a7.6 7.6 0 0 0 2.7-1.6l2.1.8 1.8-3.1-1.8-1.4Z"/></symbol>
 <symbol id="ic-phone" viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.2"/><path d="M10.5 5.2h3M10.8 18.6h2.4"/></symbol>
-</defs></svg>
+<symbol id="ic-wrench" viewBox="0 0 24 24"><path d="M14.5 6.5a4 4 0 0 1 5.4-4.1L17 5.3l1.7 1.7 2.9-2.9a4 4 0 0 1-5.1 5.4l-8 8a2 2 0 0 1-2.9-2.9l8-8.1Z"/></symbol><symbol id="ic-lock-open" viewBox="0 0 24 24"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 6.9-.8M12 14.5v2"/></symbol><symbol id="ic-info" viewBox="0 0 24 24"><path d="M5.5 4.5h13a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2H11l-4.5 3.5v-3.5h-1a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z"/><path d="M12 10.5v4"/><circle cx="12" cy="7.6" r=".5" fill="currentColor"/></symbol></defs></svg><!-- W-92b (13.10.2026): ic-lock-open (otwarty miesiąc) i ic-info (chmurka z „i”, wariant I1 — wybór Marka) + ic-wrench z Ewidencji (wspólny kod zakładki Admin) — zakładka Admin -->
 <header>
   <img src="./ikona-192.png" alt="Rinkon">
   <div class="naglowek-tekst">
@@ -5160,6 +5172,28 @@ function admEsc_(s){
   return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
+/* W-92b: emoji z tekstów Panelu → ikona ze sprite'u (zasada rodziny: ikony tylko SVG).
+   Arkusz zostaje z emoji — tam SVG się nie wstawi. Znaki typograficzne (▸ ↻ ➜ —) zostają. */
+var ADMIN_IKONY = [[/^📋\uFE0F?\s*/, 'ic-clip'], [/^⚠\uFE0F?\s*/, 'ic-warn'], [/^🔧\uFE0F?\s*/, 'ic-wrench'],
+  [/^ℹ\uFE0F?\s*/, 'ic-info'], [/^👤\uFE0F?\s*/, 'ic-user'], [/^🔒\uFE0F?\s*/, 'ic-lock'],
+  [/^🟢\uFE0F?\s*/, 'ic-lock-open'], [/^⏳\uFE0F?\s*/, 'ic-clock'], [/^✓\uFE0F?\s*/, 'ic-check']];
+function admIkona_(id){
+  return '<svg class="ikona adm-ik" viewBox="0 0 24 24" aria-hidden="true"><use href="#' + id + '"></use></svg>';
+}
+/* Zwraca {ikona, tekst}: ikona = id symbolu albo '' (tekst bez emoji na początku). */
+function admBezEmoji_(t){
+  t = String(t == null ? '' : t);
+  for (var i = 0; i < ADMIN_IKONY.length; i++) {
+    if (ADMIN_IKONY[i][0].test(t)) return { ikona: ADMIN_IKONY[i][1], tekst: t.replace(ADMIN_IKONY[i][0], '') };
+  }
+  return { ikona: '', tekst: t };
+}
+/* Tekst do HTML: ikona SVG + bezpieczny tekst (emoji zdjęte). */
+function admZIkona_(t){
+  var x = admBezEmoji_(t);
+  return (x.ikona ? admIkona_(x.ikona) : '') + admEsc_(x.tekst);
+}
+function admNapis_(hex){ return hex === ADMIN_RAMKA.ne ? 'var(--adm-szary)' : hex; }
 function admStan_(tlo){ return ADMIN_TLO_NA_STAN[String(tlo || '').toLowerCase()] || ''; }
 function admKropka_(stan, mala){ return stan ? '<span class="adm-kr ' + stan + (mala ? ' mala' : '') + '"></span>' : ''; }
 function admMa_(t){ return t != null && String(t).trim() !== '' && String(t).trim() !== '—'; }
@@ -5289,13 +5323,13 @@ function admSekcja_(sek){
   var stanLicznika = ile ? (kolor === 'po' ? 'ne' : kolor) : 'ok';
   var tresc = '';
   if (!ile) {
-    tresc = '<div class="adm-pusto">' + admEsc_(sek.pusto || 'Brak pozycji.') + '</div>';
+    tresc = '<div class="adm-pusto">' + admZIkona_(sek.pusto || 'Brak pozycji.') + '</div>';
   } else if (checklista) {
     var kZ = admKol_(nag, 'Zamknięcie'), stany = [];
     sek.grupy.forEach(function(g){ g.wiersze.forEach(function(r){ stany.push(admStan_(admKom_(r, kZ).tlo) || 'ne'); }); });
     tresc = admLicznik_(stany) + admLegenda_() + sek.grupy.map(function(g){
       var kol = g.kolor || '#9ca3af';
-      return '<div class="adm-grupa" style="' + admRamka_(kol, true) + '"><div class="gn" style="color:' + admEsc_(kol) + '">' +
+      return '<div class="adm-grupa" style="' + admRamka_(kol, true) + '"><div class="gn adm-kol" style="--k:' + admEsc_(kol) + '">' +
         admEsc_(g.nazwa) + '</div>' + g.wiersze.map(function(r){ return admKafelJednostki_(r, nag); }).join('') + '</div>';
     }).join('');
     kolor = 'ne';
@@ -5311,9 +5345,9 @@ function admSekcja_(sek){
     kolejnosc.sort(function(a, b){ return (waga[grupy[a].stan] == null ? 1 : waga[grupy[a].stan]) - (waga[grupy[b].stan] == null ? 1 : waga[grupy[b].stan]); });
     tresc = admLicznik_(stanyK) + kolejnosc.map(function(s){
       var g = grupy[s], kol = ADMIN_RAMKA[g.stan] || ADMIN_RAMKA.ne;
-      var nazwa = g.stan === 'uw' ? '⏳ ' + s + ' — czekam' : g.stan === 'ok' ? '✓ ' + s : '— ' + s;
-      return '<div class="adm-grupa" style="' + admRamka_(kol, true) + '"><div class="gn" style="color:' + kol + '">' +
-        admEsc_(nazwa) + ' · ' + g.wiersze.length + '</div>' + g.wiersze.map(function(r){ return admKafelKierowcy_(r, nag); }).join('') + '</div>';
+      var nazwa = g.stan === 'uw' ? admIkona_('ic-clock') + admEsc_(s + ' — czekam') : g.stan === 'ok' ? admIkona_('ic-check') + admEsc_(s) : admEsc_(s);
+      return '<div class="adm-grupa" style="' + admRamka_(kol, true) + '"><div class="gn adm-kol" style="--k:' + admNapis_(kol) + '">' +
+        nazwa + ' · ' + g.wiersze.length + '</div>' + g.wiersze.map(function(r){ return admKafelKierowcy_(r, nag); }).join('') + '</div>';
     }).join('');
     kolor = 'po';
   } else {
@@ -5324,10 +5358,12 @@ function admSekcja_(sek){
   // Checklista: tytuł bez dopisku z liczbami (te same liczby stoją niżej jako kropki),
   // ramka szara, a napis w kolorze tekstu — szary tytuł na szarej ramce był za blady.
   var tytul = checklista ? String(sek.tytul).split(/\s+·\s+/)[0] : sek.tytul;
-  var kolTekstu = checklista ? 'var(--tekst)' : kolHex;
+  var kolTekstu = checklista ? 'var(--tekst)' : admNapis_(kolHex);
+  // W-92b (Marek 13.10): sekcje informacyjne (ℹ) zawsze zwinięte — rozwija się je dotknięciem.
+  var otwarta = ile && !/^ℹ/.test(String(sek.tytul));
   // P2: sekcja z pozycjami rozwinięta, pusta zwinięta (zielona kropka „0”).
-  return '<details class="adm-sekc"' + (ile ? ' open' : '') + ' style="' + admRamka_(kolHex, true) + '">' +
-    '<summary style="color:' + kolTekstu + '"><span><span class="str">▸</span>' + admEsc_(tytul) + '</span>' +
+  return '<details class="adm-sekc"' + (otwarta ? ' open' : '') + ' style="' + admRamka_(kolHex, true) + '">' +
+    '<summary class="adm-kol" style="--k:' + kolTekstu + '"><span><span class="str">▸</span>' + admZIkona_(tytul) + '</span>' +
     '<span class="ile">' + admKropka_(stanLicznika) + ile + '</span></summary>' + tresc + '</details>';
 }
 
@@ -5346,7 +5382,7 @@ function adminRysuj_(){
     '</div><button type="button" class="adm-odsw" id="adminOdswiez"' + (adminLaduje_ ? ' disabled' : '') + '>↻ Odśwież</button></div>';
   if (p.linie.length) h += '<p class="adm-linie">' + p.linie.map(admEsc_).join('<br>') + '</p>';
   if (p.pasek.length) h += '<div class="adm-pasek">' + p.pasek.map(function(k){
-    return '<span class="k ' + k.stan + '">' + k.linie.map(function(l, i){ return i === 1 ? '<b>' + admEsc_(l) + '</b>' : admEsc_(l); }).join('<br>') + '</span>';
+    return '<span class="k ' + k.stan + '">' + k.linie.map(function(l, i){ return i === 1 ? '<b>' + admZIkona_(l) + '</b>' : admZIkona_(l); }).join('<br>') + '</span>';
   }).join('') + '</div>';
   h += p.sekcje.map(admSekcja_).join('');
   cel.innerHTML = h;
