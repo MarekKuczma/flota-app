@@ -53,6 +53,26 @@ var PALETY_APKA = {
   }
 })();
 </script>
+<script>
+/* KANON WYGLĄDU (W-93, 15.10.2026) — pre-paint (identyczny w 3 appkach).
+   Wygląd „Szklany" to KSZTAŁTY (szkło, kapsułki, tapeta), nie kolory —
+   kolory zostają z wybranej palety. Domyślnie „Klasyczny" (decyzja Marka
+   15.10): atrybut data-wyglad pojawia się TYLKO po świadomym wyborze.
+   ⚠ NAGŁÓWEK SZKŁA: 'H1' = mleczne szkło z ciemnym tekstem (wybór Marka
+   15.10), 'H2' = szkło podbarwione gradientem palety, biały tekst. Reguły
+   obu stoją w bloku CSS kanonu wyglądu — zmiana to TA JEDNA STAŁA,
+   identycznie w trzech appkach. */
+var WYGLAD_NAGLOWEK = 'H1';
+(function(){
+  var d = document.documentElement;
+  try {
+    if (localStorage.getItem(PALETY_APKA.prefiks + '_wyglad') === 'szklo') {
+      d.setAttribute('data-wyglad', 'szklo');
+      d.setAttribute('data-nag', WYGLAD_NAGLOWEK);
+    }
+  } catch (e) {}
+})();
+</script>
 <style>
   /* ===== :root = wyłącznie globalny „chrom" appki (W-41) =====
      Tokeny PALET (akcent, gradienty, stożki, turkusy…) NIE mieszkają już
@@ -2214,6 +2234,138 @@ var PALETY_APKA = {
 @media (prefers-reduced-motion: reduce){
   .avatar-pierscien{ animation:none; }
 }
+/* ================================================================
+   KANON WYGLĄDU RODZINY — „SZKLANY" (W-93, 15.10.2026) — CSS.
+   TEN BLOK JEST IDENTYCZNY CO DO ZNAKU w trzech aplikacjach (wzorzec:
+   Testy/kanon/kanon-wyglad.css, pisany ręcznie — nie z generatora).
+   Działa TYLKO pod html[data-wyglad="szklo"] (ustawia pre-paint kanonu
+   wyglądu po świadomym wyborze w Ustawieniach); bez tego atrybutu nie
+   łapie nic, więc „Klasyczny" = appka co do piksela jak przed W-93.
+   ZASADY (research 13.10, makiety v2/v3, wybory Marka 15.10):
+     - kolory biorą się Z PALETY (--akcent, --gradient, --tekst-akcentjasny…),
+       tu są tylko kształty i szkło; tapeta pod spodem liczona z akcentu;
+     - szkło TYLKO w warstwie nawigacji i kontrolek (nagłówek, pasek, okna,
+       kapsułki), karty z treścią zostają pełne (C1) — czytelność;
+     - rozmycia NIE animujemy (słabsze Androidy); animacje palet i przejść
+       zostają; bez backdrop-filter / przy „mniej przezroczystości" szkło
+       gęstnieje prawie do pełnego;
+     - bezpieczne prawnie (Marek 13.10): czcionka systemowa, NASZE ikony,
+       sam styl — żadnych elementów systemu Apple 1:1;
+     - Kosmos zostaje sobą: własne niebo zamiast tapety, własne szklane
+       karty, a szkło kontrolek zawsze ciemne (Kosmos jest zawsze nocą).
+   Stoi PO bloku KOSMOS i części appki do Kosmosu (ta sama swoistość —
+   późniejszy wygrywa). Elementy jednej appki — w części appki ZARAZ POD.
+   Nagłówek: H1 (mleczne szkło) albo H2 (podbarwione gradientem) — wybór
+   stałą WYGLAD_NAGLOWEK w pre-paincie kanonu wyglądu.
+   ================================================================ */
+html[data-wyglad="szklo"]{
+  --szklo:rgba(255,255,255,.56); --szklo-mocne:rgba(255,255,255,.74);
+  --szklo-krawedz:rgba(255,255,255,.75); --szklo-cien:0 10px 30px rgba(20,30,60,.13);
+  --szklo-blask:inset 0 1px 0 rgba(255,255,255,.85); --tapeta-baza:#eef0f4;
+  --szklo-pasek:#f3f4f7;}
+html[data-wyglad="szklo"][data-motyw="ciemny"],
+html[data-wyglad="szklo"][data-paleta="kosmos"]{
+  --szklo:rgba(34,36,42,.56); --szklo-mocne:rgba(30,32,38,.76);
+  --szklo-krawedz:rgba(255,255,255,.13); --szklo-cien:0 10px 30px rgba(0,0,0,.45);
+  --szklo-blask:inset 0 1px 0 rgba(255,255,255,.10); --tapeta-baza:#0d0f14;
+  --szklo-pasek:#1b1d22;}
+html[data-wyglad="szklo"][data-paleta="kosmos"]{--szklo-pasek:#0a0818;}
+@supports not ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+  html[data-wyglad="szklo"]{--szklo:rgba(255,255,255,.94); --szklo-mocne:rgba(255,255,255,.96);}
+  html[data-wyglad="szklo"][data-motyw="ciemny"],
+  html[data-wyglad="szklo"][data-paleta="kosmos"]{--szklo:rgba(30,32,38,.95); --szklo-mocne:rgba(30,32,38,.96);}
+}
+@media (prefers-reduced-transparency: reduce){
+  html[data-wyglad="szklo"]{--szklo:rgba(255,255,255,.94); --szklo-mocne:rgba(255,255,255,.96);}
+  html[data-wyglad="szklo"][data-motyw="ciemny"],
+  html[data-wyglad="szklo"][data-paleta="kosmos"]{--szklo:rgba(30,32,38,.95); --szklo-mocne:rgba(30,32,38,.96);}
+}
+/* tapeta z kolorów palety — JEDEN element position:fixed, malowany raz
+   (ta sama metoda co niebo Kosmosu; NIE background-attachment:fixed) */
+html[data-wyglad="szklo"]{background:var(--tapeta-baza);}
+html[data-wyglad="szklo"] body{background:transparent;}
+html[data-wyglad="szklo"]::before{content:''; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(60% 45% at 12% 8%, color-mix(in srgb, var(--akcent) 38%, transparent) 0%, transparent 70%),
+    radial-gradient(55% 45% at 92% 32%, color-mix(in srgb, var(--akcent-moc) 32%, transparent) 0%, transparent 70%),
+    radial-gradient(70% 55% at 45% 100%, color-mix(in srgb, var(--akcent) 22%, transparent) 0%, transparent 70%),
+    var(--tapeta-baza);}
+html[data-wyglad="szklo"][data-paleta="kosmos"]::before{display:none;}
+/* nagłówek — H1: mleczne szkło, tekst w kolorze treści */
+html[data-wyglad="szklo"] header{background:var(--szklo-mocne); color:var(--tekst);
+  -webkit-backdrop-filter:blur(24px) saturate(180%); backdrop-filter:blur(24px) saturate(180%);
+  isolation:isolate; border-bottom:.5px solid var(--szklo-krawedz); box-shadow:var(--szklo-blask);}
+html[data-wyglad="szklo"] header .kto{color:var(--szary); opacity:1;}
+/* nagłówek — H2: szkło podbarwione gradientem palety, biały tekst */
+html[data-wyglad="szklo"][data-nag="H2"] header{background:transparent; color:#fff;
+  border-bottom:.5px solid rgba(255,255,255,.25); box-shadow:none;}
+html[data-wyglad="szklo"][data-nag="H2"] header::before{content:''; position:absolute; inset:0;
+  background:var(--gradient); opacity:.78; z-index:-1;}
+html[data-wyglad="szklo"][data-nag="H2"] header .kto{color:#fff; opacity:.9;}
+/* przyciski-kapsułki: główny w gradiencie palety (z obwódką-poświatą, jak
+   dotąd), pozostałe ze szkła; lekkie wciśnięcie zamiast samej przezroczystości */
+html[data-wyglad="szklo"] .przycisk{border-radius:999px;
+  box-shadow:0 6px 18px var(--przycisk-cien), inset 0 1px 0 rgba(255,255,255,.35);
+  transition:transform .15s ease, box-shadow .2s, opacity .2s;}
+html[data-wyglad="szklo"] .przycisk-glow{border-radius:999px;}
+html[data-wyglad="szklo"] .przycisk-glow::after{border-radius:999px;}
+html[data-wyglad="szklo"] .przycisk-drugi, html[data-wyglad="szklo"] .przycisk-trzeci,
+html[data-wyglad="szklo"] .przycisk-maly{border-radius:999px; background:var(--szklo-mocne);
+  -webkit-backdrop-filter:blur(20px) saturate(180%); backdrop-filter:blur(20px) saturate(180%);
+  border:.5px solid var(--szklo-krawedz); box-shadow:var(--szklo-blask), 0 2px 8px rgba(0,0,0,.06);
+  transition:transform .15s ease, background .2s;}
+html[data-wyglad="szklo"] .przycisk-drugi, html[data-wyglad="szklo"] .przycisk-maly{color:var(--tekst-akcentjasny);}
+html[data-wyglad="szklo"] .przycisk:active, html[data-wyglad="szklo"] .przycisk-drugi:active,
+html[data-wyglad="szklo"] .przycisk-trzeci:active, html[data-wyglad="szklo"] .przycisk-maly:active{transform:scale(.97);}
+/* karty pełne, mocniej zaokrąglone (C1) — Kosmos zostaje przy swoich szklanych */
+html[data-wyglad="szklo"]:not([data-paleta="kosmos"]) .karta{
+  background:color-mix(in srgb, var(--karta) 92%, transparent); border-radius:20px;
+  box-shadow:0 1px 2px rgba(0,0,0,.04), 0 10px 30px rgba(0,0,0,.08);}
+html[data-wyglad="szklo"][data-paleta="kosmos"] .karta{border-radius:20px;}
+html[data-wyglad="szklo"] input, html[data-wyglad="szklo"] select,
+html[data-wyglad="szklo"] textarea, html[data-wyglad="szklo"] .pole-wyb{border-radius:12px;}
+/* okno wyboru (kanon wybieraka) + czerwona kropka z napisem „Anuluj" (Z2) */
+html[data-wyglad="szklo"] .wyb{background:color-mix(in srgb, var(--karta) 86%, transparent);
+  -webkit-backdrop-filter:blur(30px) saturate(180%); backdrop-filter:blur(30px) saturate(180%);}
+html[data-wyglad="szklo"] .wyb .wyb-top{background:transparent;}
+html[data-wyglad="szklo"] .wyb .wyb-zamknij{order:-1; position:relative; padding:0 4px 0 28px; color:var(--szary);}
+html[data-wyglad="szklo"] .wyb .wyb-zamknij::before{content:''; position:absolute; left:8px; top:50%;
+  width:14px; height:14px; margin-top:-7px; border-radius:50%; background:#ff5f57;
+  box-shadow:inset 0 0 0 .5px rgba(0,0,0,.18);}
+/* ============== KONIEC BLOKU KANONU — WYGLĄD (CSS) ============== */
+/* ---- Wygląd szklany — część FLOTY (W-93, 15.10.2026) ----
+   Elementy tylko tej appki. Pasek zakładek = pływająca kapsuła ze szkła (P1);
+   płynący wskaźnik (Z-86) NIE znika — staje się podświetleniem-pigułką
+   aktywnej zakładki i jeździ tak samo jak kreska (ta sama sprężysta
+   animacja, ta sama logika szerokości z W-92: 2/3/4 zakładki). */
+html[data-wyglad="szklo"] #ustawieniaBtn{background:var(--szklo-mocne); color:var(--tekst-akcentjasny);
+  border-radius:50%; box-shadow:var(--szklo-blask), 0 1px 3px rgba(0,0,0,.12);}
+html[data-wyglad="szklo"] #ustawieniaBtn.otwarte{background:var(--bg-akcentjasny);}
+html[data-wyglad="szklo"][data-nag="H2"] #ustawieniaBtn{background:rgba(255,255,255,.22); color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35);}
+html[data-wyglad="szklo"][data-nag="H2"] #ustawieniaBtn.otwarte{background:rgba(255,255,255,.42);}
+html[data-wyglad="szklo"] nav{background:var(--szklo-mocne);
+  -webkit-backdrop-filter:blur(24px) saturate(180%); backdrop-filter:blur(24px) saturate(180%);
+  left:14px; right:14px; bottom:calc(10px + env(safe-area-inset-bottom)); padding-bottom:0;
+  border-radius:999px; border:.5px solid var(--szklo-krawedz); overflow:hidden;
+  box-shadow:var(--szklo-blask), var(--szklo-cien);}
+html[data-wyglad="szklo"] nav button{position:relative; z-index:1; min-height:56px; font-size:11.5px;
+  padding:8px 0 6px; transition:color .25s;}
+html[data-wyglad="szklo"] nav button.aktywna{color:var(--tekst-akcentjasny);}
+/* Szary podpis nieaktywnej zakładki na jasnym szkle (z prześwitującą plamą
+   tapety) miał 3,96–4,28:1 — przyciemniony do ≥ 4,5:1 (testy_w93 mierzy). */
+html[data-wyglad="szklo"]:not([data-motyw="ciemny"]):not([data-paleta="kosmos"]) nav button:not(.aktywna){
+  color:color-mix(in srgb, var(--szary) 72%, #000);}
+html[data-wyglad="szklo"] nav .wskaznik{top:0; bottom:0; height:auto; padding:4px;}
+html[data-wyglad="szklo"] nav .wskaznik i{width:100%; border-radius:999px; background:var(--bg-akcentjasny);
+  animation:none; box-shadow:none;}
+html[data-wyglad="szklo"] main{padding-bottom:112px;}
+/* „×" przy parze tankowania łączonego = czerwona kropka (Z2, jak „Anuluj") */
+html[data-wyglad="szklo"] .para-usun{position:relative; color:transparent !important; font-size:0 !important;}
+html[data-wyglad="szklo"] .para-usun::before{content:'×'; position:absolute; left:50%; top:50%;
+  width:18px; height:18px; margin:-9px 0 0 -9px; border-radius:50%; background:#ff5f57;
+  color:#7a0f0b; font-size:14px; line-height:18px; text-align:center; font-weight:700;}
+/* ---- koniec części Floty ---- */
 </style>
 </head>
 <body>
@@ -2258,7 +2410,7 @@ var PALETY_APKA = {
      telefon dorysowany w tym samym stylu. Identyczne w ewidencji. -->
 <symbol id="ic-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.1"/><path d="M19.1 13.6a7.6 7.6 0 0 0 0-3.2l1.8-1.4-1.8-3.1-2.1.8a7.6 7.6 0 0 0-2.7-1.6L14 2.8h-4l-.3 2.3a7.6 7.6 0 0 0-2.7 1.6l-2.1-.8-1.8 3.1 1.8 1.4a7.6 7.6 0 0 0 0 3.2l-1.8 1.4 1.8 3.1 2.1-.8a7.6 7.6 0 0 0 2.7 1.6l.3 2.3h4l.3-2.3a7.6 7.6 0 0 0 2.7-1.6l2.1.8 1.8-3.1-1.8-1.4Z"/></symbol>
 <symbol id="ic-phone" viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.2"/><path d="M10.5 5.2h3M10.8 18.6h2.4"/></symbol>
-<symbol id="ic-wrench" viewBox="0 0 24 24"><path d="M14.5 6.5a4 4 0 0 1 5.4-4.1L17 5.3l1.7 1.7 2.9-2.9a4 4 0 0 1-5.1 5.4l-8 8a2 2 0 0 1-2.9-2.9l8-8.1Z"/></symbol><symbol id="ic-lock-open" viewBox="0 0 24 24"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 6.9-.8M12 14.5v2"/></symbol><symbol id="ic-info" viewBox="0 0 24 24"><path d="M5.5 4.5h13a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2H11l-4.5 3.5v-3.5h-1a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z"/><path d="M12 10.5v4"/><circle cx="12" cy="7.6" r=".5" fill="currentColor"/></symbol></defs></svg><!-- W-92b (13.10.2026): ic-lock-open (otwarty miesiąc) i ic-info (chmurka z „i”, wariant I1 — wybór Marka) + ic-wrench z Ewidencji (wspólny kod zakładki Admin) — zakładka Admin -->
+<symbol id="ic-wrench" viewBox="0 0 24 24"><path d="M14.5 6.5a4 4 0 0 1 5.4-4.1L17 5.3l1.7 1.7 2.9-2.9a4 4 0 0 1-5.1 5.4l-8 8a2 2 0 0 1-2.9-2.9l8-8.1Z"/></symbol><symbol id="ic-lock-open" viewBox="0 0 24 24"><rect x="5.5" y="10.5" width="13" height="9.5" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 6.9-.8M12 14.5v2"/></symbol><symbol id="ic-info" viewBox="0 0 24 24"><path d="M5.5 4.5h13a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2H11l-4.5 3.5v-3.5h-1a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z"/><path d="M12 10.5v4"/><circle cx="12" cy="7.6" r=".5" fill="currentColor"/></symbol><symbol id="ic-styl-klas" viewBox="0 0 24 24"><rect x="4" y="4.5" width="16" height="15" rx="2.5"/><path d="M4 9.5h16"/></symbol><symbol id="ic-styl-szklo" viewBox="0 0 24 24"><rect x="4" y="4.5" width="16" height="15" rx="7.5"/><path d="M8.2 9.8c.7-1.5 2-2.5 3.6-2.7"/></symbol></defs></svg><!-- W-93 (15.10.2026): ic-styl-klas / ic-styl-szklo — przełącznik „Wygląd" w Ustawieniach --><!-- W-92b (13.10.2026): ic-lock-open (otwarty miesiąc) i ic-info (chmurka z „i”, wariant I1 — wybór Marka) + ic-wrench z Ewidencji (wspólny kod zakładki Admin) — zakładka Admin -->
 <header>
   <img src="./ikona-192.png" alt="Rinkon">
   <div class="naglowek-tekst">
@@ -3076,6 +3228,68 @@ function rysujNiebo_(){
 rysujNiebo_();
 wczytajWyglad();
 /* ============== KONIEC WSPÓLNEGO BLOKU KANONU (JS) ============== */
+/* ================================================================
+   KANON WYGLĄDU RODZINY (W-93, 15.10.2026) — JS.
+   TEN BLOK JEST IDENTYCZNY CO DO ZNAKU w trzech aplikacjach (wzorzec:
+   Testy/kanon/kanon-wyglad.js, pisany ręcznie — nie z generatora).
+   Przełącznik „Wygląd: Klasyczny / Szklany" w Ustawieniach, pod Trybem.
+   Niezależny od palety i od trybu jasny/ciemny: 2 wyglądy x palety x tryby.
+   Stoi ZA wspólnym blokiem kanonu palet i go nie zmienia — dokłada się
+   przez opakowanie dwóch jego funkcji (wczytajWyglad, rysujUstawienia_),
+   więc każde istniejące wywołanie (zębatka, kafle palet, tryb „auto")
+   samo pociąga też wygląd.
+   Wymaga: pre-paintu kanonu wyglądu (WYGLAD_NAGLOWEK) i ikon ic-styl-klas,
+   ic-styl-szklo w sprite'cie appki.
+   ================================================================ */
+var KLUCZ_WYGLAD = PALETY_APKA.prefiks + '_wyglad';
+var WYGLADY = [
+  { id:'klasyczny', ikona:'ic-styl-klas',  napis:'Klasyczny' },
+  { id:'szklo',     ikona:'ic-styl-szklo', napis:'Szklany' }
+];
+function wyborWygladu_(){
+  var w = null;
+  try { w = localStorage.getItem(KLUCZ_WYGLAD); } catch (e) {}
+  return w === 'szklo' ? 'szklo' : 'klasyczny';
+}
+/* Atrybuty na <html> + pasek systemowy telefonu. Przy szkle H1 pasek bierze
+   kolor szklanego nagłówka (--szklo-pasek z CSS), żeby nad białawym
+   nagłówkiem nie stał pomarańczowy pas; przy H2 i w klasycznym zostaje
+   kolor palety, który ustawił kanon palet. */
+function zastosujStyl_(){
+  var d = document.documentElement, szklo = wyborWygladu_() === 'szklo';
+  if (szklo) { d.setAttribute('data-wyglad', 'szklo'); d.setAttribute('data-nag', WYGLAD_NAGLOWEK); }
+  else { d.removeAttribute('data-wyglad'); d.removeAttribute('data-nag'); }
+  if (szklo && WYGLAD_NAGLOWEK !== 'H2') {
+    var meta = document.querySelector('meta[name="theme-color"]');
+    var kolor = getComputedStyle(d).getPropertyValue('--szklo-pasek').trim();
+    if (meta && kolor) meta.setAttribute('content', kolor);
+  }
+}
+var wczytajWygladKanon_ = wczytajWyglad;
+wczytajWyglad = function(){ wczytajWygladKanon_(); zastosujStyl_(); };
+var rysujUstawieniaKanon_ = rysujUstawienia_;
+rysujUstawienia_ = function(){
+  rysujUstawieniaKanon_();
+  var karta = el(PALETY_APKA.kartaUstawienId);
+  var tryb = karta && karta.querySelector('.ust-tryb');
+  if (!tryb) return;
+  var teraz = wyborWygladu_();
+  tryb.insertAdjacentHTML('afterend',
+    '<div class="ust-sekcja">Wygląd</div><div class="ust-tryb ust-wyglad">' +
+    WYGLADY.map(function(w){
+      return '<button type="button" class="' + (w.id === teraz ? 'wybrany' : '') +
+        '" data-wyglad-id="' + w.id + '">' + ikonaHTML_(w.ikona) + w.napis + '</button>';
+    }).join('') + '</div>');
+  karta.querySelectorAll('[data-wyglad-id]').forEach(function(b){
+    b.onclick = function(){
+      try { localStorage.setItem(KLUCZ_WYGLAD, b.dataset.wygladId); } catch (e) {}
+      wczytajWyglad();
+      rysujUstawienia_();
+    };
+  });
+};
+zastosujStyl_();
+/* ============== KONIEC BLOKU KANONU — WYGLĄD (JS) ============== */
 
 /* W-85 (23.09.2026): tu stał wyjątek W-50 (Kosmos dopisywany do rejestru PO bloku kanonu,
    z zapamiętaniem wyboru przed nim). Kosmos jest teraz w rejestrze kanonu, a niebo rysuje
