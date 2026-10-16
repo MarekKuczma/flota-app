@@ -2270,6 +2270,10 @@ html[data-wyglad="szklo"][data-paleta="kosmos"]{
   --szklo-blask:inset 0 1px 0 rgba(255,255,255,.10); --tapeta-baza:#0d0f14;
   --szklo-pasek:#1b1d22;}
 html[data-wyglad="szklo"][data-paleta="kosmos"]{--szklo-pasek:#0a0818;}
+/* Szary tekst (podpisy, podpowiedzi) na półprzezroczystej karcie K2 nad plamą tapety miał
+   4,09–4,36:1 w jasnym trybie (testy_w93_*_przegladarka, 16.10) — w szklanym jasnym
+   o ton ciemniejszy (#6b7280 → #5b6270), żeby trzymał ≥ 4,5:1. Ciemny i Kosmos bez zmian. */
+html[data-wyglad="szklo"]:not([data-motyw="ciemny"]):not([data-paleta="kosmos"]){--szary:#5b6270;}
 @supports not ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
   html[data-wyglad="szklo"]{--szklo:rgba(255,255,255,.94); --szklo-mocne:rgba(255,255,255,.96);}
   html[data-wyglad="szklo"][data-motyw="ciemny"],
@@ -2317,9 +2321,15 @@ html[data-wyglad="szklo"] .przycisk-maly{border-radius:999px; background:var(--s
 html[data-wyglad="szklo"] .przycisk-drugi, html[data-wyglad="szklo"] .przycisk-maly{color:var(--tekst-akcentjasny);}
 html[data-wyglad="szklo"] .przycisk:active, html[data-wyglad="szklo"] .przycisk-drugi:active,
 html[data-wyglad="szklo"] .przycisk-trzeci:active, html[data-wyglad="szklo"] .przycisk-maly:active{transform:scale(.97);}
-/* karty pełne, mocniej zaokrąglone (C1) — Kosmos zostaje przy swoich szklanych */
+/* karty: wariant POŚREDNI K2 (Marek 16.10, „zrobimy ten pośredni wariant”) — 78% krycia
+   + lekkie rozmycie 14 px, zamiast pełnych 92% bez rozmycia (C1 z 15.10). Treść dalej na
+   karcie (pola formularza pełne), tapeta lekko prześwituje. Zaokrąglenie 20 px.
+   Kosmos zostaje przy swoich szklanych kartach (40%). Kontrast tekstu na karcie mierzy
+   testy_w93_*_przegladarka (karta nałożona na najmocniejszą plamę tapety). */
 html[data-wyglad="szklo"]:not([data-paleta="kosmos"]) .karta{
-  background:color-mix(in srgb, var(--karta) 92%, transparent); border-radius:20px;
+  background:color-mix(in srgb, var(--karta) 78%, transparent); border-radius:20px;
+  -webkit-backdrop-filter:blur(14px) saturate(160%); backdrop-filter:blur(14px) saturate(160%);
+  border:.5px solid var(--szklo-krawedz);
   box-shadow:0 1px 2px rgba(0,0,0,.04), 0 10px 30px rgba(0,0,0,.08);}
 html[data-wyglad="szklo"][data-paleta="kosmos"] .karta{border-radius:20px;}
 html[data-wyglad="szklo"] input, html[data-wyglad="szklo"] select,
